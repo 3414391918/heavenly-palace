@@ -1,0 +1,4 @@
+interface:
+  display_name: "跨应用代码链路分析"
+  short_description: "闭环分析入口方法的跨应用调用链、状态变更与逐边证据"
+  default_prompt: "使用 $code-operation-center 从指定 Java 入口方法建立可恢复会话，闭环解析跨应用上下游、状态变更、持久层与消息边界，并在完整性校验后生成 AI 可读文档。"

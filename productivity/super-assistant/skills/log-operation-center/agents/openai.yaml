@@ -1,0 +1,4 @@
+interface:
+  display_name: "日志操作中心"
+  short_description: "一站式查询 Digger 与行云实例的历史日志、实时日志及启动异常"
+  default_prompt: "使用 $log-operation-center 查询目标应用日志并定位本次异常的直接原因。"

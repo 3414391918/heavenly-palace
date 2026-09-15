@@ -1,0 +1,150 @@
+{
+  "skill_name": "log-operator-center",
+  "domain": "营销应用日志查询",
+  "descriptor": "检索应用日志、查看日志详情。",
+  "text_procedure": "guide.md",
+  "keyframes_dir": "images",
+  "states": [
+    {
+      "state_id": "application-log-homepage",
+      "description": "应用日志首页。",
+      "visible_cues": [
+        "提供了历史日志查询的入口。",
+        "提供了实时日志查询的入口。",
+        "在首页有一个应用名称的输入框，应用名称需要从http://jagile.jd.com/jdosCD/ls/apps国际站应用管理页面中获取。在该网页会展示个人参与的所有应用，如果需要查询日志的应用不在该列表中需要提醒用户进行申请，所有网站使用的erp账号和密码均相同"
+      ],
+      "available_views": [
+        {
+          "type": "full_frame",
+          "path": "images/应用日志首页.png",
+          "status": "available"
+        }
+      ]
+    },
+    {
+      "state_id": "history-log-query-page",
+      "description": "应用历史日志查询首页。",
+      "when_to_use": "对已经出现的问题进行排查时使用应用历史日志进行查询。",
+      "visible_cues": [
+        "关键词输入框里可以选择匹配模式。有正则匹配、完全匹配和traceId三种查询模式",
+        "正则匹配示例：模糊：ab.*ef 可匹配：abcdef、abasdef。12345.*success 可匹配：id:12345 delete success。abc|def 可匹配：123abc123、123def456。正则匹配查询性能较差，如非必要推荐使用完全匹配",
+        "查询范围卡片中可以自定义查询的范围。",
+        "日志文件通常选择命名以detail为结尾的日志文件。",
+        "在应用历史日志查询页面的右上角可以选择日志查询的时间范围。"
+      ],
+      "available_views": [
+        {
+          "type": "full_frame",
+          "path": "images/历史日志查询页.png",
+          "status": "available"
+        },
+        {
+          "type": "full_frame",
+          "path": "images/行云应用管理国际站页面.png",
+          "status": "available"
+        },
+        {
+          "type": "focus_crop",
+          "path": "images/历史日志查询时间卡.png",
+          "status": "available"
+        },
+        {
+          "type": "focus_crop",
+          "path": "images/历史日志查询范围卡.png",
+          "status": "available"
+        }
+      ]
+    },
+    {
+      "state_id": "history-log-query-list",
+      "description": "应用历史日志查询列表。",
+      "visible_cues": [
+        "在历史日志查询页面点击搜索后页面出现相关的日志信息列表，同时左侧同步出现结果筛选模块，包含IP和类名两个结果筛选框。",
+        "点击列表中的单条日志弹出日志原文，在弹出的日志原文中点击IP或文件后的超链接即可查看日志详情。"
+      ],
+      "available_views": [
+        {
+          "type": "before",
+          "path": "images/历史日志查询页.png",
+          "status": "available"
+        },
+        {
+          "type": "after",
+          "path": "images/点击搜索后的历史日志查询页.png",
+          "status": "available"
+        },
+        {
+          "type": "focus_crop",
+          "path": "images/结果筛选框.png",
+          "status": "available"
+        },
+        {
+          "type": "before",
+          "path": "images/单条日志的日志原文.png",
+          "status": "available"
+        },
+        {
+          "type": "after",
+          "path": "images/日志详情页.png",
+          "status": "available"
+        }
+      ]
+    },
+    {
+      "state_id": "realtime-log-query-page",
+      "description": "应用实时日志查询首页。",
+      "when_to_use": "需要配合测试对实时产生的日志进行查询。",
+      "visible_cues": [
+        "在实时日志查询页面需要选择具体的分组和主机名称，分组名称的查询首先需要访问http://jagile.jd.com/jdosCD/ls/apps国际站获取应用列表，选择一个应用点击进去后再点击分组列表即可查看该应用在生产和预发环境下的所有分组，选择一个分组点进去再点击实例状态即可查看该分组下所有主机的ip地址",
+        "日志文件选择最好选择文件名detail结尾的日志文件"
+      ],
+      "available_views": [
+        {
+          "type": "full_frame",
+          "path": "images/实时日志查询首页.png",
+          "status": "available"
+        },
+        {
+          "type": "full_frame",
+          "path": "images/行云应用管理国际站页面.png",
+          "status": "available"
+        },
+        {
+          "type": "full_frame",
+          "path": "images/行云分组列表国际站页面.png",
+          "status": "available"
+        },
+        {
+          "type": "full_frame",
+          "path": "images/行云实例列表国际站页面.png",
+          "status": "available"
+        }
+      ]
+    },
+    {
+      "state_id": "realtime-log-query-list",
+      "description": "应用实时日志查询列表。",
+      "visible_cues": [
+        "点击搜索后页面展示出实时日志的列表信息",
+        "双击单条实时日志展示出日志的上下文"
+      ],
+      "available_views": [
+        {
+          "type": "before",
+          "path": "images/实时日志查询首页.png",
+          "status": "available"
+        },
+        {
+          "type": "after",
+          "path": "images/实时日志列表页.png",
+          "status": "available"
+        },
+        {
+          "type": "focus_crop",
+          "path": "images/单条实时日志的上下文窗口信息.png",
+          "status": "available"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+/productivity/agents/workflow-agents/stabledifussion/*
+!/productivity/agents/workflow-agents/stabledifussion/ComfyUI/
+.DS_Store
