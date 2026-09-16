@@ -1,6 +1,6 @@
 ---
 name: knowledge-operation-center
-description: 管理 Obsidian 知识库，将工作成果整理为可检索、可追溯的笔记，支持历史知识查询、文档审查与更新、关联巡检和归档；也用于 Obsidian CLI 操作、Markdown 格式编写、Bases 视图配置以及插件和主题调试。用户要求记录成果、查询历史决策、更新知识库或操作 Obsidian 时使用；与知识库无关的普通文件编辑不适用。
+description: 管理 Obsidian 知识库，将工作成果整理为可检索、可追溯的笔记，支持历史知识查询、文档审查与更新、关联巡检和归档；也用于 Obsidian CLI 操作、Markdown 格式编写、Bases 视图配置以及插件和主题调试。用户要求记录成果、导入网站知识、查询历史决策、更新知识库、初始化 Obsidian 或用 Git 维护多机知识库时使用；与知识库无关的普通文件编辑不适用。
 ---
 
 # 知识操作中心
@@ -13,20 +13,25 @@ description: 管理 Obsidian 知识库，将工作成果整理为可检索、可
 
 | 任务 | 参考资料 |
 |------|----------|
+| 安装后初始化、CLI 路径适配、首次连接知识库 | [initialization.md](references/initialization.md) |
+| 网站导入、覆盖率、稳定来源 ID 与重复导入 | [source-import.md](references/source-import.md) |
+| 多机 Git 同步、可见性、忽略文件和冲突处理 | [git-sync.md](references/git-sync.md) |
 | 执行 Obsidian 命令、管理笔记或任务、调试插件和主题 | [obsidian-cli.md](references/obsidian-cli.md) |
 | 编写正文、双向链接、嵌入、提示框或文档属性 | [obsidian-markdown.md](references/obsidian-markdown.md) |
 | 读取、创建或修改 `.base`，配置表格、卡片、筛选和公式 | [obsidian-bases.md](references/obsidian-bases.md) |
 | 手动设置属性、处理审查状态、记录操作日志 | [frontmatter-spec.md](references/frontmatter-spec.md) |
 | CLI 输出异常、长文损坏、属性缺失、移动失败，或脚本不可用 | [gotchas.md](references/gotchas.md) |
+| 查看当前版本验收范围与限制 | [verification.md](references/verification.md) |
 
 只读取当前任务需要的资料。Markdown 的属性、嵌入、提示框细节和 Bases 的函数清单由对应参考文档继续链接。
 
 ## 运行前提与定位
 
-- 本机已安装并打开 Obsidian，`obsidian` CLI 可用，已连接目标知识库（vault）。脚本依赖 Bash、`rg` 及脚本帮助列出的命令。
-- 执行命令前读取 CLI 参考，先用 `obsidian help` 确认本机支持的命令；环境缺失时报告具体缺项，不把知识库操作描述为已完成。环境安装、知识库初始化按用户的任务范围处理。
-- 确认目标 vault。直接命令可用 `obsidian vault="知识库名" ...`；默认会作用于最近聚焦的 vault，不能在目标不明时写入。配套脚本的参数以 `--help` 为准；若不能显式选择 vault，执行前确认默认 vault 正确。
-- 所有相对脚本路径都以本 Skill 目录为基准，与用户当前工作目录无关。笔记定位优先用 vault 内完整 `path=`，避免跨目录同名文件混淆。
+- Obsidian 由用户自行安装；Skill 不要求固定的应用安装目录。首次使用按 [初始化说明](references/initialization.md) 连接知识库、启用 CLI 并核验路径。配套脚本使用 Bash，Windows 使用 Git Bash。
+- 打开目标 vault 并启用 CLI 后，运行 `scripts/detect_obsidian.sh`。只有返回真实预期路径与 `VAULT_READY=yes` 才能继续。
+- 脚本默认操作本 Skill 内的 `knowledgebases`，可用 `OBSIDIAN_VAULT_PATH` 显式指定其他库；CLI 位置通过 `OBSIDIAN_CLI` 或 `OBSIDIAN_INSTALL_DIR` 指定。机器路径留在本地环境，不写入同步配置。
+- 通用命令使用 `bash scripts/obsidian.sh <命令> ...`，它先核对 Vault 路径；不要仅依赖最近聚焦的库。执行前用 `help` 确认命令，笔记定位用完整 `path=`。
+- 所有相对脚本路径以本 Skill 目录为基准。Git 多机使用方式和远端可见性按 [Git 同步规范](references/git-sync.md)；源资料能否公开须依据实际授权判断。
 
 ## 操作边界
 
@@ -36,7 +41,8 @@ description: 管理 Obsidian 知识库，将工作成果整理为可检索、可
 4. **保留知识文档。** 废弃内容标为 `已归档` 并移入 `4-历史归档/`。删除仅用于已合并的 AI 临时补丁，或经授权移动且已核验完整目标副本后的源文件清理。
 5. **保留事实分歧。** 冲突处保留两种表述和证据，注明取代关系或待裁决事项；不把 AI 建议写成已确认决策。
 6. **区分笔记与视图操作。** 日常知识管理中 `.base` 只读；用户明确要求创建或修改 Bases 时，按指定范围编辑并验证。`3-静态资源/` 原始资料、`5-系统模板/` 和 `6-绘图文件/` 在知识整理流程中只读。
-7. **标明证据状态。** 外部来源未验证时，在正文顶部加警告 callout。来源追溯只填写实际获得的讨论、文档或证据；不虚构提交号、日志地址或测试结果。
+7. **初始化例外。** 用户要求初始化或测试本 Skill 时，可创建缺失目录、模板、Base、来源清单和通用配置；保留用户已有内容。测试只清理本次创建的测试数据，不改变真实知识的审查状态。
+8. **标明证据状态。** 外部来源未验证时，在正文顶部加警告 callout。来源追溯只填写实际获得的讨论、文档或证据；不虚构提交号、日志地址或测试结果。
 
 ## 知识库约定
 
@@ -54,7 +60,7 @@ description: 管理 Obsidian 知识库，将工作成果整理为可检索、可
 
 目录负责物理分类，文档属性负责筛选，`[[wikilink]]` 负责关联。`.base` 保存视图规则，不是元数据缓存；关系图谱由 Obsidian 的 Graph view 展示。
 
-原工作流约定 `知识库总览.base` 包含全库、待审查、已确认、需重构、已归档、开发文档、待办、会议纪要、动态项目、长期领域、可归档、最近修改等视图。先检查实际存在的视图；缺少总览时可用 `search` 查询，不要求为一次查询新建视图。`base:query` 用于已有视图，动态关键词、标签和目录条件用 `obsidian search`。
+随附 `知识库总览.base` 提供全库、待审查、已确认和最近修改视图，按来源字段筛选知识条目；其他业务视图按需增加。先检查实际存在的视图；缺少总览时可用 `search` 查询，不要求为一次查询新建视图。CLI `base:query` 用于已有视图，动态关键词、标签和目录条件用 CLI `search`。
 
 ## 内容整理原则
 
@@ -72,13 +78,15 @@ description: 管理 Obsidian 知识库，将工作成果整理为可检索、可
 |------|------|
 | [create_note.sh](scripts/create_note.sh) | 新建正文并逐项设置属性；目标已存在时退出码 3，转更新流程 |
 | [merge_note.sh](scripts/merge_note.sh) | 整篇更新并补回属性；原文不存在时退出码 3，转新建流程 |
-| [write_note.sh](scripts/write_note.sh) | 长正文 base64 分块写入与校验；`--mkdir` 补建缺失父目录 |
+| [write_note.sh](scripts/write_note.sh) | 所有正文经本地临时文件写入与 SHA-256 回读校验；`--mkdir` 补建父目录 |
+| [obsidian.sh](scripts/obsidian.sh) / [detect_obsidian.sh](scripts/detect_obsidian.sh) | 安全定位 CLI 与目标库，执行通用命令 |
 
-- 参数、退出码和限制先看脚本 `--help`。三个脚本保持在同一目录；create/merge 对超 6000 字符正文自动使用 write_note。
-- 正文源传本地文件或 `-`（stdin）。vault 中的正文先用 `obsidian read path="..."` 导出到本地临时文件；不要把 vault 相对路径误当本地正文文件。
+- 参数、退出码和限制先看脚本 `--help`。三个脚本保持在同一目录；create/merge 的所有正文均使用 write_note，保留中文、引号、字面量反斜杠及尾部空行。
+- 正文源传本地文件或 `-`（stdin）。vault 中的正文先用 CLI `read path="..."` 导出到本地临时文件；不要把 vault 相对路径误当本地正文文件。
 - 脚本采用“正文 + 独立属性参数”输入，正文不携带 YAML frontmatter；先写正文再逐项 `property:set`。Markdown 参考中的 YAML 示例展示的是最终文档格式。
-- 创建知识草案使用 `silent`，放入待审查区；动态项目归位后可用 `1-动态项目/YYYY-MM-DD 项目名/`。
-- `obsidian templates` 列出实际模板，`template:read name="模板名" resolve` 读取正文与字段选项。业务枚举以实际模板为准，不复制硬编码。
+- 创建知识草案放入待审查区；配套脚本写入时不打开笔记窗口，直接用 CLI create 时带 `silent`；动态项目归位后可用 `1-动态项目/YYYY-MM-DD 项目名/`。
+- CLI `templates` 列出实际模板，`template:read name="模板名" resolve` 读取正文与字段选项。业务枚举以实际模板为准，不复制硬编码。
+- 脚本通过 `cli_env.sh` 从目标 vault 目录执行并校验路径；直接调用官方 CLI 时，`vault=<名称或ID>` 必须是第一个参数，并自行核验目标。
 - 每次改文档同步更新自定义属性 `修改时间`。手动覆盖前保留全部属性，覆盖后补回；模板占位串必须替换为真实值。
 - 脚本回读校验通过后，无需机械重复同一次正文检查；属性或输出异常时按 [gotchas.md](references/gotchas.md) 定位。
 
@@ -93,6 +101,8 @@ bash scripts/create_note.sh "0-临时文件/待审查/鉴权费用融合.md" bod
 ## 工作流
 
 ### 1. 沉淀研发成果
+
+网站批量导入先按 [来源导入规范](references/source-import.md) 枚举并建立来源清单，再执行本流程。
 
 1. 确认记录范围与已有授权，按内容整理原则提炼并查重。
 2. 使正文脱离当前对话也能读懂，去掉“上面提到的”等指代；明确已确认事实、待确认方案及来源。
@@ -119,7 +129,7 @@ bash scripts/create_note.sh "0-临时文件/待审查/鉴权费用融合.md" bod
 
 1. 查询已经确认、仍在待审查区的文档。状态改成已确认本身不触发移动，需有归位指令。
 2. 给出目标目录和理由；已有明确归位范围与目标时直接执行，未明确时先完成提案。
-3. 用 `obsidian move` 移动。目标目录缺失或命令失败时参照 gotchas 的文件移动小节；复制后清理源文件必须先核验目标正文、属性和引用完整。
+3. 用 CLI `move` 移动。目标目录缺失或命令失败时参照 gotchas 的文件移动小节；复制后清理源文件必须先核验目标正文、属性和引用完整。
 4. 用 `unresolved` 检查断链，追加“移动”日志。用户已手动移动过文件时，先重新定位，避免沿用旧路径。
 
 ### 5. 巡检与整理
@@ -153,4 +163,4 @@ bash scripts/create_note.sh "0-临时文件/待审查/鉴权费用融合.md" bod
 - 命令报错、乱码、丢内容、属性缺失或静默无效果时，先检查本机帮助与 gotchas，再有针对性地重试；不能只凭退出码认定成功。
 - 移动后检查未解析链接；写入后检查正文及属性，只有验证成功才报告已完成。
 - 交付时说明实际读取或修改的文档、审查状态、存放位置、验证结果及未决项。
-- 本 Skill 不自动安装 Obsidian、创建云同步、提交 Git 或推送远程；用户明确要求这些操作时按其指定范围处理。
+- 本 Skill 的环境准备从用户已安装 Obsidian 开始。云同步、Git 提交与推送按用户指定范围处理。

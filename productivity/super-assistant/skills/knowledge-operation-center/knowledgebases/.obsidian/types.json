@@ -1,0 +1,12 @@
+{
+  "types": {
+    "aliases": "aliases",
+    "cssclasses": "multitext",
+    "tags": "multitext",
+    "审查状态": "text",
+    "来源追溯": "text",
+    "创建时间": "datetime",
+    "修改时间": "datetime",
+    "是否完成": "checkbox"
+  }
+}

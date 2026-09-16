@@ -1,0 +1,7 @@
+# 每台机器自行维护窗口状态、缓存和回收站；知识与通用配置可由 Git 同步。
+.obsidian/workspace*.json
+.obsidian/cache/
+.obsidian/Cache/
+.obsidian/GPUCache/
+.trash/
+.DS_Store

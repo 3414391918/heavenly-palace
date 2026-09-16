@@ -1,0 +1,63 @@
+{
+  "sources": [
+    {
+      "source_id": "QsbAE2xY2M0dl4MWIyHO",
+      "title": "2026-09-02_银行压降域知识总览",
+      "url": "https://joyspace.jd.com/pages/QsbAE2xY2M0dl4MWIyHO",
+      "parent": null,
+      "type": "page",
+      "read_status": "read",
+      "target_note": "0-临时文件/待审查/银行压降域知识总览.md",
+      "fail_reason": null,
+      "read_date": "2026-09-16",
+      "verified_at": "2026-09-16T03:16:44+08:00",
+      "verified_by": "Codex：逐页核对可见正文",
+      "classification": "科技公开（组织内分类）",
+      "organized_note_sha256": "6a893b9aa6f42c79f67adcca6dc6a8a9f5a4a82d541a9d2062e67fea12d5c825",
+      "evidence_files_status": "原文所列代码、log/*.json 和 output/*.md 未取得，未复核运行证据"
+    },
+    {
+      "source_id": "vEiNjpVwxpBAYovVWF7a",
+      "title": "2026-09-02_银行压降银行列表查询调用链与DropBankInfo结构",
+      "url": "https://joyspace.jd.com/pages/vEiNjpVwxpBAYovVWF7a",
+      "parent": "QsbAE2xY2M0dl4MWIyHO",
+      "type": "page",
+      "read_status": "read",
+      "target_note": "0-临时文件/待审查/银行压降银行列表查询调用链.md",
+      "fail_reason": null,
+      "read_date": "2026-09-16",
+      "verified_at": "2026-09-16T03:16:44+08:00",
+      "verified_by": "Codex：逐页核对可见正文",
+      "classification": "科技公开（组织内分类）",
+      "organized_note_sha256": "dcd8aed0709e960d3c7c8daacde9c56b457b3369b35e8fd69082b9b28812916e",
+      "evidence_files_status": "原文所列代码、log/*.json 和 output/*.md 未取得，未复核运行证据"
+    },
+    {
+      "source_id": "EJQ5a4qIPV9OLGSF5ibe",
+      "title": "2026-09-02_银行压降代码定位方法与日志关键字",
+      "url": "https://joyspace.jd.com/pages/EJQ5a4qIPV9OLGSF5ibe",
+      "parent": "QsbAE2xY2M0dl4MWIyHO",
+      "type": "page",
+      "read_status": "read",
+      "target_note": "0-临时文件/待审查/银行压降代码定位与日志关键字.md",
+      "fail_reason": null,
+      "read_date": "2026-09-16",
+      "verified_at": "2026-09-16T03:16:44+08:00",
+      "verified_by": "Codex：逐页核对可见正文",
+      "classification": "科技公开（组织内分类）",
+      "organized_note_sha256": "177535986a3a3508d1f0f73c4b618e726e79798ad85df022710e783b0ab82e73",
+      "evidence_files_status": "原文所列代码、log/*.json 和 output/*.md 未取得，未复核运行证据"
+    }
+  ],
+  "summary": {
+    "total_discovered": 3,
+    "total_read": 3,
+    "total_migrated": 3,
+    "total_failed": 0,
+    "total_attachments": 0,
+    "total_verified": 3
+  },
+  "scope_notes": "已核对入口及正文引用的两篇 L2 页面，共 3 篇；未发现更多范围内 JoySpace 正文页面链接。全局侧栏其他接口不属于该入口的子树。未取得原文所列本地日志、代码资料或产出文档；原文知识已整理，未完成运行证据验证。",
+  "updated_at": "2026-09-16T03:16:44+08:00",
+  "digest_kind": "整理后本地 Markdown 文件的 SHA-256；不是原网页快照摘要或版本号。"
+}

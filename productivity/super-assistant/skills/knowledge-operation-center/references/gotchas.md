@@ -9,17 +9,7 @@
 
 ## 文件创建
 
-- 多行内容转义：CLI 中 `\n` 表换行、`\t` 表制表。长文档建议先 create 再分段 `append`，而非一次性塞进 content。
-- 长正文含特殊字符先落临时文件再中转：正文含反引号、`$`、`|`、`&` 等 shell 会解释的字符时（技术方案、含代码块的文档几乎必然如此），直接 `content="..."` 会被 shell 展开导致内容损坏或命令截断。安全做法是先写临时文件，heredoc 用带引号的定界符 `<<'EOF'` 关闭变量插值，再用命令替换传入：
-
-  ```bash
-  cat > /tmp/note_body.md <<'EOF'
-  正文可自由包含 `反引号`、$VAR、| 管道符 等字符，不会被解释。
-  EOF
-  obsidian create path="0-临时文件/待审查/xxx.md" content="$(cat /tmp/note_body.md)" silent
-  ```
-
-  create_note.sh 已内置此模式：正文参数传文件路径或 `-`（从 stdin 读），脚本内部 `content="$(cat ...)"`。注意此模式只解决 shell 展开问题，不解决长文丢字节；超 6000 字符正文脚本会自动改走 write_note.sh 的 base64 路径，见下节。
+CLI 的 `content=` 会解析 `\n`、`\t`，命令替换还会丢弃末尾换行。正文先写本地临时文件（heredoc 用带引号的定界符关闭 shell 插值），再把文件路径或 stdin 交给 create_note/merge_note。两个脚本现在对所有正文调用 write_note 的本地临时文件路径，短文也保留字面量反斜杠和尾部空行。
 
 ## 手动分步命令
 
@@ -40,24 +30,22 @@ obsidian read path="0-临时文件/待审查/鉴权费用融合.md" && obsidian 
 
 - `content=` 传长中文正文丢字节：写入后正文出现 U+FFFD 损坏字符（UTF-8 多字节序列被破坏）。merge_note.sh 的 `$(cat ...)` 路径同样存在此问题，4 处损坏。
 - `append` 大段内容丢内容：682 行文档分两段 append 后只剩 239 行，整块丢失。短内容（几行）则完全正常。
-- 可靠路径是 base64 分块 + eval 全局缓冲 + 单次写入，已封装为 [scripts/write_note.sh](../scripts/write_note.sh)，create_note.sh / merge_note.sh 对超 6000 字符正文自动路由：
-  1. 本地正文 base64 编码，按 3000 字符分块：4000 字符块实测出现累积错位（eval 缓冲与本地差 44 字符，atob 报 InvalidCharacterError），超过 12000 字符会丢尾部，3000 稳定。
-  2. 逐块 `obsidian eval code="window.__pfB64+='<块>'"` 累积，每块回读缓冲长度与本地累计比对，不匹配立即中止；eval 半执行不报错，靠校验兜底。
-  3. 单次 eval `atob` + `TextDecoder` 解码后 `app.vault.adapter.write` 整篇写入。
-  4. 回读验证三元组：`LC_ALL=C rg -c $'\xef\xbf\xbd'` 查损坏字符、比对非空行与本地稿 diff、必要时延时 1 秒复查（CLI 写入有竞态窗口，eval 直写未见）。
+- 当前 write_note 使用更短的可靠路径：先在系统临时目录保存 UTF-8 正文，再通过官方 CLI `eval` 的 Node fs 读取该文件，调用 Vault create/modify 写入，并用 SHA-256 对比回读。命令仅传编码后的路径，不传长正文。
+- 旧版分块 base64 每块都启动 CLI，在 1.13.7 连续调用实测发生挂起，现已移除该默认实现。没有自行安装 Node 的要求，使用 Obsidian 桌面内置环境；如未来版本不支持 eval/require，明确报告不兼容，不降级为未经校验的 content= 写入。
+- cli_env 会保留 stdout 原始换行、关闭 CLI stdin（避免吞掉正文）、核验 Vault 路径并限制单次调用 25 秒。超时只终止本次 CLI，不自动重做可能已发生的写入；先核对实际结果。
 - `obsidian eval` 参数名是 `code=`：写 `expression=` 报 Missing required parameter。eval 输出形如 `=> 3000`，脚本里剥前缀取值。
 - 写入后疑似乱码先客观判断：终端显示乱码不等于文件损坏（会话中终端 mojibake 但 diff 仅改动行有差异，文件本身完好）。用字节级 rg U+FFFD 与 diff 判断，勿凭显示重写。
 - 中间文本处理用 perl 必须加 `-CSD`（UTF-8 层），否则原地改写会把中文写坏成 mojibake，只能从原始副本重来。
 
 ## 文件创建（补充）
 
-- `move` 与 eval 内 `app.vault.adapter.create`（vault.create）均不自动创建缺失父目录（2026-08-28 实测）：目录缺失时先 `app.vault.adapter.mkdir()` 再写入，write_note.sh 的 `--mkdir` 已封装。
+- `move` 与 eval 内 `app.vault.create`均不自动创建缺失父目录（2026-08-28 实测）：目录缺失时先 `app.vault.createFolder()` 再写入，write_note.sh 的 `--mkdir` 已封装。
 - datetime 值必须带 T：`type=datetime` 值写 `2026-07-14T19:20`；用空格写 `2026-07-14 19:20` 会报 Invalid datetime format 且字段不写入。脚本自动把空格转 T。
 - list 多值一次写入：`property:set name="tags" value="a,b" type=list` 一次调用生成两项；同名属性重复 set 是替换而非追加，循环逐项写只会留下最后一个。CLI 无 property:append。
 - 模板占位与枚举串必须覆盖：用 `template=` 创建后，`审查状态` 会是字面串 `待审查|已确认|需重构|已归档`、`aliases` 是 `{{title}}` 占位，必须用 property:set 覆盖成真实单值，否则击穿 Base 过滤。
 - `create ... overwrite` 会清空 frontmatter：用 overwrite 覆盖已有文件时 content 只含正文，原有全部属性被抹掉。这不阻止用 overwrite，覆盖后用 `property:set` 补回所有属性即可，包括审查状态、时间、类型枚举、aliases、tags，并更新 修改时间。属性多时需连发多条 `property:set`，开销大，优先用 [scripts/merge_note.sh](../scripts/merge_note.sh) 封装 overwrite 加循环 property:set，与 create_note.sh 对称。小改动也可用逐段 `append` 避免整体覆盖，省掉补属性这一步；合并补丁时按改动量选择：整篇重写用 merge_note.sh，局部增补用 append。
 - delete 是移入 trash：`obsidian delete` 移到回收站可恢复，仅用于清理 AI 自建的临时草案；知识文档一律走归档流程，见 [主入口](../SKILL.md) 的操作边界 4。
-- `obsidian read` 对不存在的文件也返回退出码 0（2026-08-31 实测）：错误信息只出现在输出流（stdout/stderr 均有），退出码不可作为存在性依据。判断笔记是否存在须看输出是否以 `Error:` 开头；create_note.sh 曾按退出码探测，导致对任何路径（含从未创建过的）恒报「已存在」拒绝创建，已修复为按输出前缀判断。脚本不可用手动探测时同样注意。
+- `obsidian read` 对不存在的文件也返回退出码 0（2026-08-31 实测）：错误信息只出现在输出流（stdout/stderr 均有），退出码不可作为存在性依据。本次 1.13.7 的缺失提示是 `Error: File "路径" not found.`；必须区分文件缺失与其他错误，create_note.sh 曾按退出码探测，导致对任何路径（含从未创建过的）恒报「已存在」拒绝创建，当前脚本改为经 eval 查询 adapter.exists，不依赖错误文案，也不会把 Error: 开头的真实正文当成不存在。手动探测仍须区分缺失与其他错误。
 - `property:set` 连发可能中途挂起（2026-08-31 实测）：逐项链式设置 13 个属性，第 8 条起卡死 2 分钟超时且无任何报错输出。批量设置后必须回读 frontmatter 核对缺了哪几项再补设，不能假设链上命令全部执行完。
 - `append` 的参数名是 `content=` 不是 `text=`：写 `text=` 报 `Unexpected token` 失败，脚本与文档示例均用 `content=`，手动分步操作时勿改参数名。
 - `提测时间`/`上线时间` 是 datetime 类型（值带 T，如 `2026-09-02T00:00`）：frontmatter-spec 的类型速查已列明，手动补设属性时易误写成 `type=text`，写错类型不报错但属性形态错乱，回读核对时一并检查。
@@ -68,7 +56,7 @@ obsidian read path="0-临时文件/待审查/鉴权费用融合.md" && obsidian 
 - CLI 无删除文件夹命令：`obsidian help` 里没有 rmdir 或 folder:delete。归档移动后源目录会残留空文件夹。清理用 `obsidian eval` 调 vault adapter，且必须先确认目录为空再删：
 
   ```bash
-  obsidian eval code="(async()=>{const p='1-动态项目/旧目录';const f=app.vault.getAbstractFileByPath(p);if(!f)return 'NOT_FOUND';if(f.children&&f.children.length!==0)return 'NOT_EMPTY:'+f.children.length;await app.vault.adapter.rmdir(p,false);return 'REMOVED';})()"
+  obsidian eval code="(async()=>{const p='1-动态项目/旧目录';const f=app.vault.getAbstractFileByPath(p);if(!f)return 'NOT_FOUND';if(f.children&&f.children.length!==0)return 'NOT_EMPTY:'+f.children.length;require('fs').rmdirSync(app.vault.adapter.getBasePath()+'/'+p);return 'REMOVED';})()"
   ```
 
   非空目录返回 NOT_EMPTY 并保护性中止，绝不递归强删。
