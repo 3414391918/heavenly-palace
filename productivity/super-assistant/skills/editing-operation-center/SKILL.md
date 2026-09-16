@@ -1,5 +1,5 @@
 ---
-name: editing-master
+name: editing-operation-center
 description: Create and edit local JianYing/CapCut video drafts through JSON command-line tools without starting an MCP or HTTP service. Use when an Agent needs to create a draft, add video/audio/images/text/SRT subtitles/effects/stickers/keyframes, inspect supported editing resources, analyze media duration, or export an editable JianYing/CapCut project.
 ---
 
