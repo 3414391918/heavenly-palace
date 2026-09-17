@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="640" viewBox="0 0 900 640" role="img" aria-label="Cloud 与 Kernel Runner 职责">
+<title>Cloud 与 Kernel Runner 职责</title>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/></marker></defs>
+<rect width="900" height="640" rx="14" fill="#f8fafc"/>
+<path d="M 450 80 L 450 115" fill="none" stroke="#64748b" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M 450 175 L 450 210" fill="none" stroke="#64748b" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M 450 270 L 450 315" fill="none" stroke="#64748b" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M 450 375 L 450 425" fill="none" stroke="#64748b" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M 450 485 L 450 540" fill="none" stroke="#64748b" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M 325 345 L 270 345" fill="none" stroke="#64748b" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M 575 345 L 630 345" fill="none" stroke="#64748b" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M 575 455 L 750 455 L 750 540" fill="none" stroke="#64748b" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="325" y="20" width="250" height="60" rx="9" fill="#e8f0ff" stroke="#648ad1" stroke-width="1.5"/>
+<text x="450.0" y="50.0" text-anchor="middle" dominant-baseline="middle" font-family="PingFang SC, Noto Sans CJK SC, sans-serif" font-size="15" fill="#0f172a">Cloud</text>
+<rect x="325" y="115" width="250" height="60" rx="9" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="450.0" y="145.0" text-anchor="middle" dominant-baseline="middle" font-family="PingFang SC, Noto Sans CJK SC, sans-serif" font-size="15" fill="#0f172a">集群入口 LB</text>
+<rect x="325" y="210" width="250" height="60" rx="9" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="450.0" y="240.0" text-anchor="middle" dominant-baseline="middle" font-family="PingFang SC, Noto Sans CJK SC, sans-serif" font-size="15" fill="#0f172a">入口 Runner /kernel</text>
+<rect x="325" y="315" width="250" height="60" rx="9" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="450.0" y="345.0" text-anchor="middle" dominant-baseline="middle" font-family="PingFang SC, Noto Sans CJK SC, sans-serif" font-size="15" fill="#0f172a">scope 所属 Runner</text>
+<rect x="325" y="425" width="250" height="60" rx="9" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="450.0" y="455.0" text-anchor="middle" dominant-baseline="middle" font-family="PingFang SC, Noto Sans CJK SC, sans-serif" font-size="15" fill="#0f172a">bwrap / 显式 Docker</text>
+<rect x="325" y="540" width="250" height="60" rx="9" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="450.0" y="570.0" text-anchor="middle" dominant-baseline="middle" font-family="PingFang SC, Noto Sans CJK SC, sans-serif" font-size="15" fill="#0f172a">常驻 Kernel 与 agents</text>
+<rect x="30" y="315" width="240" height="60" rx="9" fill="#e4f4ed" stroke="#5e9c7e" stroke-width="1.5"/>
+<text x="150.0" y="345.0" text-anchor="middle" dominant-baseline="middle" font-family="PingFang SC, Noto Sans CJK SC, sans-serif" font-size="15" fill="#0f172a">Redis 路由与协调</text>
+<rect x="630" y="315" width="240" height="60" rx="9" fill="#e4f4ed" stroke="#5e9c7e" stroke-width="1.5"/>
+<text x="750.0" y="345.0" text-anchor="middle" dominant-baseline="middle" font-family="PingFang SC, Noto Sans CJK SC, sans-serif" font-size="15" fill="#0f172a">宿主 MySQL</text>
+<rect x="630" y="540" width="240" height="60" rx="9" fill="#e4f4ed" stroke="#5e9c7e" stroke-width="1.5"/>
+<text x="750.0" y="570.0" text-anchor="middle" dominant-baseline="middle" font-family="PingFang SC, Noto Sans CJK SC, sans-serif" font-size="15" fill="#0f172a">挂载工作区与 JSONL</text>
+</svg>
