@@ -2,7 +2,7 @@
 
 ## 1. 适用场景
 
-优先使用行云实例日志和终端的情况：
+先用行云定位实例，再优先通过 tmux 登录读取日志的情况：
 
 - 应用刚部署或重启，需要确认启动是否完成。
 - Spring 容器启动失败、端口异常或配置占位符缺失。
@@ -10,7 +10,7 @@
 - 源码配置正确，但实例行为仍像旧配置。
 - 用户已给出明确应用、分组、IP，希望直接观察该实例。
 
-已经发生的业务请求需要跨实例、按 traceId 或时间范围检索时，仍优先使用 Digger 历史日志。需要边操作边观察业务明细时，可使用 Digger 实时日志。
+已经发生的业务请求需要跨实例、按 traceId 或时间范围检索时，仍优先使用 Digger 历史日志。需要边操作边观察目标实例业务明细时，优先通过 tmux 限时跟踪文件；无法登录或需要跨实例聚合时使用 Digger 实时日志。
 
 ## 2. 锁定正确实例
 
@@ -20,7 +20,7 @@
 
 ## 3. 入口选择
 
-在行云应用管理中进入目标分组和实例列表：
+在行云应用管理中进入目标分组和实例列表，核对 IP 后按 [tmux 操作](../references/tmux-log-query.md) 登录读取；以下网页入口作为备用：
 
 - “日志”：观察应用实时输出和请求日志。
 - “Digger”：跳转到可按关键字、时间和实例筛选的日志检索。
@@ -37,7 +37,6 @@ tail -n 200 /export/logs/console.log
 grep -n 'Exception in thread\|BeanCreationException\|Caused by' /export/logs/console.log | tail -80
 ```
 
-服务器未必安装 `rg`，终端内可使用 `grep`。本地源码搜索仍优先使用 `rg` 或 CodeGraph。
 
 常见判断顺序：
 
@@ -68,7 +67,7 @@ grep -n '<配置关键字>' /home/export/App/conf/*.properties
 - 请求地址或 JSF 接口、请求时间和关键参数。
 - 响应参数或前端错误。
 - 命中的实例 IP、日志文件和第一条异常。
-- traceId；一旦日志中出现 traceId，转到 Digger 用完整 traceId 查询全链路。
+- traceId；一旦日志中出现 traceId，使用完整 traceId 继续查询；跨实例落点未知或本机日志不全时使用 Digger 补齐。
 
 日志中可能包含 pin、手机号、令牌或其他敏感信息。输出报告时只保留排障必需字段，不复制密码、Cookie、Authorization 或完整令牌。
 
