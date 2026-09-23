@@ -1,4 +1,0 @@
-interface:
-  display_name: "部署操作中心"
-  short_description: "一站式处理前后端代码提交、主干合并、公共包发布、环境部署与结果验证"
-  default_prompt: "使用 $deploy-operation-center 排查当前项目运行问题，并完成当前需求代码的提交、合并、发布和部署验证。"

@@ -1,4 +1,0 @@
-interface:
-  display_name: "日志操作中心"
-  short_description: "网页定位实例，优先通过 tmux 查询应用日志与启动异常"
-  default_prompt: "使用 $log-operation-center 查询目标应用日志并定位本次异常的直接原因。"
