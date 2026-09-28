@@ -1,0 +1,131 @@
+import {
+  CatalogInstallMarketplaceSkillContentResultSchema,
+  CatalogSnapshotSchema,
+  CommandEnvelopeSchema,
+  createEnvelope,
+  type CommandEnvelope,
+  type CommandResult
+} from "@deepwrite/contracts";
+import { createId } from "@deepwrite/shared";
+import { createCloudBackupFeature } from "../extras/cloud-backup/create-service";
+import { createDesktopDeviceSync } from "../extras/device-sync";
+import { AgentTeamConfigStore } from "./agent-team-config-store";
+import { AppAlertStore } from "./app-alert-store";
+import { AppearanceService } from "./appearance-service";
+import { ChatAssistantProjectConfigStore } from "./chat-assistant-project-config-store";
+import { createBookAnalysisServices } from "./extras/book-analysis-services";
+import { GeneralSettingsStore } from "./general-settings-store";
+import { LearningImitationConfigStore } from "./learning-imitation-config-store";
+import { LibraryAgentConfigStore } from "./library-agent-config-store";
+import { LongAgentConfigStore } from "./long-agent-config-store";
+import { MarketplaceClient } from "./marketplace-client";
+import { ModelConfigStore } from "./model-config-store";
+import { ModelUsageStore } from "./model-usage-store";
+import { SoftwareTokenUsageReporter } from "./software-token-usage-reporter";
+import type { StartupLog } from "./startup-log";
+import { UpdateService } from "./update-service";
+import { WorkspaceAgentConfigStore } from "./workspace-agent-config-store";
+import { WorkspaceDirectoryStore } from "./workspace-directory-store";
+
+interface DesktopServiceOptions {
+  userDataPath: string;
+  appVersion: string;
+  command: (command: CommandEnvelope) => Promise<CommandResult>;
+  busy: () => boolean;
+  installUpdate: () => void;
+}
+
+/** Construction has no network dependency; optional refreshes start separately. */
+export function createDesktopServices(options: DesktopServiceOptions) {
+  const { userDataPath, command } = options;
+  const modelConfigStore = new ModelConfigStore(userDataPath, {
+    appVersion: options.appVersion
+  });
+  const modelUsageStore = new ModelUsageStore(userDataPath);
+  const workspaceDirectoryStore = new WorkspaceDirectoryStore(userDataPath);
+  const workspaceDirectory = async () =>
+    (await workspaceDirectoryStore.list()).path;
+  return {
+    modelConfigStore,
+    modelUsageStore,
+    softwareTokenUsageReporter: new SoftwareTokenUsageReporter(
+      userDataPath,
+      modelUsageStore
+    ),
+    workspaceAgentConfigStore: new WorkspaceAgentConfigStore(userDataPath),
+    agentTeamConfigStore: new AgentTeamConfigStore(userDataPath),
+    libraryAgentConfigStore: new LibraryAgentConfigStore(userDataPath),
+    longAgentConfigStore: new LongAgentConfigStore(userDataPath),
+    learningImitationConfigStore: new LearningImitationConfigStore(
+      userDataPath
+    ),
+    bookAnalysisServices: createBookAnalysisServices(userDataPath),
+    workspaceDirectoryStore,
+    appearanceService: new AppearanceService(userDataPath),
+    generalSettingsStore: new GeneralSettingsStore(userDataPath),
+    chatAssistantProjectConfigStore: new ChatAssistantProjectConfigStore(
+      userDataPath
+    ),
+    updateService: new UpdateService(options.installUpdate),
+    appAlertStore: new AppAlertStore(userDataPath),
+    cloudBackupService: createCloudBackupFeature(
+      userDataPath,
+      workspaceDirectory,
+      command
+    ),
+    deviceSyncService: createDesktopDeviceSync(userDataPath, {
+      workspaceDirectory,
+      command,
+      busy: options.busy
+    }),
+    marketplaceClient: new MarketplaceClient(userDataPath, {
+      loadCatalogSnapshot: async () => {
+        const id = createId("cmd_marketplace_snapshot");
+        const result = await command(
+          CommandEnvelopeSchema.parse(
+            createEnvelope("catalog.snapshot", {}, { id, correlationId: id })
+          )
+        );
+        if (result.status === "rejected") throw new Error(result.error.message);
+        return CatalogSnapshotSchema.parse(result.payload);
+      },
+      installPackage: async (input) => {
+        const id = createId("cmd_marketplace_install");
+        const result = await command(
+          CommandEnvelopeSchema.parse(
+            createEnvelope("catalog.installMarketplaceSkillContent", input, {
+              id,
+              correlationId: id
+            })
+          )
+        );
+        if (result.status === "rejected") throw new Error(result.error.message);
+        return CatalogInstallMarketplaceSkillContentResultSchema.parse(
+          result.payload
+        );
+      }
+    })
+  };
+}
+
+export function refreshDesktopServices(
+  services: ReturnType<typeof createDesktopServices>,
+  log: StartupLog
+): void {
+  void services.softwareTokenUsageReporter
+    .reportAtStartup()
+    .catch((error: unknown) => {
+      log.write("usage-report.failed", { error });
+    });
+  void services.modelConfigStore.initialize().catch((error: unknown) => {
+    log.write("model-config.failed", { error });
+  });
+  void services.modelConfigStore
+    .list()
+    .then((settings) =>
+      services.modelUsageStore.syncConfiguredModels(settings.models)
+    )
+    .catch((error: unknown) => {
+      log.write("model-usage.failed", { error });
+    });
+}
