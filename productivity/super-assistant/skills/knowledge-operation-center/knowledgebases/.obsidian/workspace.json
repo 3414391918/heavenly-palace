@@ -4,21 +4,19 @@
     "type": "split",
     "children": [
       {
-        "id": "f9bf96f655cb5469",
+        "id": "55a0ce10c01a52b2",
         "type": "tabs",
         "children": [
           {
-            "id": "4d025600dc063a11",
+            "id": "cc1cf44efb20bdae",
             "type": "leaf",
             "state": {
-              "type": "markdown",
+              "type": "image",
               "state": {
-                "file": "1-动态项目/虚拟世界/架构设计与项目初始化.md",
-                "mode": "source",
-                "source": false
+                "file": "1-动态项目/虚拟世界/assets/DeepWrite 智能体与资料库关系图.svg"
               },
-              "icon": "lucide-file",
-              "title": "架构设计与项目初始化"
+              "icon": "lucide-image",
+              "title": "DeepWrite 智能体与资料库关系图"
             }
           }
         ]
@@ -188,13 +186,14 @@
       "bases:新建数据库": false
     }
   },
-  "active": "4d025600dc063a11",
+  "active": "cc1cf44efb20bdae",
   "lastOpenFiles": [
     "1-动态项目/虚拟世界/架构设计与项目初始化.md",
+    "1-动态项目/虚拟世界/assets/DeepWrite 智能体与资料库关系图.svg",
+    "1-动态项目/虚拟世界/assets/长篇创作流程时序图.svg",
+    "1-动态项目/虚拟世界/assets",
+    "未命名.base",
     "1-动态项目/虚拟世界/长篇创作流程时序图.md",
-    "1-动态项目/虚拟世界/架构设计与项目初始化.assets/DeepWrite 智能体与资料库关系图.svg",
-    "1-动态项目/虚拟世界/架构设计与项目初始化.assets/长篇创作流程时序图.svg",
-    "1-动态项目/虚拟世界/架构设计与项目初始化.assets",
     "1-动态项目/虚拟世界/DeepWrite 智能体与资料库关系图.md",
     "1-动态项目/小叮当/小叮当自定义模型工具指令解析失败与任务循环误结束.md",
     "1-动态项目/虚拟世界/架构设计.md",
