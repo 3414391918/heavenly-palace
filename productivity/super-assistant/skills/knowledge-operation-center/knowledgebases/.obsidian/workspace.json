@@ -1,0 +1,206 @@
+{
+  "main": {
+    "id": "8dfd968df842dfce",
+    "type": "split",
+    "children": [
+      {
+        "id": "f9bf96f655cb5469",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "4d025600dc063a11",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "1-动态项目/虚拟世界/架构设计与项目初始化.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "架构设计与项目初始化"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "a10104cd58580311",
+    "type": "split",
+    "children": [
+      {
+        "id": "82efe624ee022e4b",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "685db2e97e66bd98",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-folder-closed",
+              "title": "文件列表"
+            }
+          },
+          {
+            "id": "302d86bfafbc7207",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "搜索"
+            }
+          },
+          {
+            "id": "74beba4ba4dca65a",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-bookmark",
+              "title": "书签"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "2d449d2f62c93d9d",
+    "type": "split",
+    "children": [
+      {
+        "id": "d9bb5f75e36ed44d",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "de336783bcabd56d",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "1-动态项目/JingleAI/小叮当自定义模型工具指令解析失败与任务循环误结束.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "反向链接"
+            }
+          },
+          {
+            "id": "e421fa347b99ad08",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "1-动态项目/JingleAI/小叮当自定义模型工具指令解析失败与任务循环误结束.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "出链"
+            }
+          },
+          {
+            "id": "a8e51e0e9e9504c3",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "标签"
+            }
+          },
+          {
+            "id": "6203a5548432508d",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "添加笔记属性"
+            }
+          },
+          {
+            "id": "c760a25fb36e0e46",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "1-动态项目/JingleAI/小叮当自定义模型工具指令解析失败与任务循环误结束.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "大纲"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:打开快速切换": false,
+      "graph:查看关系图谱": false,
+      "canvas:新建白板": false,
+      "daily-notes:打开/创建今天的日记": false,
+      "templates:插入模板": false,
+      "command-palette:打开命令面板": false,
+      "bases:新建数据库": false
+    }
+  },
+  "active": "4d025600dc063a11",
+  "lastOpenFiles": [
+    "1-动态项目/虚拟世界/架构设计与项目初始化.md",
+    "1-动态项目/虚拟世界/长篇创作流程时序图.md",
+    "1-动态项目/虚拟世界/架构设计与项目初始化.assets/DeepWrite 智能体与资料库关系图.svg",
+    "1-动态项目/虚拟世界/架构设计与项目初始化.assets/长篇创作流程时序图.svg",
+    "1-动态项目/虚拟世界/架构设计与项目初始化.assets",
+    "1-动态项目/虚拟世界/DeepWrite 智能体与资料库关系图.md",
+    "1-动态项目/小叮当/小叮当自定义模型工具指令解析失败与任务循环误结束.md",
+    "1-动态项目/虚拟世界/架构设计.md",
+    "1-动态项目/虚拟世界",
+    "1-动态项目/DeepWrite",
+    "0-临时文件/待审查",
+    "0-临时文件"
+  ]
+}
