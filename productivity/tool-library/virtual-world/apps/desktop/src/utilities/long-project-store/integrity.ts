@@ -20,29 +20,6 @@ import {
   type IndexedFileSlot
 } from "./types";
 
-export function assertMutableChapterDocument(
-  index: LongWorkspaceIndexSnapshot,
-  fileId: string
-): void {
-  const committedContinuity = index.chapters.some(
-    (chapter) =>
-      chapter.commitId !== null &&
-      [
-        chapter.characterState,
-        chapter.handoff,
-        chapter.foreshadowingChanges,
-        chapter.worldReveals,
-        ...chapter.characterContinuity.flatMap((character) => [
-          character.currentState,
-          character.history
-        ])
-      ].some((file) => file?.id === fileId)
-  );
-  if (committedContinuity) {
-    throw new Error("已提交的连续性文件为只读，请先删除对应提交记录再修改。");
-  }
-}
-
 export function assertDirectlyMutableDocument(
   index: LongWorkspaceIndexSnapshot,
   fileId: string
@@ -59,7 +36,6 @@ export function assertDirectlyMutableDocument(
   ) {
     throw new Error("只读迁移证据不能修改。");
   }
-  assertMutableChapterDocument(index, fileId);
 }
 
 export function assertExactDecisionIds(

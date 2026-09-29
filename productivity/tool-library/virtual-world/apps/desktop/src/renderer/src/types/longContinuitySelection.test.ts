@@ -44,7 +44,7 @@ describe("continuity selection permissions", () => {
     });
   });
 
-  it("keeps committed body editable while locking generated continuity files", () => {
+  it("keeps committed body and continuity records author-editable", () => {
     const { summary, workspaceIndex } = fixture("commit_one");
     const chapter = createLongChapterSelection(
       summary,
@@ -58,9 +58,9 @@ describe("continuity selection permissions", () => {
     expect(
       chapter?.files
         .filter(({ role }) => role !== "body")
-        .every((entry) => entry.readOnly)
+        .every((entry) => !entry.readOnly)
     ).toBe(true);
-    expect(chapter?.description).toContain("记录仅供参考");
+    expect(chapter?.description).toContain("可直接编辑保存");
     const chapterCard = createLongChapterCardVolumeSelection(
       summary,
       workspaceIndex,
@@ -175,8 +175,7 @@ describe("continuity selection permissions", () => {
       ]);
       expect(
         selection?.files.every(
-          ({ role, readOnly }) =>
-            readOnly === (role === "body" || commitId !== null)
+          ({ role, readOnly }) => Boolean(readOnly) === (role === "body")
         )
       ).toBe(true);
       expect(
@@ -216,9 +215,9 @@ describe("continuity selection permissions", () => {
     )!;
     expect(pending.continuityView).toBe("inbox");
     expect(pending.preferredFileId).toBe(handoff.file.id);
-    expect(pending.files.find(({ role }) => role === "handoff")?.readOnly).toBe(
-      false
-    );
+    expect(
+      Boolean(pending.files.find(({ role }) => role === "handoff")?.readOnly)
+    ).toBe(false);
     workspaceIndex.chapters[0]!.commitId = "commit_one";
     workspaceIndex.ledger.commits = records;
     const resubmitted = reconcileLongWorkspaceSelection(
@@ -227,6 +226,10 @@ describe("continuity selection permissions", () => {
       pending
     )!;
     expect(resubmitted.continuityView).toBe("history");
-    expect(resubmitted.files.every(({ readOnly }) => readOnly)).toBe(true);
+    expect(
+      resubmitted.files.every(
+        ({ role, readOnly }) => Boolean(readOnly) === (role === "body")
+      )
+    ).toBe(true);
   });
 });

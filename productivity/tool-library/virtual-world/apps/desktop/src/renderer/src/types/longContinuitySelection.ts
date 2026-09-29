@@ -11,7 +11,7 @@ import { indexedVolume, indexedChapterCard } from "./longIndexedChapter";
 
 /**
  * Keeps chapter authoring and continuity review as two distinct entry points.
- * Evidence stays read-only; continuity outputs are editable until committed;
+ * Evidence stays read-only; continuity outputs remain editable after commit;
  * the internal commit JSON is never part of the visible selection.
  */
 export function createLongContinuitySelection(
@@ -56,14 +56,12 @@ export function createLongContinuitySelection(
         {
           role: "current-state",
           label: `${name} · 当前状态`,
-          file: character.currentState,
-          readOnly: committed
+          file: character.currentState
         },
         {
           role: "history",
           label: `${name} · 历史轨迹`,
-          file: character.history,
-          readOnly: committed
+          file: character.history
         }
       ];
     });
@@ -92,8 +90,7 @@ export function createLongContinuitySelection(
             {
               role: "world-reveals" as const,
               label: "世界观揭露",
-              file: entry.worldReveals,
-              readOnly: committed
+              file: entry.worldReveals
             }
           ]
         : []),
@@ -102,8 +99,7 @@ export function createLongContinuitySelection(
             {
               role: "foreshadowing-changes" as const,
               label: "伏笔变化",
-              file: entry.foreshadowingChanges,
-              readOnly: committed
+              file: entry.foreshadowingChanges
             }
           ]
         : []),
@@ -113,14 +109,12 @@ export function createLongContinuitySelection(
             {
               role: "character-state" as const,
               label: "章末状态",
-              file: entry.characterState,
-              readOnly: committed
+              file: entry.characterState
             },
             {
               role: "handoff" as const,
               label: "接续包",
-              file: entry.handoff,
-              readOnly: committed
+              file: entry.handoff
             }
           ])
     ],
@@ -128,7 +122,7 @@ export function createLongContinuitySelection(
     description: importCheckpoint
       ? "续写导入检查点仅表示历史正文已封存，不代表已经生成连续性事实、章末状态或接续包。"
       : committed
-        ? "按章保留正文证据、人物状态与历史、世界观揭露、既有伏笔触点变化、章末状态和接续包。"
+        ? "按章保留正文证据、人物状态与历史、世界观揭露、既有伏笔触点变化、章末状态和接续包；正文证据只读，改正文回原入口，其余记录可编辑。"
         : "待处理章节；伏笔只核验总览中已关联本章的既有触点，没有候选时不生成伏笔记录。"
   };
 }

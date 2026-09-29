@@ -3,7 +3,7 @@ import resourceTreeSource from "../utils/longWorkspaceContinuityTree.ts?raw";
 import selectionSource from "../types/longWorkspace.ts?raw";
 import ledgerNavigationSource from "./LongContinuityLedgerNavigation.vue?raw";
 import source from "./LongWorkspaceEditor.vue?raw";
-import structureSource from "../composables/useLongEditorStructureSelection.ts?raw";
+import activeFileSource from "../composables/useLongEditorActiveFile.ts?raw";
 
 describe("LongWorkspaceEditor continuity text-file integration", () => {
   it("uses the ordinary text surface instead of a continuity dashboard", () => {
@@ -20,7 +20,7 @@ describe("LongWorkspaceEditor continuity text-file integration", () => {
   });
 
   it("selects ledger entries by file id even when records share a role", () => {
-    expect(structureSource).toContain(
+    expect(activeFileSource).toContain(
       "const activeFileId = ref<string | null>(null)"
     );
     expect(source).toContain("<LongContinuityLedgerNavigation");

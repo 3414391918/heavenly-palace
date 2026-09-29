@@ -255,7 +255,7 @@ describe("long workspace chapter navigation", () => {
     expect(selection?.files[0]?.file.id).toBe("file_chapter_body");
   });
 
-  it("keeps only the body editable before continuity generates projections", () => {
+  it("keeps the body and chapter-end continuity records editable", () => {
     const { summary, workspaceIndex } = fixture(null);
     const selection = createLongChapterSelection(
       summary,
@@ -271,11 +271,12 @@ describe("long workspace chapter navigation", () => {
     expect(
       selection?.files.find(({ role }) => role === "body")?.readOnly
     ).toBeUndefined();
-    expect(
-      selection?.files
-        .filter(({ role }) => role !== "body")
-        .every((entry) => entry.readOnly)
-    ).toBe(true);
+    expect(selection?.files.every((entry) => !entry.readOnly)).toBe(true);
+    expect(selection?.files.map(({ role }) => role)).toEqual([
+      "body",
+      "character-state",
+      "handoff"
+    ]);
     expect(selection?.description).toContain("正文已完成");
   });
 

@@ -1,4 +1,5 @@
 import creationSubmitSource from "../composables/submitCreativeBook.ts?raw";
+import chapterSelectionSource from "../types/longChapterSelection.ts?raw";
 import creationSource from "../composables/useCreativeBookCreation.ts?raw";
 import {
   appSource,
@@ -69,9 +70,9 @@ describe("long-form renderer vertical slice: editor-and-layout", () => {
     expect(editorSessionSource).not.toContain("baseWorkspaceRevision");
     expect(editorSessionSource).not.toContain("baseProjectRevision");
     expect(editorSource).toContain("currentReadOnly");
-    expect(longWorkspaceTypeSource).toContain('label: "正文"');
-    expect(longWorkspaceTypeSource).toContain('label: "章末状态"');
-    expect(longWorkspaceTypeSource).toContain('label: "下一章接续包"');
+    expect(chapterSelectionSource).toContain('label: "正文"');
+    expect(chapterSelectionSource).toContain('label: "章末状态"');
+    expect(chapterSelectionSource).toContain('label: "下一章接续包"');
     expect(editorSessionSource).toContain("async function saveAllChanges()");
     expect(editorSessionSource).toContain("离开前已自动保存");
     expect(appSource).toContain("saveActiveLongEditorBeforeLeaving");

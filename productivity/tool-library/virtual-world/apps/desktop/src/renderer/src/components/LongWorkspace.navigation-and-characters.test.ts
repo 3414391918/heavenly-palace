@@ -2,6 +2,7 @@ import creationSource from "../composables/useCreativeBookCreation.ts?raw";
 import bindingSource from "./BookLibraryBindings.vue?raw";
 import treeNodeFactorySource from "../utils/longWorkspaceTreeNode.ts?raw";
 import continuityTreeSource from "../utils/longWorkspaceContinuityTree.ts?raw";
+import chapterSelectionSource from "../types/longChapterSelection.ts?raw";
 import {
   appSource,
   chapterCardDialogSource,
@@ -122,9 +123,9 @@ describe("long-form renderer vertical slice: navigation-and-characters", () => {
       "isLongMigrationEvidenceCategoryId"
     );
     expect(longWorkspaceTypeSource).toContain("{ readOnly: true }");
-    expect(longWorkspaceTypeSource).toContain('role: "body"');
-    expect(longWorkspaceTypeSource).toContain('role: "character-state"');
-    expect(longWorkspaceTypeSource).toContain('role: "handoff"');
+    expect(chapterSelectionSource).toContain('role: "body"');
+    expect(chapterSelectionSource).toContain('role: "character-state"');
+    expect(chapterSelectionSource).toContain('role: "handoff"');
   });
 
   it("groups characters by each book's dynamic type directory with tab-bar creation", () => {

@@ -69,15 +69,25 @@ describe("LongProjectStore: continuity file lifecycle", () => {
       })
     ).resolves.toMatchObject({ content: "" });
 
-    await expect(
-      projectStore.writeDocument(created.projectDirectory, {
+    const refinedState = await projectStore.writeDocument(
+      created.projectDirectory,
+      {
         fileId: writtenChapter.characterState.id,
         content: "提交后仍可直接修订章末状态。"
+      }
+    );
+    expect(refinedState.fileId).toBe(writtenChapter.characterState.id);
+    expect(refinedState.book.workspaceIndex.chapters[0]!.commitId).toBe(
+      committed.record.id
+    );
+    await expect(
+      projectStore.readDocument(created.projectDirectory, {
+        fileId: writtenChapter.characterState.id
       })
-    ).rejects.toThrow("已提交的连续性文件为只读");
+    ).resolves.toMatchObject({ content: "提交后仍可直接修订章末状态。" });
   });
 
-  it("protects committed continuity files until the record is deleted", async () => {
+  it("keeps committed continuity files author-editable while the ledger stays consistent", async () => {
     const { projectStore, created } = await createFixture(
       "text-file-continuity"
     );
@@ -460,42 +470,51 @@ describe("LongProjectStore: continuity file lifecycle", () => {
         entry.history
       ])
     ]) {
-      await expect(
-        projectStore.writeDocument(created.projectDirectory, {
+      const edited = await projectStore.writeDocument(
+        created.projectDirectory,
+        {
           fileId: reference.id,
-          content: "不应写入已提交记录"
+          content: `提交后直接修订：${reference.id}`
+        }
+      );
+      expect(edited.book.workspaceIndex.chapters[0]!.commitId).toBe(
+        committed.record.id
+      );
+      await expect(
+        projectStore.readDocument(created.projectDirectory, {
+          fileId: reference.id
         })
-      ).rejects.toThrow("已提交的连续性文件为只读");
+      ).resolves.toMatchObject({ content: `提交后直接修订：${reference.id}` });
     }
 
     for (const mode of ["replace", "append"] as const) {
-      await expect(
-        projectStore.applyWorkspaceOperations(created.projectDirectory, {
-          batch: {
-            updatedAt: FIXED_NOW,
-            operations: [],
-            documentWrites: [
-              {
-                proposalId: `proposal_blocked_${mode}`,
-                fileId: committedChapter.handoff.id,
-                mode,
-                updatedAt: FIXED_NOW,
-                content: "禁止改写已提交接续包",
-                reason: "验证连续性提交保护"
-              }
-            ]
-          }
-        })
-      ).rejects.toThrow("已提交的连续性文件为只读");
+      await projectStore.applyWorkspaceOperations(created.projectDirectory, {
+        batch: {
+          updatedAt: FIXED_NOW,
+          operations: [],
+          documentWrites: [
+            {
+              proposalId: `proposal_edit_${mode}`,
+              fileId: committedChapter.handoff.id,
+              mode,
+              updatedAt: FIXED_NOW,
+              content: `提交后由智能体修订接续包(${mode})\n`,
+              reason: "验证已提交接续包可编辑"
+            }
+          ]
+        }
+      });
     }
-    await expect(
-      projectStore.writeChapter(created.projectDirectory, {
+    const chapterRefine = await projectStore.writeChapter(
+      created.projectDirectory,
+      {
         chapterCardId,
-        body: { content: "不应覆盖正文" },
-        characterState: { content: "不应覆盖章末状态" },
-        handoff: { content: "不应覆盖接续包" }
-      })
-    ).rejects.toThrow("已提交的连续性文件为只读");
+        body: { content: "提交后重写正文" },
+        characterState: { content: "提交后重写章末状态" },
+        handoff: { content: "提交后重写接续包" }
+      }
+    );
+    expect(chapterRefine.chapterCardId).toBe(chapterCardId);
 
     const afterEdits = await projectStore.openBook(created.projectDirectory);
     expect(afterEdits.book.workspaceIndex.ledger.commits).toHaveLength(1);
@@ -506,7 +525,7 @@ describe("LongProjectStore: continuity file lifecycle", () => {
       projectStore.readDocument(created.projectDirectory, {
         fileId: committedChapter.body.id
       })
-    ).resolves.toMatchObject({ content: agentRefinedBody });
+    ).resolves.toMatchObject({ content: "提交后重写正文" });
     await expect(
       projectStore.readDocument(created.projectDirectory, {
         fileId: committedChapter.card.id
@@ -531,7 +550,7 @@ describe("LongProjectStore: continuity file lifecycle", () => {
         fileId: writtenCharacterContinuity.history.id
       })
     ).resolves.toMatchObject({
-      content: "第一章：收到旧信并开始调查。"
+      content: `提交后直接修订：${writtenCharacterContinuity.history.id}`
     });
     await projectStore.deleteLedgerCommit(created.projectDirectory, {
       commitId: committed.record.id
@@ -552,11 +571,20 @@ describe("LongProjectStore: continuity file lifecycle", () => {
         fileId: writtenCharacterContinuity.history.id
       })
     ).resolves.toMatchObject({ content: "删除提交后人工修订连续性内容。" });
-    await expect(
-      projectStore.writeDocument(created.projectDirectory, {
+    const afterResubmitEdit = await projectStore.writeDocument(
+      created.projectDirectory,
+      {
         fileId: writtenChapter.handoff.id,
-        content: "重新提交后禁止修改"
+        content: "重新提交后仍可修改"
+      }
+    );
+    expect(afterResubmitEdit.book.workspaceIndex.chapters[0]!.commitId).toBe(
+      resubmitted.record.id
+    );
+    await expect(
+      projectStore.readDocument(created.projectDirectory, {
+        fileId: writtenChapter.handoff.id
       })
-    ).rejects.toThrow("已提交的连续性文件为只读");
+    ).resolves.toMatchObject({ content: "重新提交后仍可修改" });
   }, 10_000);
 });

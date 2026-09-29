@@ -29,6 +29,7 @@ import { uiMessage } from "../ui-feedback";
 import type { LongApprovalEditorFocus } from "../utils/approvalNavigation";
 import { orderLongChapterNavigationItems } from "../utils/orderLongChapterNavigationItems";
 import type { LongDocumentState } from "./useLongEditorDocumentSession";
+import { useLongEditorActiveFile } from "./useLongEditorActiveFile";
 import { useLongStoryPlotDeleteConfirmation } from "./useLongStoryPlotDeleteConfirmation";
 
 export interface LongStructureTitleTarget {
@@ -211,8 +212,7 @@ export function useLongEditorStructureSelection(options: {
   ): Promise<void> {
     await options.host.loadWorkspaceDocument(selectedFile, force);
   }
-  const activeRole = ref<LongWorkspaceFileRole>("content");
-  const activeFileId = ref<string | null>(null);
+  const { activeRole, activeFileId } = useLongEditorActiveFile(props);
   const activeWorldbuildingItemId = ref<string | null>(null);
   const pendingWorldbuildingItemId = ref<string | null>(null);
   const pendingWorldbuildingOverview = ref(false);
@@ -965,27 +965,6 @@ export function useLongEditorStructureSelection(options: {
       }
     });
   }
-
-  watch(
-    () =>
-      [
-        props.bookId,
-        props.selection?.key,
-        props.selection?.preferredRole,
-        props.selection?.preferredFileId
-      ] as const,
-    () => {
-      const preferredRole = props.selection?.preferredRole ?? "content";
-      activeRole.value = preferredRole;
-      activeFileId.value =
-        props.selection?.preferredFileId ??
-        props.selection?.files.find(({ role }) => role === preferredRole)?.file
-          .id ??
-        props.selection?.files[0]?.file.id ??
-        null;
-    },
-    { immediate: true, flush: "sync" }
-  );
 
   watch(
     () =>
