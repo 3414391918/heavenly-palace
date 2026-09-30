@@ -4,19 +4,21 @@
     "type": "split",
     "children": [
       {
-        "id": "55a0ce10c01a52b2",
+        "id": "dff78c82076097a2",
         "type": "tabs",
         "children": [
           {
-            "id": "cc1cf44efb20bdae",
+            "id": "bfd7918462d63823",
             "type": "leaf",
             "state": {
-              "type": "image",
+              "type": "markdown",
               "state": {
-                "file": "1-动态项目/虚拟世界/assets/DeepWrite 智能体与资料库关系图.svg"
+                "file": "1-动态项目/小叮当/任务中断与聊天400错误.md",
+                "mode": "source",
+                "source": false
               },
-              "icon": "lucide-image",
-              "title": "DeepWrite 智能体与资料库关系图"
+              "icon": "lucide-file",
+              "title": "任务中断与聊天400错误"
             }
           }
         ]
@@ -186,11 +188,28 @@
       "bases:新建数据库": false
     }
   },
-  "active": "cc1cf44efb20bdae",
+  "active": "bfd7918462d63823",
   "lastOpenFiles": [
+    "1-动态项目/小叮当/assets/问题2-解决方案.svg",
+    "1-动态项目/小叮当/任务中断与聊天400错误.md",
+    "1-动态项目/小叮当/assets/小叮当普通任务循环示意图.svg",
+    "1-动态项目/小叮当/assets/问题1-解决方案.svg",
+    "1-动态项目/小叮当/assets/问题1.3-根因1.png",
+    "1-动态项目/小叮当/assets/问题1.3-根因2.png",
+    "Pasted image 20260930154749.png",
+    "Pasted image 20260930154932.png",
+    "1-动态项目/小叮当/assets/问题1.3-根因3.png",
+    "1-动态项目/小叮当/assets/问题2-问题截图.png",
+    "Pasted image 20260930154342.png",
+    "1-动态项目/小叮当/assets/未命名.md",
+    "1-动态项目/小叮当/assets/任务中断指定错误重试时序图源文件.md",
+    "1-动态项目/小叮当/assets/聊天400取消工具结果时序图源文件.md",
+    "1-动态项目/虚拟世界/连续性记录可编辑改造与界面验收.md",
     "1-动态项目/虚拟世界/架构设计与项目初始化.md",
-    "1-动态项目/虚拟世界/assets/DeepWrite 智能体与资料库关系图.svg",
-    "1-动态项目/虚拟世界/assets/长篇创作流程时序图.svg",
+    "操作日志.md",
+    "1-动态项目/小叮当/assets",
+    "1-动态项目/小叮当/asset",
+    "1-动态项目/小叮当",
     "1-动态项目/虚拟世界/assets",
     "未命名.base",
     "1-动态项目/虚拟世界/长篇创作流程时序图.md",
