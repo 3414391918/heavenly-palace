@@ -127,9 +127,6 @@ const emit = defineEmits<{
     :library-agent-settings="module.libraryAgentSettings"
     :library-agent-loading="module.libraryAgentLoading"
     :library-agent-saving="module.libraryAgentSaving"
-    :learning-imitation-settings="module.learningImitationSettings"
-    :learning-imitation-loading="module.learningImitationLoading"
-    :learning-imitation-saving="module.learningImitationSaving"
     :model-usage-dashboard="module.modelUsageDashboard"
     :model-usage-loading="module.modelUsageLoading"
     :model-settings="module.modelSettings"
@@ -166,8 +163,6 @@ const emit = defineEmits<{
     @save-long-agents="emit('saveLongAgents', $event)"
     @save-library-agents="emit('saveLibraryAgents', $event)"
     @reset-library-agent="emit('resetLibraryAgent', $event)"
-    @save-learning-imitation="emit('saveLearningImitation', $event)"
-    @reset-learning-imitation="emit('resetLearningImitation', $event)"
     @load-model-usage="emit('loadModelUsage', $event)"
     @load-models="emit('loadModels')"
     @save-models="emit('saveModels', $event)"
@@ -282,7 +277,13 @@ const emit = defineEmits<{
       :models="module.models"
       :catalog-snapshot="module.catalogSnapshot"
       :approval-mode="module.approvalMode"
+      :learning-imitation-settings="module.learningImitationSettings"
+      :learning-imitation-loading="module.learningImitationLoading"
+      :learning-imitation-saving="module.learningImitationSaving"
+      :runtime-available="module.runtimeAvailable"
       @refresh-catalog="emit('refreshCatalog')"
+      @save-learning-imitation="emit('saveLearningImitation', $event)"
+      @reset-learning-imitation="emit('resetLearningImitation', $event)"
     />
   </WorkspaceFeatureFrame>
 

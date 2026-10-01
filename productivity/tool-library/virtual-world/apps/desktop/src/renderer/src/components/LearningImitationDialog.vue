@@ -20,6 +20,8 @@ import {
   type CatalogLibrary,
   type CatalogSnapshot,
   type LearningImitationDocument,
+  type LearningImitationSettings,
+  type LearningImitationSettingsInput,
   type LearningImitationStageId,
   type LearningMaterialStageId,
   type MaterialKind,
@@ -40,6 +42,7 @@ import {
   readLearningDocumentFile
 } from "../utils/learningDocumentFiles";
 import PopupSelect, { type PopupSelectOption } from "./PopupSelect.vue";
+import LearningImitationPromptEditor from "./LearningImitationPromptEditor.vue";
 
 const props = withDefaults(
   defineProps<{
@@ -48,6 +51,10 @@ const props = withDefaults(
     models?: readonly ModelConfig[];
     catalogSnapshot?: CatalogSnapshot | null;
     approvalMode?: AgentWriteApprovalMode;
+    learningImitationSettings: LearningImitationSettings | null;
+    learningImitationLoading: boolean;
+    learningImitationSaving: boolean;
+    runtimeAvailable: boolean;
   }>(),
   {
     models: () => [],
@@ -58,6 +65,8 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   refreshCatalog: [];
+  saveLearningImitation: [settings: LearningImitationSettingsInput];
+  resetLearningImitation: [stageId: LearningImitationStageId];
 }>();
 
 type LearningMaterialKind = Extract<
@@ -1090,6 +1099,16 @@ onBeforeUnmount(stopKeydownListener);
           </button>
         </header>
 
+        <LearningImitationPromptEditor
+          :stage-id="activeStage"
+          :settings="learningImitationSettings"
+          :loading="learningImitationLoading"
+          :saving="learningImitationSaving"
+          :runtime-available="runtimeAvailable"
+          @save="emit('saveLearningImitation', $event)"
+          @reset="emit('resetLearningImitation', $event)"
+        />
+
         <section
           v-if="activeStage === 'material_split'"
           class="learning-target-strip"
@@ -1173,7 +1192,7 @@ onBeforeUnmount(stopKeydownListener);
               />
             </template>
           </label>
-          <p>预览可手动修订；提示词请在“设置 → 学习仿写设置”中维护。</p>
+          <p>预览可手动修订；上方展开即可编辑当前阶段提示词。</p>
         </section>
 
         <div

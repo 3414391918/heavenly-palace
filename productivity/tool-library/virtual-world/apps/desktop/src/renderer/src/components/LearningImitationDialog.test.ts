@@ -113,11 +113,13 @@ describe("LearningImitationDialog", () => {
     );
   });
 
-  it("routes temporary feedback through uiMessage and points prompt editing to settings", () => {
+  it("routes temporary feedback through uiMessage and edits prompts by stage", () => {
     expect(source).toContain('import { uiMessage } from "../ui-feedback"');
     expect(source).toContain("uiMessage.warning");
     expect(source).toContain("uiMessage.error");
-    expect(source).toContain("设置 → 学习仿写设置");
+    expect(source).toContain("<LearningImitationPromptEditor");
+    expect(source).toContain(':stage-id="activeStage"');
+    expect(source).not.toContain("设置 → 学习仿写设置");
     expect(source).not.toContain("learning-status--error");
   });
 });

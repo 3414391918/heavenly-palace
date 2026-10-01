@@ -159,10 +159,15 @@ describe("SettingsPage", () => {
     expect(generalPanelSource).toContain("flex: 0 1 210px;");
   });
 
-  it("provides a dedicated learning-imitation prompt category", () => {
-    expect(source).toContain('label: "短篇学习仿写设置"');
-    expect(source).toContain("<LearningImitationSettingsPanel");
-    expect(source).toContain("emit('saveLearningImitation', $event)");
+  it("keeps learning-imitation prompts in the feature instead of settings", () => {
+    expect(source).not.toContain('label: "短篇学习仿写设置"');
+    expect(source).not.toContain("<LearningImitationSettingsPanel");
+    expect(featureModulesSource).toContain(
+      ':learning-imitation-settings="module.learningImitationSettings"'
+    );
+    expect(featureModulesSource).toContain(
+      "@save-learning-imitation=\"emit('saveLearningImitation', $event)\""
+    );
   });
 
   it("configures the default plot stages for newly created short books", () => {

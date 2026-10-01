@@ -6,9 +6,6 @@ import {
   type BodyTextFormatChange,
   type CreativePlotStage,
   type GeneralPermissionMode,
-  type LearningImitationSettings,
-  type LearningImitationSettingsInput,
-  type LearningImitationStageId,
   type LibraryAgentDomain,
   type LibraryAgentSettings,
   type LibraryAgentSettingsInput,
@@ -31,7 +28,6 @@ import AppearanceSettingsPanel from "./AppearanceSettingsPanel.vue";
 import FreeModelsPanel from "./FreeModelsPanel.vue";
 import BodyTextSettingsPanel from "./BodyTextSettingsPanel.vue";
 import GeneralSettingsPanel from "./GeneralSettingsPanel.vue";
-import LearningImitationSettingsPanel from "./LearningImitationSettingsPanel.vue";
 import LibraryAgentSettingsPanel from "./LibraryAgentSettingsPanel.vue";
 import ModelSettingsFeature from "./ModelSettingsFeature.vue";
 import ModelUsagePanel from "./ModelUsagePanel.vue";
@@ -81,9 +77,6 @@ const props = defineProps<{
   longAgentLoading: boolean;
   longAgentSaving: boolean;
   longAgentError: string | null;
-  learningImitationSettings: LearningImitationSettings | null;
-  learningImitationLoading: boolean;
-  learningImitationSaving: boolean;
   modelUsageDashboard: ModelUsageDashboard | null;
   modelUsageLoading: boolean;
   modelSettings: ModelSettings | null;
@@ -122,8 +115,6 @@ const emit = defineEmits<{
   saveWorkspaceAgents: [settings: WorkspaceAgentSettingsInput];
   retryLongAgents: [];
   saveLongAgents: [settings: LongAgentSettingsInput];
-  saveLearningImitation: [settings: LearningImitationSettingsInput];
-  resetLearningImitation: [stageId: LearningImitationStageId];
   saveLibraryAgents: [settings: LibraryAgentSettingsInput];
   resetLibraryAgent: [domain: LibraryAgentDomain];
   loadModelUsage: [input?: ModelUsageQueryInput];
@@ -152,8 +143,7 @@ const sections: SettingsSection[] = [
     categories: [
       { id: "short-agents", label: "创作空间配置", icon: "brain" },
       { id: "skill-library-agent", label: "技能库配置", icon: "wand" },
-      { id: "material-library-agent", label: "素材库配置", icon: "archive" },
-      { id: "learning-imitation", label: "短篇学习仿写设置", icon: "sparkles" }
+      { id: "material-library-agent", label: "素材库配置", icon: "archive" }
     ]
   },
   {
@@ -281,16 +271,6 @@ async function selectCategory(id: string): Promise<void> {
           @save="emit('saveWorkspaceAgents', $event)"
           @retry-long="emit('retryLongAgents')"
           @save-long="emit('saveLongAgents', $event)"
-        />
-
-        <LearningImitationSettingsPanel
-          v-else-if="activeCategory === 'learning-imitation'"
-          :settings="learningImitationSettings"
-          :loading="learningImitationLoading"
-          :saving="learningImitationSaving"
-          :runtime-available="runtimeAvailable"
-          @save="emit('saveLearningImitation', $event)"
-          @reset="emit('resetLearningImitation', $event)"
         />
 
         <LibraryAgentSettingsPanel

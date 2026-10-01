@@ -142,6 +142,9 @@ export function useWorkspaceFeatureHostCoordinator(
       if (!navigationIsCurrent(generation)) return;
     }
     options.view.workspaceMain.value = mode;
+    if (mode === "imitation") {
+      issueBackground(options.loaders.loadLearningImitationSettings);
+    }
     if (mode === "directory" && options.api()) {
       issueBackground(loadWorkspaceDirectory);
     }
@@ -186,7 +189,6 @@ export function useWorkspaceFeatureHostCoordinator(
     }
     issueBackground(options.loaders.loadWorkspaceAgentSettings);
     issueBackground(options.loaders.loadLibraryAgentSettings);
-    issueBackground(options.loaders.loadLearningImitationSettings);
   }
 
   function openOfficialModelsSettings(): void {

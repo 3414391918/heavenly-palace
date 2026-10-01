@@ -78,14 +78,14 @@ describe("LeftSidebar account controls", () => {
       moreFeatures,
       '{ id: "imitation", label: "短篇学习仿写"'
     );
-    expect(source).toContain('emit("openDialog", "imitation")');
+    expect(source).toContain('emit("openDialog", id)');
     expect(source).toContain("feature.id === props.activePrimaryFeature");
     expect(source).toContain(
       "feature.id === 'imitation' && props.imitationRunning"
     );
   });
 
-  it("adds the skill marketplace to more features while keeping runtime settings", () => {
+  it("keeps feature entries and removes the duplicate runtime settings entry", () => {
     expectSourceToContain(
       source,
       '{ id: "skill-marketplace", label: "技能广场"'
@@ -98,7 +98,7 @@ describe("LeftSidebar account controls", () => {
       '{ id: "zhuque-detection", label: "朱雀检测"'
     );
     expect(source).toContain('emit("openZhuqueDetection")');
-    expectSourceToContain(source, '{ id: "runtime", label: "运行设置"');
+    expect(source).not.toContain('{ id: "runtime", label: "运行设置"');
     expect(source).not.toContain('{ id: "history", label: "版本历史"');
     expect(source).not.toContain('{ id: "search", label: "全局检索"');
     expect(source).not.toContain('{ id: "transfer", label: "导入与导出"');

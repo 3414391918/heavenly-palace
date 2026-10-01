@@ -58,7 +58,11 @@ export function buildWorkspaceFeatureModule(
         controller: options.features.learningImitation.controller.value,
         models: settingsStore.modelSettings?.models ?? [],
         catalogSnapshot: options.catalogSnapshot.value,
-        approvalMode: settingsStore.generalSettings.permissionMode
+        approvalMode: settingsStore.generalSettings.permissionMode,
+        learningImitationSettings: settingsStore.learningImitationSettings,
+        learningImitationLoading: settingsStore.learningImitationLoading,
+        learningImitationSaving: settingsStore.learningImitationSaving,
+        runtimeAvailable: Boolean(options.api())
       };
     case "revision-analysis":
       return {

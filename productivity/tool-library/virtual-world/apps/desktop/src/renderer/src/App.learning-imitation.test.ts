@@ -36,6 +36,9 @@ describe("App learning-imitation integration", () => {
     );
     expect(featureHostSource).toContain('case "imitation":');
     expect(featureHostSource).toContain('kind: "imitation"');
+    expect(featureHostCoordinatorSource).toContain(
+      'if (mode === "imitation") {\n      issueBackground(options.loaders.loadLearningImitationSettings);'
+    );
     expect(featureModulesSource).toContain(
       "v-else-if=\"module.kind === 'imitation'\""
     );

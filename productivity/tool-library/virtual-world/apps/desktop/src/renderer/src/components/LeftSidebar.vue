@@ -81,10 +81,6 @@ function handleSidebarScroll(event: Event): void {
   if (element instanceof HTMLElement) sidebarScrollbar.reveal(element);
 }
 onBeforeUnmount(() => sidebarScrollbar.dispose());
-function openSettings(): void {
-  emit("openSettings");
-}
-
 const newBookItem = {
   id: "create-book",
   label: "新建书籍",
@@ -118,26 +114,15 @@ function activateMoreFeature(
     | "cloud-backup"
     | "device-sync"
     | "zhuque-detection"
-    | "runtime"
 ): void {
-  if (id === "revision-analysis") {
-    emit("openDialog", "revision-analysis");
-    return;
-  }
-  if (id === "style-comparison") {
-    emit("openDialog", "style-comparison");
-    return;
-  }
-  if (id === "imitation") {
-    emit("openDialog", "imitation");
-    return;
-  }
-  if (id === "short-book-analysis") {
-    emit("openDialog", "short-book-analysis");
-    return;
-  }
-  if (id === "long-book-analysis") {
-    emit("openDialog", "long-book-analysis");
+  if (
+    id === "revision-analysis" ||
+    id === "style-comparison" ||
+    id === "imitation" ||
+    id === "short-book-analysis" ||
+    id === "long-book-analysis"
+  ) {
+    emit("openDialog", id);
     return;
   }
   if (id === "skill-marketplace") {
@@ -152,11 +137,7 @@ function activateMoreFeature(
     emit("openCloudBackup");
     return;
   }
-  if (id === "zhuque-detection") {
-    emit("openZhuqueDetection");
-    return;
-  }
-  openSettings();
+  emit("openZhuqueDetection");
 }
 
 function activateNav(id: "create-book" | PrimaryFeatureId): void {

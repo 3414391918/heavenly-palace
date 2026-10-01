@@ -47,9 +47,6 @@ export interface SettingsFeatureModule {
   libraryAgentSettings: LibraryAgentSettings | null;
   libraryAgentLoading: boolean;
   libraryAgentSaving: boolean;
-  learningImitationSettings: LearningImitationSettings | null;
-  learningImitationLoading: boolean;
-  learningImitationSaving: boolean;
   modelUsageDashboard: ModelUsageDashboard | null;
   modelUsageLoading: boolean;
   modelSettings: ModelSettings | null;
@@ -107,6 +104,10 @@ export interface ImitationFeatureModule {
   models: readonly ModelConfig[];
   catalogSnapshot: CatalogSnapshot | null;
   approvalMode: GeneralPermissionMode;
+  learningImitationSettings: LearningImitationSettings | null;
+  learningImitationLoading: boolean;
+  learningImitationSaving: boolean;
+  runtimeAvailable: boolean;
 }
 
 export interface LongBookAnalysisFeatureModule {

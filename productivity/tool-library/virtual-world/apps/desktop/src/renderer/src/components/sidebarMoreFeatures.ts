@@ -9,8 +9,7 @@ export const moreFeatures: Array<{
     | "skill-marketplace"
     | "cloud-backup"
     | "device-sync"
-    | "zhuque-detection"
-    | "runtime";
+    | "zhuque-detection";
   label: string;
   description: string;
   icon: IconName;
@@ -18,7 +17,7 @@ export const moreFeatures: Array<{
   {
     id: "imitation",
     label: "短篇学习仿写",
-    description: "学习范文并生成同类短篇",
+    description: "学习范文并仿写短篇",
     icon: "wand"
   },
   {
@@ -68,11 +67,5 @@ export const moreFeatures: Array<{
     label: "朱雀检测",
     description: "检测文本中的 AI 生成内容",
     icon: "globe"
-  },
-  {
-    id: "runtime",
-    label: "运行设置",
-    description: "智能体与工具边界",
-    icon: "model"
   }
 ];

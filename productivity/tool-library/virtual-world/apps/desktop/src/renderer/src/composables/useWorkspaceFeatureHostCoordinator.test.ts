@@ -397,12 +397,22 @@ describe("useWorkspaceFeatureHostCoordinator", () => {
     expect(harness.loaders.loadLibraryAgentSettings).toHaveBeenCalledOnce();
     expect(
       harness.loaders.loadLearningImitationSettings
-    ).toHaveBeenCalledOnce();
+    ).not.toHaveBeenCalled();
 
     harness.coordinator.closeSettings();
     await harness.coordinator.openSettings("official-models");
     expect(harness.loaders.loadOfficialModels).toHaveBeenCalledOnce();
     expect(harness.loaders.loadModelSettings).toHaveBeenCalledOnce();
+  });
+
+  it("loads learning prompts when the imitation feature opens", async () => {
+    const harness = createHarness();
+
+    await harness.coordinator.openWorkspaceDialog("imitation");
+
+    expect(
+      harness.loaders.loadLearningImitationSettings
+    ).toHaveBeenCalledOnce();
   });
 
   it("keeps the current page usable when a settings chunk cannot load", async () => {
