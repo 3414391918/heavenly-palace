@@ -1,6 +1,7 @@
 import creationSubmitSource from "../composables/submitCreativeBook.ts?raw";
 import chapterSelectionSource from "../types/longChapterSelection.ts?raw";
 import creationSource from "../composables/useCreativeBookCreation.ts?raw";
+import editorFileNavigationSource from "../composables/useLongEditorFileNavigation.ts?raw";
 import {
   appSource,
   continuityNavigationSource,
@@ -100,7 +101,7 @@ describe("long-form renderer vertical slice: editor-and-layout", () => {
     expect(editorSessionSource).toContain(
       "async function ensureDocumentsLoaded"
     );
-    expect(editorStructureSource).toContain(
+    expect(editorFileNavigationSource).toContain(
       "async function selectRole(role: LongWorkspaceFileRole)"
     );
     expect(longWorkspaceSessionSource).toContain(
@@ -215,8 +216,8 @@ describe("long-form renderer vertical slice: editor-and-layout", () => {
     expect(worldbuildingNavigationSource).toContain(
       "'is-loading': pendingOverview"
     );
-    expect(editorStructureSource).toContain(
-      "await selectWorldbuildingItem(item.id)"
+    expect(editorFileNavigationSource).toContain(
+      "await options.selectWorldbuildingItem(item.id)"
     );
     expect(editorDeleteSource).toContain(
       "void options.selectWorldbuildingItem(nextId)"

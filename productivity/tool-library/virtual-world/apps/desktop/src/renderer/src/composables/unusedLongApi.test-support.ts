@@ -1,7 +1,16 @@
 import { vi } from "vitest";
 import type { DeepWriteApi } from "@deepwrite/contracts";
 export function createUnusedLongApi(): DeepWriteApi["long"] {
+  const unused = vi.fn(async () => {
+    throw new Error("Character assets are not used by conversation tests.");
+  });
   return {
+    readCharacterProfile: unused,
+    saveCharacterProfile: unused,
+    importCharacterAssets: unused,
+    renameCharacterAsset: unused,
+    deleteCharacterAsset: unused,
+    copyCharacterAsset: unused,
     resolveConflicts: vi.fn(async () => {
       throw new Error("Long workspace is not used by conversation tests.");
     }),

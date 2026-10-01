@@ -39,7 +39,11 @@ export function validateOperations(
     if (operation.action === "check") {
       return { ...operation, action: "check" as const, path };
     }
-    if (Buffer.byteLength(operation.content, "utf8") > maxFileBytes) {
+    if (
+      (typeof operation.content === "string"
+        ? Buffer.byteLength(operation.content, "utf8")
+        : operation.content.byteLength) > maxFileBytes
+    ) {
       throw new Error(`项目事务文件超过大小限制：${path}`);
     }
     return { ...operation, action: "write" as const, path };

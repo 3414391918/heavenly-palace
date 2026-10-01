@@ -1,4 +1,5 @@
 import { handleBookTemplateCommands } from "./ipc/book-template-commands";
+import { handleCharacterAssetCommands } from "./ipc/character-asset-commands";
 import { handleCatalogProjectCommands } from "./ipc/catalog-project-commands";
 import { resolveChatAssistantRuntimeContext as resolveAssistantContext } from "./chat-assistant-runtime-context";
 import { handleChatAssistantConfigCommands } from "./ipc/chat-assistant-config-commands";
@@ -1023,6 +1024,7 @@ function registerIpc(): void {
         command.type === "long.previewLegacySyncAtPath" ||
         command.type === "long.applyLegacySyncAtPath" ||
         command.type === "long.importPortableAtPath" ||
+        command.type === "long.importCharacterAssetsAtPaths" ||
         command.type === "long.previewContinuationImportAtPath" ||
         command.type === "long.importContinuationAtPath" ||
         command.type === "long.openAtPath" ||
@@ -1050,6 +1052,12 @@ function registerIpc(): void {
           )
         };
       }
+
+      const characterAssetResult = await handleCharacterAssetCommands(
+        { getMainWindow: requireMainWindow, supervisor, dialog },
+        command
+      );
+      if (characterAssetResult) return characterAssetResult;
 
       if (command.type === "manuscript.exportShort") {
         try {

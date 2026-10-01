@@ -1,3 +1,6 @@
+import { materializeCharacterAliasBatch } from "./character-alias-operations";
+import { characterAssetDeleteOperations } from "./character-assets-lifecycle";
+import { guardCharacterProfileWrite } from "./character-profile-guard";
 import { createHash } from "node:crypto";
 import {
   LONG_WORKSPACE_INDEX_PATH,
@@ -46,9 +49,9 @@ export async function previewWorkspaceOperations(
   const requestedBatch = LongWorkspaceOperationBatchSchema.parse(batchInput);
   return await ctx.runExclusive(canonical, async () => {
     const loaded = await loadProject(ctx, canonical);
-    const batch = await materializeWorldbuildingConversionBatch(
+    const batch = await materializeCharacterAliasBatch(
       loaded,
-      requestedBatch
+      await materializeWorldbuildingConversionBatch(loaded, requestedBatch)
     );
     return previewLongWorkspaceOperations(loaded.index, batch);
   });
@@ -63,9 +66,9 @@ export async function applyWorkspaceOperations(
   const requestedBatch = LongWorkspaceOperationBatchSchema.parse(input.batch);
   return await ctx.runExclusive(canonical, async () => {
     const loaded = await loadProject(ctx, canonical);
-    const batch = await materializeWorldbuildingConversionBatch(
+    const batch = await materializeCharacterAliasBatch(
       loaded,
-      requestedBatch
+      await materializeWorldbuildingConversionBatch(loaded, requestedBatch)
     );
     for (const operation of batch.operations) {
       const raw = operation as unknown as Record<string, unknown>;
@@ -112,6 +115,13 @@ export async function applyWorkspaceOperations(
       }
       const proposal = proposalByFileId.get(intent.file.id);
       const content = proposal?.content ?? "";
+      await guardCharacterProfileWrite(
+        loaded,
+        intent.file.id,
+        "",
+        content,
+        nextIndex
+      );
       const nextFile = requireIndexedFileReference(nextIndex, intent.file.id);
       intent.file.updatedAt = nextIndex.updatedAt;
       nextFile.updatedAt = nextIndex.updatedAt;
@@ -135,6 +145,13 @@ export async function applyWorkspaceOperations(
         proposal.mode === "append"
           ? `${current.disk.content}${proposal.content}`
           : proposal.content;
+      await guardCharacterProfileWrite(
+        loaded,
+        proposal.fileId,
+        current.disk.content,
+        content,
+        nextIndex
+      );
       const nextFile = requireIndexedFileReference(nextIndex, proposal.fileId);
       nextFile.updatedAt = nextIndex.updatedAt;
       updateChapterBodyStatus(nextIndex, nextFile.id, content);
@@ -144,6 +161,9 @@ export async function applyWorkspaceOperations(
       });
     }
 
+    fileOperations.push(
+      ...(await characterAssetDeleteOperations(loaded, nextIndex))
+    );
     fileOperations.push(
       ...(await buildLedgerRecordEditOperations({
         loaded,

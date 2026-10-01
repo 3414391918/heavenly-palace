@@ -26,7 +26,7 @@ export interface ProjectTransactionFileOperationBase {
 export type ProjectTransactionFileOperation =
   | (ProjectTransactionFileOperationBase & {
       action?: "write";
-      content: string;
+      content: string | Uint8Array;
     })
   | (ProjectTransactionFileOperationBase & {
       action: "delete";

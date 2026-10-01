@@ -1,3 +1,11 @@
+import { LongCharacterProfileService } from "./long-character-profile-service";
+import type {
+  LongReadCharacterProfileInput,
+  LongSaveCharacterProfileInput,
+  LongImportCharacterAssetsAtPathsInput,
+  LongRenameCharacterAssetInput,
+  LongDeleteCharacterAssetInput
+} from "@deepwrite/contracts";
 import { createHash } from "node:crypto";
 import { dirname } from "node:path";
 import {
@@ -129,6 +137,7 @@ export class LongWorkspaceService {
   readonly store: LongProjectStore;
   readonly catalog: LongProjectCatalog;
 
+  private readonly characterProfiles: LongCharacterProfileService;
   private readonly now: () => string;
   private readonly onDiagnostic:
     ((diagnostic: LongWorkspaceServiceDiagnostic) => void) | undefined;
@@ -157,6 +166,35 @@ export class LongWorkspaceService {
         }
       }
     });
+    this.characterProfiles = new LongCharacterProfileService(
+      this.catalog,
+      this.store,
+      async (projectDirectory, bookId) => {
+        await this.refreshCatalogSummaryBestEffort(
+          projectDirectory,
+          bookId,
+          "write-document"
+        );
+      }
+    );
+  }
+
+  async readCharacterProfile(input: LongReadCharacterProfileInput) {
+    return await this.characterProfiles.readCharacterProfile(input);
+  }
+  async saveCharacterProfile(input: LongSaveCharacterProfileInput) {
+    return await this.characterProfiles.saveCharacterProfile(input);
+  }
+  async importCharacterAssetsAtPaths(
+    input: LongImportCharacterAssetsAtPathsInput
+  ) {
+    return await this.characterProfiles.importCharacterAssetsAtPaths(input);
+  }
+  async renameCharacterAsset(input: LongRenameCharacterAssetInput) {
+    return await this.characterProfiles.renameCharacterAsset(input);
+  }
+  async deleteCharacterAsset(input: LongDeleteCharacterAssetInput) {
+    return await this.characterProfiles.deleteCharacterAsset(input);
   }
 
   async create(

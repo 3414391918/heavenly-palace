@@ -30,6 +30,7 @@ import type { LongApprovalEditorFocus } from "../utils/approvalNavigation";
 import { orderLongChapterNavigationItems } from "../utils/orderLongChapterNavigationItems";
 import type { LongDocumentState } from "./useLongEditorDocumentSession";
 import { useLongEditorActiveFile } from "./useLongEditorActiveFile";
+import { useLongEditorFileNavigation } from "./useLongEditorFileNavigation";
 import { useLongStoryPlotDeleteConfirmation } from "./useLongStoryPlotDeleteConfirmation";
 
 export interface LongStructureTitleTarget {
@@ -221,8 +222,6 @@ export function useLongEditorStructureSelection(options: {
   const storyPlotActionMenuId = ref<string | null>(null);
   let storyPlotSelectionRequest = 0;
   const pendingCharacterId = ref<string | null>(null);
-  const pendingRole = ref<LongWorkspaceFileRole | null>(null);
-  const pendingFileId = ref<string | null>(null);
   const foreshadowingWorkspace = ref<{
     captureFocus(): LongForeshadowingFocus;
     focusTarget(threadId?: string, beatId?: string): Promise<boolean>;
@@ -303,6 +302,32 @@ export function useLongEditorStructureSelection(options: {
       );
     }
   );
+
+  const {
+    pendingRole,
+    pendingFileId,
+    selectRole,
+    selectWorkspaceFile,
+    focusFile,
+    focusTarget
+  } = useLongEditorFileNavigation({
+    props,
+    activeRole,
+    activeFileId,
+    currentSelectionFile,
+    documentStates: options.documentStates,
+    stateKey: options.stateKey,
+    loadWorkspaceDocument,
+    saveAllChanges,
+    resetTextViewMode: options.resetTextViewMode,
+    selectWorldbuildingItem,
+    selectWorldbuildingOverview,
+    selectPlotPointTab,
+    selectStoryPlot,
+    selectBookLineVolume,
+    focusForeshadowing: async (threadId, beatId) =>
+      foreshadowingWorkspace.value?.focusTarget(threadId, beatId)
+  });
 
   function createFirstCollectionItem(): void {
     const action = options.host.currentEmptyCollection.value?.action;
@@ -846,96 +871,6 @@ export function useLongEditorStructureSelection(options: {
     }
   }
 
-  async function selectRole(role: LongWorkspaceFileRole): Promise<void> {
-    if (role === activeRole.value || role === pendingRole.value) return;
-    const selectedFile = props.selection?.files.find(
-      (file) => file.role === role
-    );
-    if (!selectedFile) {
-      activeRole.value = role;
-      activeFileId.value = null;
-      return;
-    }
-    await selectWorkspaceFile(selectedFile.file.id);
-  }
-
-  async function selectWorkspaceFile(fileId: string): Promise<void> {
-    if (fileId === activeFileId.value || fileId === pendingFileId.value) return;
-    const selectedFile = props.selection?.files.find(
-      ({ file }) => file.id === fileId
-    );
-    if (!selectedFile) return;
-    const bookId = props.bookId;
-    const selectionKey = props.selection?.key;
-    pendingRole.value = selectedFile.role;
-    pendingFileId.value = fileId;
-    await loadWorkspaceDocument(selectedFile);
-    if (
-      props.bookId !== bookId ||
-      props.selection?.key !== selectionKey ||
-      pendingFileId.value !== fileId
-    ) {
-      return;
-    }
-    pendingRole.value = null;
-    pendingFileId.value = null;
-    const state =
-      options.documentStates.value[
-        options.stateKey(selectedFile.file.id, bookId)
-      ];
-    if (state?.loaded || Boolean(state?.content)) {
-      activeRole.value = selectedFile.role;
-      activeFileId.value = fileId;
-      options.resetTextViewMode(selectedFile.readOnly);
-    }
-  }
-
-  async function focusFile(fileId: string): Promise<boolean> {
-    const selection = props.selection;
-    if (!selection?.files.some(({ file }) => file.id === fileId)) return false;
-    if (selection.worldbuildingFormat === "list") {
-      const item = selection.worldbuildingItems?.find(
-        ({ file }) => file.id === fileId
-      );
-      if (item) {
-        await selectWorldbuildingItem(item.id);
-      } else {
-        await selectWorldbuildingOverview();
-      }
-    } else {
-      const storyPlot = selection.storyPlots?.find(
-        ({ file }) => file.id === fileId
-      );
-      if (storyPlot) {
-        await selectPlotPointTab("storyline");
-        await selectStoryPlot(storyPlot.id);
-      } else {
-        await selectWorkspaceFile(fileId);
-      }
-    }
-    return currentSelectionFile.value?.file.id === fileId;
-  }
-
-  async function focusTarget(
-    target: LongApprovalEditorFocus
-  ): Promise<boolean> {
-    if (target.bookLineVolumeId) {
-      selectBookLineVolume(target.bookLineVolumeId);
-    }
-    if (target.foreshadowingThreadId || target.foreshadowingBeatId) {
-      await nextTick();
-      if (
-        !(await foreshadowingWorkspace.value?.focusTarget(
-          target.foreshadowingThreadId,
-          target.foreshadowingBeatId
-        ))
-      ) {
-        return false;
-      }
-    }
-    return target.fileId ? focusFile(target.fileId) : true;
-  }
-
   function captureNavigationSelection(): Partial<LongWorkspaceSelection> {
     const selection = props.selection;
     if (!selection) return {};
@@ -1029,8 +964,6 @@ export function useLongEditorStructureSelection(options: {
       worldbuildingSelectionRequest += 1;
       pendingWorldbuildingItemId.value = null;
       pendingWorldbuildingOverview.value = false;
-      pendingRole.value = null;
-      pendingFileId.value = null;
     },
     { flush: "sync" }
   );

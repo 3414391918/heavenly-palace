@@ -1,5 +1,13 @@
 import type { DeepWriteApi } from "@deepwrite/contracts";
 import {
+  readCharacterProfile,
+  saveCharacterProfile,
+  importCharacterAssets,
+  renameCharacterAsset,
+  deleteCharacterAsset,
+  copyCharacterAsset
+} from "./character-assets-api";
+import {
   listLongBooks,
   createLongBook,
   duplicateLongBook,
@@ -30,6 +38,12 @@ import {
 } from "./long-document-api";
 import { resolveLongConflicts } from "./long-recovery-api";
 export const long: DeepWriteApi["long"] = {
+  readCharacterProfile,
+  saveCharacterProfile,
+  importCharacterAssets,
+  renameCharacterAsset,
+  deleteCharacterAsset,
+  copyCharacterAsset,
   resolveConflicts: resolveLongConflicts,
   list: listLongBooks,
   create: createLongBook,

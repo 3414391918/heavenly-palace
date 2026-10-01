@@ -1,3 +1,4 @@
+import { handleLongCharacterProfileCoreCommand } from "./long-character-profile-core-commands";
 import {
   LongApplyOperationsResultSchema,
   LongApplyLegacySyncResultSchema,
@@ -27,6 +28,11 @@ export async function handleLongCoreCommand(
   service: LongWorkspaceService,
   command: CommandEnvelope
 ): Promise<CommandResult | undefined> {
+  const characterResult = await handleLongCharacterProfileCoreCommand(
+    service,
+    command
+  );
+  if (characterResult) return characterResult;
   if (command.type === "long.resolveConflicts") {
     return {
       status: "accepted",

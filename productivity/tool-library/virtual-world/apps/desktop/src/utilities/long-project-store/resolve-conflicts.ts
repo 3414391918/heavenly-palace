@@ -1,3 +1,4 @@
+import { restoreRetainedCharacterAssets } from "./character-assets-recovery";
 import {
   LONG_WORKSPACE_INDEX_PATH,
   LongBookSchema,
@@ -95,7 +96,7 @@ export async function resolveLongProjectConflicts(
           schemaVersion: index.schemaVersion,
           workspaceIndex: index
         });
-        const changes = new Map<string, string>();
+        const changes = new Map<string, string | Uint8Array>();
         // An external index can retain a document that the interrupted
         // transaction intended to delete. Preserve that reference, including
         // restoring its verified backup if the delete already took effect.
@@ -112,8 +113,9 @@ export async function resolveLongProjectConflicts(
             throw new Error(
               `索引引用的文件缺失：${reference.path}。请恢复文件或修正索引后重试。`
             );
-          changes.set(reference.path, before.toString("utf8"));
+          changes.set(reference.path, before);
         }
+        await restoreRetainedCharacterAssets(index, read, recovery, changes);
         if (
           nextManifest.updatedAt !== index.updatedAt ||
           nextManifest.workspaceIndexFile.updatedAt !== index.updatedAt

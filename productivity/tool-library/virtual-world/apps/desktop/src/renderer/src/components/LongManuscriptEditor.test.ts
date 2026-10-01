@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import source from "./LongManuscriptEditor.vue?raw";
 import editorSource from "./LongWorkspaceEditor.vue?raw";
 import documentSessionSource from "../composables/useLongEditorDocumentSession.ts?raw";
-import structureSelectionSource from "../composables/useLongEditorStructureSelection.ts?raw";
+import fileNavigationSource from "../composables/useLongEditorFileNavigation.ts?raw";
 
 const editorImplementationSource = [editorSource, documentSessionSource].join(
   "\n"
@@ -114,7 +114,7 @@ describe("LongManuscriptEditor", () => {
       "resetToDefault(Boolean(currentSelectionFile.value?.readOnly))"
     );
     expect(editorSource).toContain("() => props.defaultViewMode");
-    expect(structureSelectionSource).toContain(
+    expect(fileNavigationSource).toContain(
       "options.resetTextViewMode(selectedFile.readOnly)"
     );
   });

@@ -14,6 +14,7 @@ const FORBIDDEN_RENDERER_COMMAND_TYPES = new Set<string>([
   "long.previewContinuationImportAtPath",
   "long.importContinuationAtPath",
   "long.openAtPath",
+  "long.importCharacterAssetsAtPaths",
   "catalog.createLibraryAtPath",
   "catalog.createLibraryGroupAtPath",
   "catalog.openProjectAtPath",

@@ -79,3 +79,6 @@ export * from "./text-context-menu";
 export { compareVersions } from "./update-version";
 
 export * from "./window-frame";
+
+export * from "./long-character-profile";
+export * from "./long-character-profile-markdown";

@@ -41,6 +41,8 @@ import { longBodyTextKind } from "../utils/bodyTextTarget";
 import DocumentMetaRow from "./DocumentMetaRow.vue";
 import EditorSearchHighlight from "./EditorSearchHighlight.vue";
 import LongCharacterNavigation from "./LongCharacterNavigation.vue";
+import CharacterCoreProfile from "../features/character-assets/CharacterCoreProfile.vue";
+import { useCharacterCoreEditor } from "../features/character-assets/useCharacterCoreEditor";
 import LongContinuityLedgerNavigation from "./LongContinuityLedgerNavigation.vue";
 import LongEditorDeleteDialogs from "./LongEditorDeleteDialogs.vue";
 import LongEditorFindReplaceBar from "./LongEditorFindReplaceBar.vue";
@@ -212,6 +214,18 @@ const currentIsCharacterDocument = computed(
     props.selection?.root === "character_design" &&
     Boolean(props.selection.characterId)
 );
+const {
+  editor: characterProfileEditor,
+  dirty: characterProfileDirty,
+  active: currentIsCharacterCoreProfile,
+  saved: onCharacterProfileSaved
+} = useCharacterCoreEditor({
+  bookId: () => props.bookId,
+  selection: () => props.selection,
+  file: () => currentSelectionFile.value,
+  reload: () => loadSelectedDocument(true),
+  saved: (result) => emit("saved", result)
+});
 const currentEmptyCollection = computed<{
   icon: "file" | "user";
   title: string;
@@ -556,6 +570,7 @@ const currentReadOnly = computed(() => {
   );
 });
 const currentDirty = computed(() => {
+  if (currentIsCharacterCoreProfile.value) return characterProfileDirty.value;
   if (currentIsVolumeForeshadowing.value) {
     const volumeId = currentBookLineVolume.value?.id;
     const draft = volumeId ? volumeOutlineDrafts.value[volumeId] : undefined;
@@ -795,6 +810,7 @@ const documentEyebrow = computed(() => {
 });
 const canUseTextTools = computed(
   () =>
+    !currentIsCharacterCoreProfile.value &&
     !currentIsForeshadowingView.value &&
     (Boolean(currentState.value?.loaded) || currentIsStructuredText.value) &&
     Boolean(
@@ -806,6 +822,7 @@ const canUseTextTools = computed(
 );
 const hasUnsavedChanges = computed(
   () =>
+    characterProfileDirty.value ||
     Object.values(documentStates.value).some(
       (state) => state.loaded && state.content !== state.savedContent
     ) ||
@@ -1044,7 +1061,7 @@ const {
   loadSelectedDocument,
   ensureDocumentsLoaded,
   saveCurrentDocument,
-  saveAllChanges
+  saveAllChanges: saveTextChanges
 } = useLongEditorDocumentSession({
   props,
   emit,
@@ -1069,6 +1086,14 @@ const {
   clearRecoveryRecordForKey,
   persistRecoveryForKey
 });
+async function saveAllChanges(): Promise<boolean> {
+  if (
+    characterProfileEditor.value &&
+    !(await characterProfileEditor.value.prepareLeave())
+  )
+    return false;
+  return await saveTextChanges();
+}
 const activeEditorScrollMemoryKey = computed(() =>
   longEditorScrollMemoryKey({
     bookId: props.bookId,
@@ -1825,7 +1850,11 @@ onBeforeUnmount(() => {
           class="long-toolbar-separator"
         />
         <div
-          v-if="!currentIsForeshadowingView && !currentIsPlotPointStoryline"
+          v-if="
+            !currentIsForeshadowingView &&
+            !currentIsPlotPointStoryline &&
+            !currentIsCharacterCoreProfile
+          "
           class="long-editor-view-tabs"
           role="tablist"
           aria-label="文本视图"
@@ -1852,11 +1881,19 @@ onBeforeUnmount(() => {
           </button>
         </div>
         <span
-          v-if="!currentIsForeshadowingView && !currentIsPlotPointStoryline"
+          v-if="
+            !currentIsForeshadowingView &&
+            !currentIsPlotPointStoryline &&
+            !currentIsCharacterCoreProfile
+          "
           class="long-toolbar-separator"
         />
         <div
-          v-if="!currentIsForeshadowingView && !currentIsPlotPointStoryline"
+          v-if="
+            !currentIsForeshadowingView &&
+            !currentIsPlotPointStoryline &&
+            !currentIsCharacterCoreProfile
+          "
           ref="editorToolsElement"
           class="long-editor-text-tools"
           role="group"
@@ -2147,6 +2184,16 @@ onBeforeUnmount(() => {
             </main>
           </div>
         </section>
+        <CharacterCoreProfile
+          v-else-if="currentIsCharacterCoreProfile && selection.characterId"
+          ref="characterProfileEditor"
+          :book-id="bookId"
+          :character-id="selection.characterId"
+          :updated-at="currentSelectionFile?.file.updatedAt"
+          :locked="locked"
+          @saved="onCharacterProfileSaved"
+          @dirty="characterProfileDirty = $event"
+        />
         <div v-else-if="showEditorLoading" class="long-editor-loading">
           <span class="long-loading-dot" />
           <span>正在读取文件内容…</span>
@@ -2614,7 +2661,7 @@ onBeforeUnmount(() => {
         />
       </div>
 
-      <footer class="long-editor-footer">
+      <footer v-if="!currentIsCharacterCoreProfile" class="long-editor-footer">
         <span>
           {{
             currentIsForeshadowingView

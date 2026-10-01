@@ -69,6 +69,7 @@ describe("long image protocol", () => {
         privileges: {
           standard: true,
           secure: true,
+          corsEnabled: true,
           supportFetchAPI: true,
           stream: true
         }

@@ -400,3 +400,6 @@ export {
 export { compareVersions } from "./update-version";
 
 export type { WindowFrameAction, WindowFrameState } from "./window-frame";
+
+export * from "./long-character-profile";
+export * from "./long-character-profile-markdown";

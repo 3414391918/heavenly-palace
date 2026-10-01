@@ -1,4 +1,14 @@
 import type {
+  LongReadCharacterProfileInput,
+  LongSaveCharacterProfileInput,
+  LongImportCharacterAssetsInput,
+  LongRenameCharacterAssetInput,
+  LongDeleteCharacterAssetInput,
+  LongCopyCharacterAssetInput,
+  LongCharacterProfileSnapshot,
+  LongCopyCharacterAssetResult
+} from "./long-character-profile";
+import type {
   CreateLongBookInput,
   LongDuplicateBookInput,
   LongImportPortableResult,
@@ -44,6 +54,24 @@ import type {
   LongResolveConflictsResult
 } from "./long-project-recovery";
 export interface LongPreloadApi {
+  readCharacterProfile(
+    input: LongReadCharacterProfileInput
+  ): Promise<LongCharacterProfileSnapshot>;
+  saveCharacterProfile(
+    input: LongSaveCharacterProfileInput
+  ): Promise<LongCharacterProfileSnapshot>;
+  importCharacterAssets(
+    input: LongImportCharacterAssetsInput
+  ): Promise<LongCharacterProfileSnapshot | null>;
+  renameCharacterAsset(
+    input: LongRenameCharacterAssetInput
+  ): Promise<LongCharacterProfileSnapshot>;
+  deleteCharacterAsset(
+    input: LongDeleteCharacterAssetInput
+  ): Promise<LongCharacterProfileSnapshot>;
+  copyCharacterAsset(
+    input: LongCopyCharacterAssetInput
+  ): Promise<LongCopyCharacterAssetResult>;
   resolveConflicts(
     input: LongResolveConflictsInput
   ): Promise<LongResolveConflictsResult>;

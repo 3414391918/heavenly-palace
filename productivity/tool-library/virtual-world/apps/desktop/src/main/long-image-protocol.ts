@@ -4,6 +4,7 @@ import { join, resolve } from "node:path";
 import { Readable } from "node:stream";
 import { LongBookIdSchema } from "@deepwrite/contracts";
 import { protocol } from "electron";
+import { characterAssetImageResponse } from "./character-asset-access";
 
 const SCHEME = "deepwrite-image";
 const REGISTRY_MAX_BYTES = 4 * 1024 * 1024;
@@ -27,6 +28,7 @@ export function registerLongImageScheme(
       privileges: {
         standard: true,
         secure: true,
+        corsEnabled: true,
         supportFetchAPI: true,
         stream: true
       }
@@ -120,6 +122,9 @@ export function createLongImageProtocolHandler(
       url.hash
     )
       return new Response(null, { status: 400 });
+    if (url.pathname.includes("/character/")) {
+      return await characterAssetImageResponse(userDataPath, url);
+    }
     const match =
       /^\/([^/]+)\/([a-f0-9]{32})\/([A-Za-z0-9][A-Za-z0-9._-]*\.(png|jpe?g|webp|gif|avif))$/i.exec(
         url.pathname

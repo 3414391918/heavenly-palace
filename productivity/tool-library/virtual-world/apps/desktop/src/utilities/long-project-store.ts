@@ -1,3 +1,19 @@
+import {
+  readCharacterProfile,
+  saveCharacterProfile
+} from "./long-project-store/character-profiles";
+import {
+  importCharacterAssetsAtPaths,
+  renameCharacterAsset,
+  deleteCharacterAsset
+} from "./long-project-store/character-assets";
+import type {
+  LongReadCharacterProfileInput,
+  LongSaveCharacterProfileInput,
+  LongImportCharacterAssetsAtPathsInput,
+  LongRenameCharacterAssetInput,
+  LongDeleteCharacterAssetInput
+} from "@deepwrite/contracts";
 import { resolveLongProjectConflicts } from "./long-project-store/resolve-conflicts";
 import type { LongWorkspaceOperationBatch } from "@deepwrite/contracts";
 import { commitChapter } from "./long-project-store/commit-chapter";
@@ -131,6 +147,41 @@ export class LongProjectStore {
 
   async renameBook(projectDirectory: string, input: RenameLongBookInput) {
     return await renameBook(this.context, projectDirectory, input);
+  }
+
+  async readCharacterProfile(
+    projectDirectory: string,
+    input: LongReadCharacterProfileInput
+  ) {
+    return await readCharacterProfile(this.context, projectDirectory, input);
+  }
+  async saveCharacterProfile(
+    projectDirectory: string,
+    input: LongSaveCharacterProfileInput
+  ) {
+    return await saveCharacterProfile(this.context, projectDirectory, input);
+  }
+  async importCharacterAssetsAtPaths(
+    projectDirectory: string,
+    input: LongImportCharacterAssetsAtPathsInput
+  ) {
+    return await importCharacterAssetsAtPaths(
+      this.context,
+      projectDirectory,
+      input
+    );
+  }
+  async renameCharacterAsset(
+    projectDirectory: string,
+    input: LongRenameCharacterAssetInput
+  ) {
+    return await renameCharacterAsset(this.context, projectDirectory, input);
+  }
+  async deleteCharacterAsset(
+    projectDirectory: string,
+    input: LongDeleteCharacterAssetInput
+  ) {
+    return await deleteCharacterAsset(this.context, projectDirectory, input);
   }
 
   async readDocument(projectDirectory: string, input: ReadLongDocumentInput) {

@@ -5,6 +5,7 @@ import coordinatorSource from "./composables/useApprovalNavigationCoordinator.ts
 import lazyCoordinatorSource from "./composables/useLazyApprovalNavigationCoordinator.ts?raw";
 import resourceTreeSource from "./composables/useWorkspaceResourceTreeCoordinator.ts?raw";
 import editorStructureSource from "./composables/useLongEditorStructureSelection.ts?raw";
+import editorFileNavigationSource from "./composables/useLongEditorFileNavigation.ts?raw";
 
 describe("accepted approval navigation wiring", () => {
   it("routes both approval card families into the central navigator", () => {
@@ -61,13 +62,19 @@ describe("accepted approval navigation wiring", () => {
   });
 
   it("lets the long editor focus exact files and structured targets", () => {
-    expect(editorStructureSource).toContain(
+    expect(editorFileNavigationSource).toContain(
       "async function focusFile(fileId: string)"
     );
-    expect(editorStructureSource).toContain("async function focusTarget(");
-    expect(editorStructureSource).toContain("target: LongApprovalEditorFocus");
-    expect(editorStructureSource).toContain("selectWorldbuildingItem(item.id)");
-    expect(editorStructureSource).toContain('selectPlotPointTab("storyline")');
+    expect(editorFileNavigationSource).toContain("async function focusTarget(");
+    expect(editorFileNavigationSource).toContain(
+      "target: LongApprovalEditorFocus"
+    );
+    expect(editorFileNavigationSource).toContain(
+      "selectWorldbuildingItem(item.id)"
+    );
+    expect(editorFileNavigationSource).toContain(
+      'selectPlotPointTab("storyline")'
+    );
     expect(editorStructureSource).toContain(
       "foreshadowingWorkspace.value?.focusTarget("
     );

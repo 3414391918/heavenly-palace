@@ -54,16 +54,21 @@ export async function commitLongProjectTransaction(
     }
     const path = operation.path.trim();
     const maxBytes =
-      path === MANIFEST_PATH
-        ? MAX_MANIFEST_BYTES
-        : path === LONG_WORKSPACE_INDEX_PATH
-          ? MAX_INDEX_BYTES
-          : path === LONG_AGENTS_MD_PATH
-            ? MAX_AGENTS_MD_BYTES
-            : path.startsWith("long/ledger/") && path.endsWith(".json")
-              ? MAX_LEDGER_RECORD_BYTES
-              : MAX_DOCUMENT_BYTES;
-    const byteLength = encodeUtf8Strict(operation.content).byteLength;
+      typeof operation.content !== "string"
+        ? 100 * 1024 * 1024
+        : path === MANIFEST_PATH
+          ? MAX_MANIFEST_BYTES
+          : path === LONG_WORKSPACE_INDEX_PATH
+            ? MAX_INDEX_BYTES
+            : path === LONG_AGENTS_MD_PATH
+              ? MAX_AGENTS_MD_BYTES
+              : path.startsWith("long/ledger/") && path.endsWith(".json")
+                ? MAX_LEDGER_RECORD_BYTES
+                : MAX_DOCUMENT_BYTES;
+    const byteLength =
+      typeof operation.content === "string"
+        ? encodeUtf8Strict(operation.content).byteLength
+        : operation.content.byteLength;
     if (byteLength > maxBytes) {
       throw new Error(
         `长篇项目文件超过 UTF-8 字节限制：${path}（${byteLength} > ${maxBytes}）。`

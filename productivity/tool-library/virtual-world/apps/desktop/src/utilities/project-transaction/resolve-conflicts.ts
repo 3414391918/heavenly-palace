@@ -1,5 +1,4 @@
 import { join } from "node:path";
-import { TextDecoder } from "node:util";
 import { randomHex8 } from "@deepwrite/shared";
 import { commitProjectTransactionLocked } from "./commit";
 import {
@@ -34,7 +33,7 @@ export interface ResolveProjectConflictsInput {
       deletions: ReadonlySet<string>;
       readBeforeDeletion(path: string): Promise<Buffer | null>;
     }
-  ): Promise<ReadonlyMap<string, string>>;
+  ): Promise<ReadonlyMap<string, string | Uint8Array>>;
 }
 
 /** Explicit recovery only: keep external edits, finish the remaining writes. */
@@ -136,7 +135,12 @@ export async function resolveProjectTransactionConflicts(
     );
     for (const [path, content] of adjustments) {
       await currentFile(path);
-      projected.set(path, Buffer.from(content, "utf8"));
+      projected.set(
+        path,
+        typeof content === "string"
+          ? Buffer.from(content, "utf8")
+          : Buffer.from(content)
+      );
     }
     const operations: ProjectTransactionFileOperation[] = [];
     for (const [path, next] of projected) {
@@ -149,7 +153,7 @@ export async function resolveProjectTransactionConflicts(
         operations.push({
           path,
           expectedSha256,
-          content: new TextDecoder("utf-8", { fatal: true }).decode(next)
+          content: next
         });
       }
     }

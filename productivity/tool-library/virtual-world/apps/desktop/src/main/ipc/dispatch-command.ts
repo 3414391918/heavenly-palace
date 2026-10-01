@@ -10,6 +10,7 @@ import { handleCatalogCommands } from "./catalog-commands";
 import type { IpcCommandContext } from "./command-types";
 import { isForbiddenRendererCommand } from "./forbidden-commands";
 import { handleLongCommands } from "./long-commands";
+import { handleCharacterAssetCommands } from "./character-asset-commands";
 import { handleManuscriptCommands } from "./manuscript-commands";
 import { handleModelCommands } from "./model-commands";
 import { handleRendererStateCommands } from "./renderer-state-commands";
@@ -41,6 +42,7 @@ export async function dispatchCommand(
   }
 
   const result =
+    (await handleCharacterAssetCommands(ctx, command)) ??
     (await handleBookTemplateCommands(ctx, command)) ??
     (await handleManuscriptCommands(ctx, command)) ??
     (await handleSettingsCommands(ctx, command)) ??

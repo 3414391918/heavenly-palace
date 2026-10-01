@@ -1,3 +1,4 @@
+import { LongCharacterProfileCommandSchemas } from "./long-character-profile-commands";
 import { z } from "zod";
 import { EnvelopeBaseSchema } from "./envelope";
 import {
@@ -186,6 +187,7 @@ export const LongDeleteLedgerCommitCommandEnvelopeSchema =
     payload: LongDeleteLedgerCommitInputSchema
   });
 export const LongWorkspaceCommandSchemas = [
+  ...LongCharacterProfileCommandSchemas,
   LongResolveConflictsCommandEnvelopeSchema,
   LongCreateBookCommandEnvelopeSchema,
   LongCreateBookAtPathCommandEnvelopeSchema,

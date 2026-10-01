@@ -1,3 +1,4 @@
+import { guardCharacterProfileWrite } from "./character-profile-guard";
 import {
   DEFAULT_LONG_AGENTS_MD,
   LONG_AGENTS_MD_MAX_CHARACTERS,
@@ -240,6 +241,13 @@ export async function writeDocument(
     if (file.kind !== "markdown") {
       throw new Error("第一阶段只允许通过 writeDocument 写入 Markdown 文件。");
     }
+    await guardCharacterProfileWrite(
+      loaded,
+      fileId,
+      file.disk.content,
+      input.content,
+      loaded.index
+    );
     const nextBytes = encodeUtf8Strict(input.content);
     if (nextBytes.byteLength > MAX_DOCUMENT_BYTES) {
       throw new Error("长篇 Markdown 文件超过 32 MiB 限制。");
