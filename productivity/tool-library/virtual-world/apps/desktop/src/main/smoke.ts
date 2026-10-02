@@ -10,6 +10,8 @@ import { createId } from "@deepwrite/shared";
 import type { UtilitySupervisor } from "./supervisor";
 import { runBookTemplateSmoke } from "./smoke-book-templates";
 import { runConversationSmoke } from "./smoke-conversation";
+import { runChapterImageSmoke } from "./smoke-chapter-images";
+import { runCharacterAppearanceSmoke } from "./smoke-character-appearances";
 
 export async function runApplicationSmoke(
   health: SystemHealthPayload,
@@ -114,11 +116,18 @@ export async function runApplicationSmoke(
 
     const conversation = await runConversationSmoke(window);
     const bookTemplates = await runBookTemplateSmoke(window);
+    const chapterImages = await runChapterImageSmoke(supervisor, window);
+    const characterAppearances = await runCharacterAppearanceSmoke(
+      supervisor,
+      window
+    );
     console.log(
       `DEEPWRITE_SMOKE_OK ${JSON.stringify({
         health,
         conversation,
         bookTemplates,
+        chapterImages,
+        characterAppearances,
         agent: {
           status: "ok",
           runtime: accepted.runtime,

@@ -1,4 +1,5 @@
 import { handleLongCharacterProfileCoreCommand } from "./long-character-profile-core-commands";
+import { handleLongChapterImageCoreCommand } from "./long-chapter-image-core-commands";
 import {
   LongApplyOperationsResultSchema,
   LongApplyLegacySyncResultSchema,
@@ -28,6 +29,8 @@ export async function handleLongCoreCommand(
   service: LongWorkspaceService,
   command: CommandEnvelope
 ): Promise<CommandResult | undefined> {
+  const imageResult = await handleLongChapterImageCoreCommand(service, command);
+  if (imageResult) return imageResult;
   const characterResult = await handleLongCharacterProfileCoreCommand(
     service,
     command

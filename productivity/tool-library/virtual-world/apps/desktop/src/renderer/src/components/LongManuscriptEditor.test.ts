@@ -110,9 +110,7 @@ describe("LongManuscriptEditor", () => {
   it("uses the persisted default mode while keeping read-only files in preview", () => {
     expect(editorSource).toContain("defaultViewMode: TextViewMode");
     expect(editorSource).toContain("defaultMode: () => props.defaultViewMode");
-    expect(editorSource).toContain(
-      "resetToDefault(Boolean(currentSelectionFile.value?.readOnly))"
-    );
+    expect(editorSource).toContain("useLongEditorViewSession({");
     expect(editorSource).toContain("() => props.defaultViewMode");
     expect(fileNavigationSource).toContain(
       "options.resetTextViewMode(selectedFile.readOnly)"

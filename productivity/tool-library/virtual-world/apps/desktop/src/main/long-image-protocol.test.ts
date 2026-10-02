@@ -89,6 +89,20 @@ describe("long image protocol", () => {
       Buffer.from([137, 80, 78, 71])
     );
   });
+  it("allows a single content revision for immediate reload and rejects arbitrary queries", async () => {
+    const { userData } = await fixture();
+    const handler = createLongImageProtocolHandler(userData);
+    const result = await handler(new Request(`${url}?v=${"b".repeat(64)}`));
+    expect(result.status).toBe(200);
+    await result.arrayBuffer();
+    for (const query of [
+      "v=bad",
+      `v=${"a".repeat(64)}&path=secret`,
+      `v=${"a".repeat(64)}&v=${"b".repeat(64)}`
+    ]) {
+      expect((await handler(new Request(`${url}?${query}`))).status).toBe(400);
+    }
+  });
 
   it("rejects unregistered chapters, traversal, SVG, and symlinked assets", async () => {
     const { userData, imageDirectory } = await fixture();

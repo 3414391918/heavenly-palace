@@ -104,6 +104,15 @@
   display: grid;
   gap: 18px;
 }
+.character-appearance-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.character-appearance-heading {
+  flex-wrap: wrap;
+}
 .character-appearance-body .character-field {
   background: var(--surface-main);
 }

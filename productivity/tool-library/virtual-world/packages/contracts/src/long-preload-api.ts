@@ -1,4 +1,10 @@
 import type {
+  LongGetCharacterAppearanceReferencesInput,
+  LongDeleteCharacterAppearanceInput,
+  LongDeleteCharacterAppearanceResult,
+  LongGetCharacterAppearanceReferencesResult
+} from "./long-character-appearance";
+import type {
   LongReadCharacterProfileInput,
   LongSaveCharacterProfileInput,
   LongImportCharacterAssetsInput,
@@ -54,6 +60,19 @@ import type {
   LongResolveConflictsResult
 } from "./long-project-recovery";
 export interface LongPreloadApi {
+  getCharacterAppearanceReferences(
+    input: LongGetCharacterAppearanceReferencesInput
+  ): Promise<LongGetCharacterAppearanceReferencesResult>;
+  readChapterImage(
+    input: LongReadChapterImageInput
+  ): Promise<LongReadChapterImageResult>;
+  replaceChapterImage(
+    input: LongReplaceChapterImageInput
+  ): Promise<LongReplaceChapterImageResult>;
+  copyChapterImage(
+    input: LongReadChapterImageInput
+  ): Promise<LongCopyChapterImageResult>;
+  readClipboardImage(): Promise<LongReadClipboardImageResult>;
   readCharacterProfile(
     input: LongReadCharacterProfileInput
   ): Promise<LongCharacterProfileSnapshot>;
@@ -69,6 +88,9 @@ export interface LongPreloadApi {
   deleteCharacterAsset(
     input: LongDeleteCharacterAssetInput
   ): Promise<LongCharacterProfileSnapshot>;
+  deleteCharacterAppearance(
+    input: LongDeleteCharacterAppearanceInput
+  ): Promise<LongDeleteCharacterAppearanceResult>;
   copyCharacterAsset(
     input: LongCopyCharacterAssetInput
   ): Promise<LongCopyCharacterAssetResult>;
@@ -119,3 +141,11 @@ export interface LongPreloadApi {
   unregister(input: LongRemoveBookInput): Promise<LongRemoveBookResult>;
   delete(input: LongRemoveBookInput): Promise<LongRemoveBookResult>;
 }
+import type {
+  LongReadChapterImageInput,
+  LongReadChapterImageResult,
+  LongReplaceChapterImageInput,
+  LongReplaceChapterImageResult,
+  LongReadClipboardImageResult,
+  LongCopyChapterImageResult
+} from "./long-chapter-image";

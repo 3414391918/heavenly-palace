@@ -66,10 +66,8 @@ import { useLongEditorFindReplace } from "../composables/useLongEditorFindReplac
 import { useLongEditorEntrySearch } from "../composables/useLongEditorEntrySearch";
 import { useLongEditorHistory } from "../composables/useLongEditorHistory";
 import { useLongEditorPaneResize } from "../composables/useLongEditorPaneResize";
-import {
-  longEditorScrollMemoryKey,
-  useLongEditorScrollMemory
-} from "../composables/useLongEditorScrollMemory";
+import { longEditorScrollMemoryKey } from "../composables/useLongEditorScrollMemory";
+import { useLongEditorViewport } from "../composables/useLongEditorViewport";
 import { useLongEditorRecovery } from "../composables/useLongEditorRecovery";
 import {
   useLongEditorStructureSelection,
@@ -77,6 +75,7 @@ import {
   type LongStructureTitleTarget
 } from "../composables/useLongEditorStructureSelection";
 import { useTextViewMode } from "../composables/useTextViewMode";
+import { useLongEditorViewSession } from "../composables/useLongEditorViewSession";
 
 const props = defineProps<{
   bookId: string;
@@ -956,23 +955,6 @@ function stateKey(fileId: string, bookId = props.bookId): string {
 let volumeDraftBookId = "";
 
 const {
-  longEditorDocumentElement,
-  storyPlotLayoutElement,
-  entryListWidth,
-  storyPlotListWidth,
-  entryListMaxWidth,
-  storyPlotListMaxWidth,
-  resizingLongEditorPane,
-  entryListGridStyle,
-  storyPlotListGridStyle,
-  startLongEditorPaneResize,
-  handleLongEditorPaneResizeKeydown
-} = useLongEditorPaneResize({
-  currentUsesAnyRightEntryList,
-  currentIsPlotPointStoryline
-});
-
-const {
   clearRecoveryRecordForKey,
   readRecoveryRecord,
   persistRecoveryForKey,
@@ -1086,6 +1068,22 @@ const {
   clearRecoveryRecordForKey,
   persistRecoveryForKey
 });
+const {
+  longEditorDocumentElement,
+  storyPlotLayoutElement,
+  entryListWidth,
+  storyPlotListWidth,
+  entryListMaxWidth,
+  storyPlotListMaxWidth,
+  resizingLongEditorPane,
+  entryListGridStyle,
+  storyPlotListGridStyle,
+  startLongEditorPaneResize,
+  handleLongEditorPaneResizeKeydown
+} = useLongEditorPaneResize({
+  currentUsesAnyRightEntryList,
+  currentIsPlotPointStoryline
+});
 async function saveAllChanges(): Promise<boolean> {
   if (
     characterProfileEditor.value &&
@@ -1145,11 +1143,14 @@ const {
   handleScroll: handleEditorScroll,
   rememberScroll: rememberCurrentEditorScroll,
   restoreScroll: restoreCurrentEditorScroll
-} = useLongEditorScrollMemory({
+} = useLongEditorViewport({
   documentKey: () => activeEditorScrollMemoryKey.value,
   viewMode,
   editorInput,
-  documentPreview
+  documentPreview,
+  contentReady: () =>
+    currentIsStructuredText.value ||
+    Boolean(currentState.value?.loaded && !currentState.value.loading)
 });
 const characterCount = ref(
   countNonWhitespaceCharacters(currentVisibleContent.value)
@@ -1457,33 +1458,20 @@ watch(
   { immediate: true, flush: "sync" }
 );
 
-watch(
-  () =>
-    [
-      props.bookId,
-      currentSelectionFile.value?.file.id,
-      activeWorldbuildingItemId.value,
-      activeBookLineVolumeId.value,
-      activeBookLineContentTab.value,
-      props.selection?.plotPointId,
-      activePlotPointTab.value,
-      props.selection?.chapterCardId
-    ] as const,
-  () => {
-    resetToDefault(Boolean(currentSelectionFile.value?.readOnly));
+useLongEditorViewSession({
+  documentKey: () => activeEditorScrollMemoryKey.value,
+  defaultMode: () => props.defaultViewMode,
+  readOnly: () => Boolean(currentSelectionFile.value?.readOnly),
+  viewMode,
+  setViewMode,
+  resetToDefault,
+  onDocumentChange: () => {
     closeFindPanel();
     searchQuery.value = "";
     replacementText.value = "";
     resetEditorHistory();
-  },
-  { immediate: true, flush: "sync" }
-);
-
-watch(
-  () => props.defaultViewMode,
-  () => resetToDefault(Boolean(currentSelectionFile.value?.readOnly)),
-  { flush: "sync" }
-);
+  }
+});
 
 watch(
   () =>
@@ -2235,6 +2223,14 @@ onBeforeUnmount(() => {
                 currentSelectionFile?.file.path ?? '',
                 source
               )
+          "
+          :image-context="
+            selection.chapterCardId &&
+            /^long\/chapters\/[a-f0-9]{32}\/body\.md$/.test(
+              currentSelectionFile?.file.path ?? ''
+            )
+              ? { bookId: props.bookId, chapterCardId: selection.chapterCardId }
+              : undefined
           "
           :document-key="currentSelectionFile?.file.id ?? selection?.key ?? ''"
           :view-mode="viewMode"

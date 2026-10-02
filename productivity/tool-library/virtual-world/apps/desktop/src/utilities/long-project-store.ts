@@ -2,6 +2,11 @@ import {
   readCharacterProfile,
   saveCharacterProfile
 } from "./long-project-store/character-profiles";
+import { deleteCharacterAppearance } from "./long-project-store/character-appearance-delete";
+import {
+  readChapterImage,
+  replaceChapterImage
+} from "./long-project-store/chapter-images";
 import {
   importCharacterAssetsAtPaths,
   renameCharacterAsset,
@@ -12,7 +17,10 @@ import type {
   LongSaveCharacterProfileInput,
   LongImportCharacterAssetsAtPathsInput,
   LongRenameCharacterAssetInput,
-  LongDeleteCharacterAssetInput
+  LongDeleteCharacterAssetInput,
+  LongDeleteCharacterAppearanceInput,
+  LongReadChapterImageInput,
+  LongReplaceChapterImageInput
 } from "@deepwrite/contracts";
 import { resolveLongProjectConflicts } from "./long-project-store/resolve-conflicts";
 import type { LongWorkspaceOperationBatch } from "@deepwrite/contracts";
@@ -183,9 +191,33 @@ export class LongProjectStore {
   ) {
     return await deleteCharacterAsset(this.context, projectDirectory, input);
   }
+  async deleteCharacterAppearance(
+    projectDirectory: string,
+    input: LongDeleteCharacterAppearanceInput
+  ) {
+    return await deleteCharacterAppearance(
+      this.context,
+      projectDirectory,
+      input
+    );
+  }
 
   async readDocument(projectDirectory: string, input: ReadLongDocumentInput) {
     return await readDocument(this.context, projectDirectory, input);
+  }
+
+  async readChapterImage(
+    projectDirectory: string,
+    input: LongReadChapterImageInput
+  ) {
+    return await readChapterImage(this.context, projectDirectory, input);
+  }
+
+  async replaceChapterImage(
+    projectDirectory: string,
+    input: LongReplaceChapterImageInput
+  ) {
+    return await replaceChapterImage(this.context, projectDirectory, input);
   }
 
   async readAgentsMd(projectDirectory: string) {

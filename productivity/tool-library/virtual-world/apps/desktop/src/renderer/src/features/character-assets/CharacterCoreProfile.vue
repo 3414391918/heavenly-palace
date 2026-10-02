@@ -3,6 +3,9 @@ import { computed, ref, watch, onBeforeUnmount, onMounted } from "vue";
 import SavedProfileField from "./SavedProfileField.vue";
 import CharacterAssetGallery from "./CharacterAssetGallery.vue";
 import CharacterAssetDialog from "./CharacterAssetDialog.vue";
+import CreateCharacterAppearanceDialog from "./CreateCharacterAppearanceDialog.vue";
+import DeleteCharacterAppearanceDialog from "./DeleteCharacterAppearanceDialog.vue";
+import type { LongDeleteCharacterAppearanceInput } from "@deepwrite/contracts";
 import PopupSelect from "../../components/PopupSelect.vue";
 import { uiMessage } from "../../ui-feedback";
 import { useCharacterProfile } from "./useCharacterProfile";
@@ -26,7 +29,8 @@ const {
   load,
   discard,
   updateAssets,
-  addAppearance
+  deleteAppearance,
+  createAppearance: saveNewAppearance
 } = useCharacterProfile(props, () => emit("saved"));
 const gallery = ref<InstanceType<typeof CharacterAssetGallery> | null>(null);
 const disabled = computed(() =>
@@ -45,6 +49,11 @@ const savedAppearance = computed(() =>
   )
 );
 const leaveOpen = ref(false);
+const createOpen = ref(false);
+const deleteTarget = ref<{
+  name: string;
+  input: LongDeleteCharacterAppearanceInput;
+} | null>(null);
 let pendingLeave: Promise<boolean> | null = null;
 let resolveLeave: ((allowed: boolean) => void) | null = null;
 function settleLeave(allowed: boolean) {
@@ -74,7 +83,40 @@ async function selectAppearance(value: string | number | boolean | null) {
   if (await prepareLeave()) selectedAppearance.value = String(value ?? "");
 }
 async function createAppearance() {
-  if (await prepareLeave()) addAppearance();
+  if (await prepareLeave()) createOpen.value = true;
+}
+async function requestDeleteAppearance() {
+  const bookId = props.bookId,
+    characterId = props.characterId,
+    appearanceId = selectedAppearance.value;
+  if (
+    !(await prepareLeave()) ||
+    bookId !== props.bookId ||
+    characterId !== props.characterId
+  )
+    return;
+  const appearance = snapshot.value?.profile.appearances.find(
+    (a) => a.id === appearanceId
+  );
+  if (!appearance || !snapshot.value) return;
+  deleteTarget.value = {
+    name: appearance.name,
+    input: {
+      bookId,
+      characterId,
+      appearanceId,
+      expectedRevision: snapshot.value.revision,
+      expectedAssetIds: snapshot.value.assets
+        .filter((a) => a.appearanceId === appearanceId)
+        .map((a) => a.id)
+    }
+  };
+}
+async function confirmDeleteAppearance() {
+  if (disabled.value || gallery.value?.isBusy) return;
+  const target = deleteTarget.value;
+  if (target && (await deleteAppearance(target.input)))
+    deleteTarget.value = null;
 }
 async function reload() {
   if (dirty.value && !(await prepareLeave())) return;
@@ -92,6 +134,13 @@ onBeforeUnmount(() => {
   settleLeave(false);
 });
 watch(dirty, (value) => emit("dirty", value), { immediate: true });
+watch(
+  () => [props.bookId, props.characterId],
+  () => {
+    createOpen.value = false;
+    deleteTarget.value = null;
+  }
+);
 defineExpose({ prepareLeave, saveAll: () => save("all"), dirty });
 </script>
 <template>
@@ -151,9 +200,22 @@ defineExpose({ prepareLeave, saveAll: () => save("all"), dirty });
             <h2>角色形象描述</h2>
             <span>{{ draft.appearances.length }} 种形象</span>
           </div>
-          <button type="button" :disabled="disabled" @click="createAppearance">
-            ＋ 新增形象
-          </button>
+          <div class="character-appearance-actions">
+            <button
+              type="button"
+              :disabled="disabled"
+              @click="createAppearance"
+            >
+              ＋ 新增形象
+            </button>
+            <button
+              type="button"
+              :disabled="disabled || !savedAppearance"
+              @click="requestDeleteAppearance"
+            >
+              删除形象
+            </button>
+          </div>
         </header>
         <PopupSelect
           :model-value="selectedAppearance"
@@ -210,6 +272,23 @@ defineExpose({ prepareLeave, saveAll: () => save("all"), dirty });
         </div>
       </section>
     </template>
+    <CreateCharacterAppearanceDialog
+      v-if="createOpen"
+      :book-id="bookId"
+      :character-id="characterId"
+      :locked="disabled"
+      :create="saveNewAppearance"
+      @close="createOpen = false"
+    />
+    <DeleteCharacterAppearanceDialog
+      v-if="deleteTarget"
+      :name="deleteTarget.name"
+      :count="deleteTarget.input.expectedAssetIds.length"
+      :busy="saving"
+      :disabled="disabled"
+      @close="deleteTarget = null"
+      @confirm="confirmDeleteAppearance"
+    />
     <CharacterAssetDialog
       v-if="leaveOpen"
       title="角色档案有未保存修改"

@@ -17,6 +17,34 @@ const identity = {
   characterId: "character_example",
   appearanceId: "look_a"
 };
+it("forwards appearance deletion with the confirmed revision and image set to Core", async () => {
+  const requestCommand = vi.fn(async () => ({
+    status: "rejected",
+    requestId: "cmd_delete",
+    error: { code: "fixture", message: "fixture" }
+  }));
+  const ctx = {
+    supervisor: { requestCommand }
+  } as unknown as IpcCommandContext;
+  const command = CommandEnvelopeSchema.parse(
+    createEnvelope(
+      "long.deleteCharacterAppearance",
+      { ...identity, expectedRevision: "a".repeat(64), expectedAssetIds: [] },
+      { id: "cmd_delete" }
+    )
+  );
+  await handleCharacterAssetCommands(ctx, command);
+  expect(requestCommand).toHaveBeenCalledWith("core", command, 60_000);
+  expect(
+    CommandEnvelopeSchema.safeParse(
+      createEnvelope(
+        "long.deleteCharacterAppearance",
+        { ...command.payload, path: "/outside/image.png" },
+        { id: "cmd_delete" }
+      )
+    ).success
+  ).toBe(false);
+});
 it("does not accept arbitrary upload paths from the renderer", () => {
   expect(
     CommandEnvelopeSchema.safeParse(

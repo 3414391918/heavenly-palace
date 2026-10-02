@@ -118,11 +118,12 @@ export function createLongImageProtocolHandler(
       url.host !== "book" ||
       url.username ||
       url.password ||
-      url.search ||
+      (url.search && !/^\?v=[a-f0-9]{64}$/u.test(url.search)) ||
       url.hash
     )
       return new Response(null, { status: 400 });
     if (url.pathname.includes("/character/")) {
+      if (url.search) return new Response(null, { status: 400 });
       return await characterAssetImageResponse(userDataPath, url);
     }
     const match =

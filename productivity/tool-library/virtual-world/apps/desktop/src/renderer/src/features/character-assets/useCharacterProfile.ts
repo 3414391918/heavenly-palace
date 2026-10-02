@@ -2,15 +2,22 @@ import { characterApi } from "./character-api";
 import { computed, ref, watch, type Ref } from "vue";
 import type {
   LongCharacterProfileSnapshot,
+  LongDeleteCharacterAppearanceInput,
   LongCharacterProfile
 } from "@deepwrite/contracts";
 import { uiMessage } from "../../ui-feedback";
+import { useCharacterProfileFocusRefresh } from "./useCharacterProfileFocusRefresh";
 import {
   cloneProfile,
   mergeProfileField,
   rebaseProfileDraft,
   type ProfileField
 } from "./profile-draft";
+
+export interface CreatedCharacterAppearance {
+  appearanceId: string;
+  snapshot: LongCharacterProfileSnapshot;
+}
 
 export function useCharacterProfile(
   props: {
@@ -79,7 +86,6 @@ export function useCharacterProfile(
     appearanceId?: string
   ): Promise<boolean> {
     if (saving.value || !draft.value || !snapshot.value) return false;
-    const version = request;
     const before = cloneProfile(snapshot.value.profile);
     let submitted: LongCharacterProfile;
     try {
@@ -88,6 +94,14 @@ export function useCharacterProfile(
       uiMessage.warning(e instanceof Error ? e.message : "请先选择形象");
       return false;
     }
+    return Boolean(await persist(before, submitted));
+  }
+  async function persist(
+    before: LongCharacterProfile,
+    submitted: LongCharacterProfile
+  ) {
+    if (saving.value || !snapshot.value || !draft.value) return null;
+    const version = request;
     saving.value = true;
     try {
       const next = await characterApi().saveCharacterProfile({
@@ -96,7 +110,7 @@ export function useCharacterProfile(
         profile: submitted,
         expectedRevision: snapshot.value.revision
       });
-      if (version !== request || !draft.value) return false;
+      if (version !== request || !draft.value) return null;
       draft.value = rebaseProfileDraft(
         before,
         draft.value,
@@ -106,10 +120,10 @@ export function useCharacterProfile(
       snapshot.value = next;
       onSaved();
       uiMessage.success("已保存");
-      return true;
+      return next;
     } catch (e) {
       uiMessage.error(e instanceof Error ? e.message : "保存失败，输入仍保留");
-      return false;
+      return null;
     } finally {
       saving.value = false;
     }
@@ -125,11 +139,87 @@ export function useCharacterProfile(
     )
       snapshot.value.assets = next.assets;
   }
-  function addAppearance() {
-    if (!draft.value) return;
+  async function createAppearance(
+    name: string
+  ): Promise<CreatedCharacterAppearance | null> {
+    if (!snapshot.value || !draft.value || saving.value || loading.value)
+      return null;
+    const trimmed = name.trim();
+    if (!trimmed || trimmed.length > 256 || /[\r\n]/u.test(trimmed)) {
+      uiMessage.warning("请填写 1～256 字的形象名称");
+      return null;
+    }
+    if (
+      snapshot.value.profile.appearances.some((item) => item.name === trimmed)
+    ) {
+      uiMessage.warning("已有同名形象，请换一个名称");
+      return null;
+    }
+    if (!snapshot.value.profile.faceDescription.trim()) {
+      uiMessage.warning("请先填写并保存脸部身材描述");
+      return null;
+    }
     const id = "appearance_" + crypto.randomUUID().replaceAll("-", "");
-    draft.value.appearances.push({ id, name: "新形象", description: "" });
+    const before = cloneProfile(snapshot.value.profile);
+    const submitted = cloneProfile(before);
+    submitted.appearances.push({ id, name: trimmed, description: "" });
+    const next = await persist(before, submitted);
+    if (!next) return null;
     selectedAppearance.value = id;
+    return { appearanceId: id, snapshot: next };
+  }
+  async function deleteAppearance(
+    input: LongDeleteCharacterAppearanceInput
+  ): Promise<boolean> {
+    if (
+      !snapshot.value ||
+      !draft.value ||
+      saving.value ||
+      loading.value ||
+      input.bookId !== props.bookId ||
+      input.characterId !== props.characterId
+    )
+      return false;
+    const before = cloneProfile(snapshot.value.profile);
+    const version = request;
+    saving.value = true;
+    try {
+      const next = await characterApi().deleteCharacterAppearance({
+        ...input,
+        expectedAssetIds: [...input.expectedAssetIds]
+      });
+      if (version !== request || !draft.value) return false;
+      const submitted = {
+        ...before,
+        appearances: before.appearances.filter(
+          (a) => a.id !== input.appearanceId
+        )
+      };
+      draft.value = rebaseProfileDraft(
+        before,
+        draft.value,
+        submitted,
+        next.profile
+      );
+      draft.value.appearances = draft.value.appearances.filter(
+        (a) => a.id !== input.appearanceId
+      );
+      snapshot.value = next;
+      if (
+        !next.profile.appearances.some((a) => a.id === selectedAppearance.value)
+      )
+        selectedAppearance.value = next.profile.appearances[0]?.id ?? "";
+      onSaved();
+      if (next.directoryCleanupWarning)
+        uiMessage.warning(next.directoryCleanupWarning);
+      else uiMessage.success("形象及相关图片已永久删除");
+      return true;
+    } catch (e) {
+      uiMessage.error(e instanceof Error ? e.message : "删除形象失败");
+      return false;
+    } finally {
+      saving.value = false;
+    }
   }
   watch(
     () => [props.bookId, props.characterId],
@@ -141,6 +231,9 @@ export function useCharacterProfile(
     },
     { immediate: true }
   );
+  useCharacterProfileFocusRefresh(() => {
+    if (!saving.value && !loading.value) void load();
+  });
   watch(
     () => props.updatedAt,
     () => {
@@ -160,6 +253,7 @@ export function useCharacterProfile(
     load,
     discard,
     updateAssets,
-    addAppearance
+    deleteAppearance,
+    createAppearance
   };
 }

@@ -402,4 +402,17 @@ export { compareVersions } from "./update-version";
 export type { WindowFrameAction, WindowFrameState } from "./window-frame";
 
 export * from "./long-character-profile";
+export * from "./long-character-appearance";
 export * from "./long-character-profile-markdown";
+export {
+  LONG_CHAPTER_IMAGE_MAX_BYTES,
+  LONG_CHAPTER_IMAGE_MAX_PIXELS
+} from "./long-chapter-image";
+export type {
+  LongReadChapterImageInput,
+  LongReadChapterImageResult,
+  LongReplaceChapterImageInput,
+  LongReplaceChapterImageResult,
+  LongReadClipboardImageResult,
+  LongCopyChapterImageResult
+} from "./long-chapter-image";

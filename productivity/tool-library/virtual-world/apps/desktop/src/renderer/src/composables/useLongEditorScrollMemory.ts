@@ -105,7 +105,7 @@ export function useLongEditorScrollMemory(options: {
 
   if (options.bindIdentityWatch !== false) {
     watch(
-      () => [options.documentKey(), options.viewMode.value] as const,
+      [options.documentKey, () => options.viewMode.value],
       ([nextKey, nextView], [previousKey, previousView]) => {
         rememberScroll(previousKey, previousView);
         void restoreScroll(nextKey, nextView);

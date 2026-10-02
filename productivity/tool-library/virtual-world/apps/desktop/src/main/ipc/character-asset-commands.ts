@@ -3,6 +3,8 @@ import {
   CommandEnvelopeSchema,
   createEnvelope,
   LongCharacterProfileSnapshotSchema,
+  LongGetCharacterAppearanceReferencesResultSchema,
+  LongDeleteCharacterAppearanceResultSchema,
   LongCopyCharacterAssetResultSchema,
   LONG_CHARACTER_IMAGE_MAX_BYTES,
   type CommandEnvelope,
@@ -16,6 +18,8 @@ export async function handleCharacterAssetCommands(
   command: CommandEnvelope
 ): Promise<CommandResult | undefined> {
   if (
+    command.type !== "long.getCharacterAppearanceReferences" &&
+    command.type !== "long.deleteCharacterAppearance" &&
     command.type !== "long.readCharacterProfile" &&
     command.type !== "long.saveCharacterProfile" &&
     command.type !== "long.importCharacterAssets" &&
@@ -92,7 +96,14 @@ export async function handleCharacterAssetCommands(
     return {
       status: "accepted",
       requestId: command.id,
-      payload: LongCharacterProfileSnapshotSchema.parse(result.payload)
+      payload:
+        command.type === "long.getCharacterAppearanceReferences"
+          ? LongGetCharacterAppearanceReferencesResultSchema.parse(
+              result.payload
+            )
+          : command.type === "long.deleteCharacterAppearance"
+            ? LongDeleteCharacterAppearanceResultSchema.parse(result.payload)
+            : LongCharacterProfileSnapshotSchema.parse(result.payload)
     };
   } catch (error) {
     return {

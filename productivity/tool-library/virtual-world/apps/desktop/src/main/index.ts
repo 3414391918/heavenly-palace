@@ -1,5 +1,6 @@
 import { handleBookTemplateCommands } from "./ipc/book-template-commands";
 import { handleCharacterAssetCommands } from "./ipc/character-asset-commands";
+import { handleChapterImageCommands } from "./ipc/chapter-image-commands";
 import { handleCatalogProjectCommands } from "./ipc/catalog-project-commands";
 import { resolveChatAssistantRuntimeContext as resolveAssistantContext } from "./chat-assistant-runtime-context";
 import { handleChatAssistantConfigCommands } from "./ipc/chat-assistant-config-commands";
@@ -1058,6 +1059,11 @@ function registerIpc(): void {
         command
       );
       if (characterAssetResult) return characterAssetResult;
+      const chapterImageResult = await handleChapterImageCommands(
+        { supervisor },
+        command
+      );
+      if (chapterImageResult) return chapterImageResult;
 
       if (command.type === "manuscript.exportShort") {
         try {

@@ -1,5 +1,7 @@
 import {
   LongDeleteCharacterAssetInputSchema,
+  LongDeleteCharacterAppearanceInputSchema,
+  type LongDeleteCharacterAppearanceInput,
   LongImportCharacterAssetsAtPathsInputSchema,
   LongReadCharacterProfileInputSchema,
   LongRenameCharacterAssetInputSchema,
@@ -66,5 +68,15 @@ export class LongCharacterProfileService {
       opened.projectDirectory,
       parsed
     );
+  }
+  async deleteCharacterAppearance(input: LongDeleteCharacterAppearanceInput) {
+    const parsed = LongDeleteCharacterAppearanceInputSchema.parse(input);
+    const opened = await this.catalog.open(parsed.bookId);
+    const snapshot = await this.store.deleteCharacterAppearance(
+      opened.projectDirectory,
+      parsed
+    );
+    await this.refreshSummary(opened.projectDirectory, parsed.bookId);
+    return snapshot;
   }
 }

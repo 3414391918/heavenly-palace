@@ -15,7 +15,8 @@
     "smoke": "node scripts/electron-smoke.mjs"
   },
   "dependencies": {
-    "qrcode": "^1.5.4"
+    "qrcode": "^1.5.4",
+    "sharp": "catalog:"
   },
   "devDependencies": {
     "@deepwrite/contracts": "workspace:*",

@@ -1,5 +1,15 @@
 import type { DeepWriteApi } from "@deepwrite/contracts";
 import {
+  getCharacterAppearanceReferences,
+  deleteCharacterAppearance
+} from "./character-appearance-api";
+import {
+  readChapterImage,
+  replaceChapterImage,
+  copyChapterImage,
+  readClipboardImage
+} from "./chapter-images-api";
+import {
   readCharacterProfile,
   saveCharacterProfile,
   importCharacterAssets,
@@ -38,6 +48,12 @@ import {
 } from "./long-document-api";
 import { resolveLongConflicts } from "./long-recovery-api";
 export const long: DeepWriteApi["long"] = {
+  deleteCharacterAppearance,
+  getCharacterAppearanceReferences,
+  readChapterImage,
+  replaceChapterImage,
+  copyChapterImage,
+  readClipboardImage,
   readCharacterProfile,
   saveCharacterProfile,
   importCharacterAssets,

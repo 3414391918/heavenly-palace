@@ -9,7 +9,7 @@ onMounted(async () => {
   previous = document.activeElement as HTMLElement;
   await nextTick();
   panel.value
-    ?.querySelector<HTMLElement>('input,button,[tabindex="0"]')
+    ?.querySelector<HTMLElement>('input,textarea,button,[tabindex="0"]')
     ?.focus();
 });
 onBeforeUnmount(() => previous?.focus());
@@ -17,7 +17,7 @@ function trap(event: KeyboardEvent) {
   if (event.key !== "Tab") return;
   const elements = Array.from(
     panel.value?.querySelectorAll<HTMLElement>(
-      'button:not(:disabled),input:not(:disabled),[tabindex="0"]'
+      'button:not(:disabled),input:not(:disabled),textarea:not(:disabled),[tabindex="0"]'
     ) ?? []
   );
   const first = elements[0],

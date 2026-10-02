@@ -1,11 +1,13 @@
 import { effectScope, nextTick, ref } from "vue";
 import { beforeEach, describe, expect, it } from "vitest";
 import { clearEditorScrollMemory } from "../utils/editorScrollMemory";
+import { rememberEditorScrollPosition } from "../utils/editorScrollMemory";
 import {
   longEditorScrollMemoryKey,
   useLongEditorScrollMemory,
   type LongEditorScrollIdentity
 } from "./useLongEditorScrollMemory";
+import { useLongEditorViewport } from "./useLongEditorViewport";
 
 function identity(
   overrides: Partial<LongEditorScrollIdentity> = {}
@@ -39,6 +41,49 @@ beforeEach(() => {
 });
 
 describe("long editor scroll memory", () => {
+  it("waits for preview content and ignores layout scroll events during loading", async () => {
+    const scope = effectScope();
+    const key = longEditorScrollMemoryKey(identity());
+    rememberEditorScrollPosition(key, "preview", 760);
+    const ready = ref(false);
+    const preview = scrollElement();
+    const memory = scope.run(() =>
+      useLongEditorViewport({
+        documentKey: () => key,
+        viewMode: ref("preview"),
+        editorInput: ref(null),
+        documentPreview: ref(preview),
+        contentReady: () => ready.value
+      })
+    )!;
+    await memory.restoreScroll();
+    expect(preview.scrollTop).toBe(0);
+    memory.handleScroll({ currentTarget: preview } as unknown as Event);
+    ready.value = true;
+    await flushScrollRestore();
+    expect(preview.scrollTop).toBe(760);
+    scope.stop();
+  });
+  it("restores a reopened preview when its element appears after document loading", async () => {
+    const scope = effectScope();
+    const key = longEditorScrollMemoryKey(identity());
+    rememberEditorScrollPosition(key, "preview", 760);
+    const preview = ref<HTMLElement | null>(null);
+    scope.run(() =>
+      useLongEditorViewport({
+        documentKey: () => key,
+        viewMode: ref("preview"),
+        editorInput: ref(null),
+        documentPreview: preview,
+        contentReady: () => true
+      })
+    );
+    await flushScrollRestore();
+    preview.value = scrollElement();
+    await flushScrollRestore();
+    expect(preview.value.scrollTop).toBe(760);
+    scope.stop();
+  });
   it("starts an unseen item at the top and restores each previous position", async () => {
     const scope = effectScope();
     const firstKey = longEditorScrollMemoryKey(identity());

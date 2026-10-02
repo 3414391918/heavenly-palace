@@ -4,6 +4,8 @@ import { onBeforeUnmount, ref, watch } from "vue";
 import DocumentMetaRow from "./DocumentMetaRow.vue";
 import EditorSearchHighlight from "./EditorSearchHighlight.vue";
 import MarkdownContent from "./MarkdownContent.vue";
+import ChapterImageActions from "../features/chapter-images/ChapterImageActions.vue";
+import type { ChapterImageContext } from "../features/chapter-images/useChapterImageActions";
 
 defineProps<{
   title: string;
@@ -14,6 +16,7 @@ defineProps<{
   format: string;
   content: string;
   resolveImageUrl?: (source: string) => string | undefined;
+  imageContext?: ChapterImageContext | undefined;
   documentKey: string;
   viewMode: TextViewMode;
   readOnly: boolean;
@@ -128,12 +131,19 @@ function updateTitle(event: Event): void {
       @contextmenu="emit('previewContextmenu', $event)"
       @scroll="emit('editorScroll', $event)"
     >
-      <MarkdownContent
+      <ChapterImageActions
         v-if="content.trim()"
-        :content="content"
+        :context="imageContext"
+        :disabled="busy || readOnly"
         :resolve-image-url="resolveImageUrl"
-        annotate-headings
-      />
+        v-slot="{ resolveUrl }"
+      >
+        <MarkdownContent
+          :content="content"
+          :resolve-image-url="resolveUrl"
+          annotate-headings
+        />
+      </ChapterImageActions>
       <p v-else class="is-empty">暂无正文</p>
     </article>
   </section>

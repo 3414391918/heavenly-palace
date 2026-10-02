@@ -1,16 +1,31 @@
 import {
   LongCharacterProfileSnapshotSchema,
+  LongGetCharacterAppearanceReferencesResultSchema,
+  LongDeleteCharacterAppearanceResultSchema,
   type CommandEnvelope,
   type CommandResult
 } from "@deepwrite/contracts";
 import type { LongWorkspaceService } from "./long-workspace-service";
+import { getCharacterAppearanceReferences } from "./long-character-appearance-references";
 
 export async function handleLongCharacterProfileCoreCommand(
   service: LongWorkspaceService,
   command: CommandEnvelope
 ): Promise<CommandResult | undefined> {
+  if (command.type === "long.getCharacterAppearanceReferences") {
+    return {
+      status: "accepted",
+      requestId: command.id,
+      payload: LongGetCharacterAppearanceReferencesResultSchema.parse(
+        await getCharacterAppearanceReferences(service, command.payload)
+      )
+    };
+  }
   let payload;
   switch (command.type) {
+    case "long.deleteCharacterAppearance":
+      payload = await service.deleteCharacterAppearance(command.payload);
+      break;
     case "long.readCharacterProfile":
       payload = await service.readCharacterProfile(command.payload);
       break;
@@ -32,6 +47,9 @@ export async function handleLongCharacterProfileCoreCommand(
   return {
     status: "accepted",
     requestId: command.id,
-    payload: LongCharacterProfileSnapshotSchema.parse(payload)
+    payload:
+      command.type === "long.deleteCharacterAppearance"
+        ? LongDeleteCharacterAppearanceResultSchema.parse(payload)
+        : LongCharacterProfileSnapshotSchema.parse(payload)
   };
 }

@@ -3,7 +3,9 @@ import { access, mkdtemp, rm } from "node:fs/promises";
 import { spawn, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { build } from "vite";
+import vue from "@vitejs/plugin-vue";
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const appDir = resolve(scriptDir, "..");
@@ -37,6 +39,45 @@ const smokeUserData = await mkdtemp(
   join(tmpdir(), "deepwrite-electron-smoke-")
 );
 await prepareSmokeWorkspace(smokeUserData);
+const smokeAssets = await mkdtemp(
+  join(appDir, "out/renderer/.chapter-image-smoke-")
+);
+try {
+  await build({
+    configFile: false,
+    root: join(appDir, "src/renderer"),
+    plugins: [vue()],
+    logLevel: "warn",
+    define: { "process.env.NODE_ENV": JSON.stringify("production") },
+    resolve: {
+      alias: {
+        "@deepwrite/contracts": join(
+          workspaceRoot,
+          "packages/contracts/src/renderer.ts"
+        )
+      }
+    },
+    build: {
+      outDir: smokeAssets,
+      emptyOutDir: true,
+      lib: {
+        entry: join(
+          appDir,
+          "src/renderer/src/features/chapter-images/chapter-image.smoke.ts"
+        ),
+        formats: ["es"],
+        fileName: () => "chapter-image.smoke.js",
+        cssFileName: "chapter-image.smoke"
+      }
+    }
+  });
+} catch (error) {
+  await Promise.all([
+    rm(smokeUserData, { recursive: true, force: true }),
+    rm(smokeAssets, { recursive: true, force: true })
+  ]);
+  throw error;
+}
 const command = !hasDisplay && hasXvfb ? "xvfb-run" : electronBinary;
 const args =
   !hasDisplay && hasXvfb
@@ -48,6 +89,9 @@ const child = spawn(command, args, {
   env: {
     ...process.env,
     DEEPWRITE_SMOKE: "1",
+    DEEPWRITE_SMOKE_CHAPTER_IMAGE_MODULE: pathToFileURL(
+      join(smokeAssets, "chapter-image.smoke.js")
+    ).href,
     ELECTRON_DISABLE_SECURITY_WARNINGS: "true"
   },
   stdio: ["ignore", "pipe", "pipe"]
@@ -68,6 +112,7 @@ const timeout = setTimeout(() => {
 child.on("close", async (code) => {
   clearTimeout(timeout);
   await rm(smokeUserData, { recursive: true, force: true });
+  await rm(smokeAssets, { recursive: true, force: true });
   const marker = output
     .split(/\r?\n/)
     .find((line) => line.startsWith("DEEPWRITE_SMOKE_OK "));
@@ -91,6 +136,27 @@ child.on("close", async (code) => {
 
   if (
     summary.bookTemplates?.status !== "ok" ||
+    summary.characterAppearances?.status !== "ok" ||
+    summary.characterAppearances?.created !== true ||
+    summary.characterAppearances?.copied !== true ||
+    summary.characterAppearances?.cancelled !== true ||
+    summary.characterAppearances?.referenceIsolated !== true ||
+    summary.characterAppearances?.persisted !== true ||
+    summary.characterAppearances?.refreshed !== true ||
+    summary.characterAppearances?.rendered !== true ||
+    summary.characterAppearances?.deleted !== true ||
+    summary.characterAppearances?.deleteCancelled !== true ||
+    summary.characterAppearances?.lockedDeletionBlocked !== true ||
+    summary.characterAppearances?.retainedOtherAppearance !== true ||
+    summary.chapterImages?.status !== "ok" ||
+    summary.chapterImages?.rendered !== true ||
+    summary.chapterImages?.referenceUnchanged !== true ||
+    summary.chapterImages?.staleRejected !== true ||
+    summary.chapterImages?.filePasteDecoded !== true ||
+    summary.chapterImages?.previewReopened !== true ||
+    summary.chapterImages?.focusPreserved !== true ||
+    summary.chapterImages?.reopenPreserved !== true ||
+    !(summary.chapterImages?.imageBytes >= 8 * 1024 * 1024) ||
     summary.bookTemplates?.created !== 4 ||
     summary.agent?.status !== "ok" ||
     summary.agent?.runtime?.mode !== "local-faux" ||
@@ -112,6 +178,6 @@ child.on("close", async (code) => {
   }
 
   console.log(
-    "Electron smoke passed: healthy utilities, Pi/Faux completion, and Renderer-to-SQLite chunked persistence with preserved metadata and proposals; template CRUD and short/script creation through real IPC."
+    `Electron smoke passed: utilities, Pi/Faux completion, conversation persistence, template CRUD, large chapter-image (${summary.chapterImages.imageBytes} bytes) clipboard/replace/reopen/render through real IPC with unchanged references, editor preview mode/scroll preservation, and character appearance create/copy/refresh/render/permanent-delete/cancel/lock/other-appearance retention.`
   );
 });

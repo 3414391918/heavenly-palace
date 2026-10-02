@@ -5,6 +5,12 @@ export function createUnusedLongApi(): DeepWriteApi["long"] {
     throw new Error("Character assets are not used by conversation tests.");
   });
   return {
+    getCharacterAppearanceReferences: unused,
+    deleteCharacterAppearance: unused,
+    readChapterImage: unused,
+    replaceChapterImage: unused,
+    copyChapterImage: unused,
+    readClipboardImage: unused,
     readCharacterProfile: unused,
     saveCharacterProfile: unused,
     importCharacterAssets: unused,

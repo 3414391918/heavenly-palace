@@ -81,4 +81,6 @@ export { compareVersions } from "./update-version";
 export * from "./window-frame";
 
 export * from "./long-character-profile";
+export * from "./long-character-appearance";
 export * from "./long-character-profile-markdown";
+export * from "./long-chapter-image";

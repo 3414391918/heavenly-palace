@@ -8,9 +8,16 @@ directories:
 
 files:
   - out/**/*
+  - "!out/runtime/**/*"
   - package.json
+  - from: "out/runtime/${os}-${arch}/node_modules"
+    to: out/node_modules
+    filter:
+      - "**/*"
 
 asar: true
+asarUnpack:
+  - "out/runtime/${os}-${arch}/node_modules/**/*"
 beforeBuild: ./scripts/electron-builder-before-build.cjs
 
 extraMetadata:

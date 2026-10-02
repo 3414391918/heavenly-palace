@@ -1,10 +1,14 @@
 import { LongCharacterProfileService } from "./long-character-profile-service";
+import { LongChapterImageService } from "./long-chapter-image-service";
 import type {
   LongReadCharacterProfileInput,
   LongSaveCharacterProfileInput,
   LongImportCharacterAssetsAtPathsInput,
   LongRenameCharacterAssetInput,
-  LongDeleteCharacterAssetInput
+  LongDeleteCharacterAssetInput,
+  LongDeleteCharacterAppearanceInput,
+  LongReadChapterImageInput,
+  LongReplaceChapterImageInput
 } from "@deepwrite/contracts";
 import { createHash } from "node:crypto";
 import { dirname } from "node:path";
@@ -138,6 +142,7 @@ export class LongWorkspaceService {
   readonly catalog: LongProjectCatalog;
 
   private readonly characterProfiles: LongCharacterProfileService;
+  private readonly chapterImages: LongChapterImageService;
   private readonly now: () => string;
   private readonly onDiagnostic:
     ((diagnostic: LongWorkspaceServiceDiagnostic) => void) | undefined;
@@ -177,6 +182,15 @@ export class LongWorkspaceService {
         );
       }
     );
+    this.chapterImages = new LongChapterImageService(this.catalog, this.store);
+  }
+
+  async readChapterImage(input: LongReadChapterImageInput) {
+    return await this.chapterImages.readChapterImage(input);
+  }
+
+  async replaceChapterImage(input: LongReplaceChapterImageInput) {
+    return await this.chapterImages.replaceChapterImage(input);
   }
 
   async readCharacterProfile(input: LongReadCharacterProfileInput) {
@@ -195,6 +209,9 @@ export class LongWorkspaceService {
   }
   async deleteCharacterAsset(input: LongDeleteCharacterAssetInput) {
     return await this.characterProfiles.deleteCharacterAsset(input);
+  }
+  async deleteCharacterAppearance(input: LongDeleteCharacterAppearanceInput) {
+    return await this.characterProfiles.deleteCharacterAppearance(input);
   }
 
   async create(

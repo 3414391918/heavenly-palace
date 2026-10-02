@@ -1,0 +1,50 @@
+import {
+  CommandEnvelopeSchema,
+  createEnvelope,
+  LongReadChapterImageInputSchema,
+  LongReadChapterImageResultSchema,
+  LongReplaceChapterImageInputSchema,
+  LongReplaceChapterImageResultSchema,
+  LongReadClipboardImageResultSchema,
+  LongCopyChapterImageResultSchema,
+  type LongReadChapterImageInput,
+  type LongReplaceChapterImageInput
+} from "@deepwrite/contracts";
+import { browserId, invokeCommand } from "./invoke";
+async function invoke(type: string, payload: unknown) {
+  const id = browserId("cmd_image");
+  return await invokeCommand<unknown>(
+    CommandEnvelopeSchema.parse(
+      createEnvelope(type, payload, { id, correlationId: id })
+    )
+  );
+}
+export async function readChapterImage(input: LongReadChapterImageInput) {
+  return LongReadChapterImageResultSchema.parse(
+    await invoke(
+      "long.readChapterImage",
+      LongReadChapterImageInputSchema.parse(input)
+    )
+  );
+}
+export async function replaceChapterImage(input: LongReplaceChapterImageInput) {
+  return LongReplaceChapterImageResultSchema.parse(
+    await invoke(
+      "long.replaceChapterImage",
+      LongReplaceChapterImageInputSchema.parse(input)
+    )
+  );
+}
+export async function copyChapterImage(input: LongReadChapterImageInput) {
+  return LongCopyChapterImageResultSchema.parse(
+    await invoke(
+      "long.copyChapterImage",
+      LongReadChapterImageInputSchema.parse(input)
+    )
+  );
+}
+export async function readClipboardImage() {
+  return LongReadClipboardImageResultSchema.parse(
+    await invoke("long.readClipboardImage", {})
+  );
+}
