@@ -20,7 +20,8 @@ const featureHostSource = `${featureHostCoordinatorSource}\n${featureHostModuleS
 describe("SettingsPage", () => {
   it("can open directly on a requested settings category", () => {
     expect(source).toContain("initialCategory?: string");
-    expect(source).toContain('ref(props.initialCategory ?? "general")');
+    expect(source).toContain("category.id === props.initialCategory");
+    expect(source).toContain(': "general"');
   });
 
   it("offers a persisted auto-save switch in general settings", () => {
@@ -95,20 +96,12 @@ describe("SettingsPage", () => {
     expectSourceToContain(generalSettingsSource, "emit('updateShowInMenuBar'");
   });
 
-  it("offers a persisted network proxy switch that defaults to direct access", () => {
-    expectSourceToContain(generalSettingsSource, "网络设置");
-    expectSourceToContain(generalSettingsSource, "<strong>网络代理</strong>");
-    expect(generalSettingsSource).toContain(':checked="useNetworkProxy"');
-    expect(generalSettingsSource).toContain("'updateUseNetworkProxy'");
-    expect(source).toContain(':use-network-proxy="useNetworkProxy"');
-    expect(featureModulesSource).toContain(
+  it("removes network controls from general settings", () => {
+    expect(generalSettingsSource).not.toContain("网络设置");
+    expect(generalSettingsSource).not.toContain("网络代理");
+    expect(source).not.toContain("useNetworkProxy");
+    expect(featureModulesSource).not.toContain(
       ':use-network-proxy="module.useNetworkProxy"'
-    );
-    expect(featureHostSource).toContain(
-      "settingsStore.generalSettings.useNetworkProxy"
-    );
-    expect(appSource).toContain(
-      '@update-use-network-proxy="updateUseNetworkProxy"'
     );
   });
 
@@ -197,48 +190,34 @@ describe("SettingsPage", () => {
     expect(source).toContain("emit('resetLibraryAgent', $event)");
   });
 
-  it("orders usage, free, custom, old-site, and new-site model settings", () => {
+  it("keeps usage and custom models without the removed settings categories", () => {
     const usageIndex = source.indexOf('{ id: "usage", label: "用量"');
-    const freeModelsIndex = source.indexOf(
-      '{ id: "free-models", label: "免费模型"'
-    );
     const customModelsIndex = source.indexOf(
       '{ id: "custom-models", label: "自定义模型配置"'
     );
-    const officialModelsIndex = source.indexOf(
-      '{ id: "official-models", label: "旧官方小站模型"'
-    );
-    const siteOfficialModelsIndex = source.indexOf(
-      'id: "site-official-models"'
-    );
 
     expect(usageIndex).toBeGreaterThan(-1);
-    expect(freeModelsIndex).toBeGreaterThan(usageIndex);
-    expect(customModelsIndex).toBeGreaterThan(freeModelsIndex);
-    expect(officialModelsIndex).toBeGreaterThan(customModelsIndex);
-    expect(siteOfficialModelsIndex).toBeGreaterThan(officialModelsIndex);
+    expect(customModelsIndex).toBeGreaterThan(usageIndex);
+    for (const id of [
+      "free-models",
+      "official-models",
+      "site-official-models",
+      "profile",
+      "voice",
+      "configuration",
+      "personalization",
+      "keyboard"
+    ]) {
+      expect(source).not.toContain(`id: "${id}"`);
+    }
     expect(source).toContain('model-scope="custom"');
     expect(source).toContain('emit("loadModels")');
     expect(source).toContain("emit('saveModels', $event)");
     expect(source).toContain("emit('testModel', $event)");
-    expect(source).toContain("<FreeModelsPanel");
-    expect(source).toContain("emit('refreshFreeModels')");
-    expect(source).toContain("emit('setFreeModelEnabled'");
+    expect(source).not.toContain("<FreeModelsPanel");
     expect(source).toContain(':testing-model-id="testingModelId"');
-    expect(source).toContain("@test=\"emit('testModel', $event)\"");
-    expect(source).toContain("<OfficialModelsPanel");
-    expect(source).toContain("emit('saveOfficialToken', $event)");
-    expect(source).toContain('if (id === "official-models")');
-    expect(source).toContain('emit("loadOfficialModels")');
-    expect(source).toContain('if (id === "site-official-models")');
-    expect(source).toContain("<SiteOfficialModelsPanel");
-    expect(source).toContain('label: "新官方小站模型"');
-    expect(source).toContain("emit('saveSiteOfficialToken', $event)");
-    expect(source).toContain("emit('clearSiteOfficialToken')");
-    expect(source).toContain('emit("loadSiteOfficialModels")');
-    expect(source).toContain("emit('refreshSiteOfficialModels')");
-    expect(source).toContain("emit('setSiteOfficialModelEnabled'");
-    expect(source).toContain(':quota="siteOfficialQuota"');
+    expect(source).not.toContain("<OfficialModelsPanel");
+    expect(source).not.toContain("<SiteOfficialModelsPanel");
   });
 
   it("connects custom model management to the existing app model state and actions", () => {
@@ -255,24 +234,11 @@ describe("SettingsPage", () => {
       ':model-saving="module.modelSaving"'
     );
     expect(featureModulesSource).toContain(
-      ':free-models-refreshing="module.freeModelsRefreshing"'
-    );
-    expect(featureModulesSource).toContain(
-      ':site-official-quota="module.siteOfficialQuota"'
-    );
-    expect(featureModulesSource).toContain(
       "@load-models=\"emit('loadModels')\""
     );
     expect(appSource).toContain('@load-models="loadModelSettings"');
     expect(appSource).toContain('@save-models="saveModelSettings"');
     expect(appSource).toContain('@test-model="testModel"');
-    expect(appSource).toContain('@refresh-free-models="refreshFreeModels"');
-    expect(appSource).toContain(
-      '@refresh-site-official-models="refreshSiteOfficialModels"'
-    );
-    expect(appSource).toContain(
-      '@set-free-model-enabled="setFreeModelEnabled"'
-    );
   });
 
   it("lets users pick UI and editor font families from appearance settings", () => {

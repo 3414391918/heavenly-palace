@@ -15,7 +15,6 @@ export function buildSettingsFeatureModule(
     language: settingsStore.generalSettings.language,
     showContextUsage: settingsStore.generalSettings.showContextUsage,
     showInMenuBar: settingsStore.generalSettings.showInMenuBar,
-    useNetworkProxy: settingsStore.generalSettings.useNetworkProxy,
     workspacePaneLayout: settingsStore.generalSettings.workspacePaneLayout,
     defaultTextViewMode: settingsStore.generalSettings.defaultTextViewMode,
     bodyTextFormats: settingsStore.generalSettings.bodyTextFormats,
@@ -35,18 +34,9 @@ export function buildSettingsFeatureModule(
     modelSettings: settingsStore.modelSettings,
     modelLoading: settingsStore.modelLoading,
     modelSaving: settingsStore.modelSaving,
-    freeModelsRefreshing: settingsStore.freeModelsRefreshing,
-    freeModelsSaving: settingsStore.freeModelsSaving,
-    siteOfficialModelsRefreshing: settingsStore.siteOfficialModelsRefreshing,
-    siteOfficialModelsSaving: settingsStore.siteOfficialModelsSaving,
-    siteOfficialQuota: settingsStore.siteOfficialQuota,
     modelError: settingsStore.modelError,
     modelTestMessage: settingsStore.modelTestMessage,
     testingModelId: settingsStore.testingModelId,
-    officialModelUsageDashboard: settingsStore.officialModelUsageDashboard,
-    officialModelBalance: settingsStore.officialModelBalance,
-    officialModelsLoading: settingsStore.officialModelsLoading,
-    officialModelsSaving: settingsStore.officialModelsSaving,
     runtimeAvailable: Boolean(options.api())
   };
 }

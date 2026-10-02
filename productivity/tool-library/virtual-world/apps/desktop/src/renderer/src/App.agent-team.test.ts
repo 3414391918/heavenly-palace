@@ -71,7 +71,7 @@ describe("App agent-team integration", () => {
     );
     expectSourceToContain(
       source,
-      ":active-primary-feature=\"chatAssistant.active.value ? 'chat-assistant' : activePrimaryFeature\""
+      ':active-primary-feature="activePrimaryFeature"'
     );
   });
 

@@ -59,9 +59,6 @@ export const WorkspaceDialogLayer = lazyFeature((features) =>
 export const AgentConversation = lazyFeature((features) =>
   features.loadAgentConversation()
 );
-export const ChatAssistantOverlay = lazyFeature((features) =>
-  features.loadChatAssistantOverlay()
-);
 export const BookResourceDialog = lazyFeature((features) =>
   features.loadBookResourceDialog()
 );

@@ -40,7 +40,6 @@ const emit = defineEmits<{
   collapse: [];
   createBook: [];
   openDialog: [mode: DialogMode];
-  openChatAssistant: [];
   openAgentTeams: [];
   openMarketplace: [];
   openCloudBackup: [];
@@ -88,17 +87,15 @@ const newBookItem = {
   shortcut: "Ctrl N"
 } as const;
 
-type PrimaryFeatureId = DialogMode | "chat-assistant" | "agent-teams";
+type PrimaryFeatureId = DialogMode | "agent-teams";
 
 const navItems: Array<{
   id: PrimaryFeatureId;
   label: string;
-  icon: "directory" | "model" | "wand" | "message" | "brain";
+  icon: "directory" | "model" | "wand" | "brain";
 }> = [
   { id: "directory", label: "工作目录", icon: "directory" },
-  { id: "models", label: "自定义模型配置", icon: "model" },
-  { id: "agent-teams", label: "智能体团队", icon: "brain" },
-  { id: "chat-assistant", label: "聊天", icon: "message" }
+  { id: "agent-teams", label: "智能体团队", icon: "brain" }
 ];
 
 const moreExpanded = ref(false);
@@ -147,10 +144,6 @@ function activateNav(id: "create-book" | PrimaryFeatureId): void {
   }
   if (id === "agent-teams") {
     emit("openAgentTeams");
-    return;
-  }
-  if (id === "chat-assistant") {
-    emit("openChatAssistant");
     return;
   }
   emit("openDialog", id);

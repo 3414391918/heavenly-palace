@@ -6,7 +6,6 @@ import messageItemSource from "./ConversationMessageItem.vue?raw";
 import messageListSource from "./ConversationMessageList.vue?raw";
 import editingSource from "../composables/useConversationMessageEditing.ts?raw";
 import writingWorkspaceSource from "./WritingWorkspaceModule.vue?raw";
-import chatAssistantSource from "../features/chat-assistant/ChatAssistantOverlay.vue?raw";
 
 describe("conversation history rewrite presentation", () => {
   it("opens one inline editor from double-click or the edit action", () => {
@@ -60,7 +59,7 @@ describe("conversation history rewrite presentation", () => {
     );
   });
 
-  it("wires workspace agents but leaves the floating chat assistant unchanged", () => {
+  it("wires history rewriting into workspace agents", () => {
     expect(agentConversationSource).toContain(
       ':can-rewrite-history="canRewriteHistory"'
     );
@@ -73,7 +72,5 @@ describe("conversation history rewrite presentation", () => {
       ':can-rewrite-history="canRewriteHistory"'
     );
     expect(longWorkspaceSource).toContain('item.status === "accepted"');
-    expect(chatAssistantSource).not.toContain("can-rewrite-history");
-    expect(chatAssistantSource).not.toContain("submit-edited-message");
   });
 });

@@ -16,8 +16,6 @@ import {
   type ModelSettingsInput,
   type ModelUsageDashboard,
   type ModelUsageQueryInput,
-  type OfficialModelBalance,
-  type SiteOfficialQuota,
   type TextViewMode,
   type WorkspacePaneLayout,
   type WorkspaceAgentSettings,
@@ -25,15 +23,12 @@ import {
 } from "@deepwrite/contracts";
 import AppIcon from "./AppIcon.vue";
 import AppearanceSettingsPanel from "./AppearanceSettingsPanel.vue";
-import FreeModelsPanel from "./FreeModelsPanel.vue";
 import BodyTextSettingsPanel from "./BodyTextSettingsPanel.vue";
 import GeneralSettingsPanel from "./GeneralSettingsPanel.vue";
 import LibraryAgentSettingsPanel from "./LibraryAgentSettingsPanel.vue";
 import ModelSettingsFeature from "./ModelSettingsFeature.vue";
 import ModelUsagePanel from "./ModelUsagePanel.vue";
-import OfficialModelsPanel from "./OfficialModelsPanel.vue";
 import ShortAgentSettingsPanel from "./ShortAgentSettingsPanel.vue";
-import SiteOfficialModelsPanel from "./SiteOfficialModelsPanel.vue";
 
 interface SettingsCategory {
   id: string;
@@ -65,7 +60,6 @@ const props = defineProps<{
   language: AppLanguage;
   showContextUsage: boolean;
   showInMenuBar: boolean;
-  useNetworkProxy: boolean;
   workspacePaneLayout: WorkspacePaneLayout;
   defaultTextViewMode: TextViewMode;
   bodyTextFormats: BodyTextFormats;
@@ -82,18 +76,9 @@ const props = defineProps<{
   modelSettings: ModelSettings | null;
   modelLoading: boolean;
   modelSaving: boolean;
-  freeModelsRefreshing: boolean;
-  freeModelsSaving: boolean;
-  siteOfficialModelsRefreshing: boolean;
-  siteOfficialModelsSaving: boolean;
-  siteOfficialQuota: SiteOfficialQuota | null;
   modelError: string | null;
   modelTestMessage: string | null;
   testingModelId: string | null;
-  officialModelUsageDashboard: ModelUsageDashboard | null;
-  officialModelBalance: OfficialModelBalance | null;
-  officialModelsLoading: boolean;
-  officialModelsSaving: boolean;
   libraryAgentSettings: LibraryAgentSettings | null;
   libraryAgentLoading: boolean;
   libraryAgentSaving: boolean;
@@ -108,7 +93,6 @@ const emit = defineEmits<{
   updateLanguage: [language: AppLanguage];
   updateShowContextUsage: [enabled: boolean];
   updateShowInMenuBar: [enabled: boolean];
-  updateUseNetworkProxy: [enabled: boolean];
   updateWorkspacePaneLayout: [layout: WorkspacePaneLayout];
   updateDefaultTextViewMode: [mode: TextViewMode];
   updateBodyTextFormat: [change: BodyTextFormatChange];
@@ -121,19 +105,7 @@ const emit = defineEmits<{
   loadModels: [];
   saveModels: [settings: ModelSettingsInput];
   testModel: [model: ModelConfigInput];
-  loadOfficialModels: [];
-  loadSiteOfficialModels: [];
-  saveOfficialToken: [apiKey: string];
-  clearOfficialToken: [];
-  saveSiteOfficialToken: [apiKey: string];
-  clearSiteOfficialToken: [];
-  refreshSiteOfficialModels: [];
-  setSiteOfficialModelEnabled: [modelId: string, enabled: boolean];
-  setOfficialModelEnabled: [modelId: string, enabled: boolean];
-  refreshFreeModels: [];
-  setFreeModelEnabled: [modelId: string, enabled: boolean];
 }>();
-const activeCategory = ref(props.initialCategory ?? "general");
 const searchQuery = ref("");
 
 const sections: SettingsSection[] = [
@@ -151,14 +123,7 @@ const sections: SettingsSection[] = [
     label: "模型与用量",
     categories: [
       { id: "usage", label: "用量", icon: "ledger" },
-      { id: "free-models", label: "免费模型", icon: "model" },
-      { id: "custom-models", label: "自定义模型配置", icon: "model" },
-      { id: "official-models", label: "旧官方小站模型", icon: "model" },
-      {
-        id: "site-official-models",
-        label: "新官方小站模型",
-        icon: "model"
-      }
+      { id: "custom-models", label: "自定义模型配置", icon: "model" }
     ]
   },
   {
@@ -167,15 +132,18 @@ const sections: SettingsSection[] = [
     categories: [
       { id: "general", label: "常规", icon: "settings" },
       { id: "body-text", label: "正文文本", icon: "wand" },
-      { id: "profile", label: "个人资料", icon: "user" },
-      { id: "appearance", label: "外观", icon: "sparkles" },
-      { id: "voice", label: "语音", icon: "brain" },
-      { id: "configuration", label: "配置", icon: "model" },
-      { id: "personalization", label: "个性化", icon: "sparkles" },
-      { id: "keyboard", label: "键盘快捷键", icon: "keyboard" }
+      { id: "appearance", label: "外观", icon: "sparkles" }
     ]
   }
 ];
+
+const activeCategory = ref(
+  sections.some((section) =>
+    section.categories.some((category) => category.id === props.initialCategory)
+  )
+    ? props.initialCategory!
+    : "general"
+);
 
 const visibleSections = computed(() => {
   const query = searchQuery.value.trim().toLocaleLowerCase();
@@ -201,14 +169,8 @@ const activeLabel = computed(() => {
 });
 
 async function selectCategory(id: string): Promise<void> {
-  if (id === "official-models") {
-    emit("loadOfficialModels");
-  }
   if (id === "custom-models") {
     emit("loadModels");
-  }
-  if (id === "site-official-models") {
-    emit("loadSiteOfficialModels");
   }
   activeCategory.value = id;
 }
@@ -302,19 +264,6 @@ async function selectCategory(id: string): Promise<void> {
           @query="emit('loadModelUsage', $event)"
         />
 
-        <FreeModelsPanel
-          v-else-if="activeCategory === 'free-models'"
-          :settings="modelSettings"
-          :refreshing="freeModelsRefreshing"
-          :saving="freeModelsSaving"
-          :testing-model-id="testingModelId"
-          @refresh="emit('refreshFreeModels')"
-          @test="emit('testModel', $event)"
-          @set-model-enabled="
-            emit('setFreeModelEnabled', $event.modelId, $event.enabled)
-          "
-        />
-
         <ModelSettingsFeature
           v-else-if="activeCategory === 'custom-models'"
           model-scope="custom"
@@ -331,37 +280,6 @@ async function selectCategory(id: string): Promise<void> {
           @test-model="emit('testModel', $event)"
         />
 
-        <OfficialModelsPanel
-          v-else-if="activeCategory === 'official-models'"
-          :settings="modelSettings"
-          :dashboard="officialModelUsageDashboard"
-          :balance="officialModelBalance"
-          :loading="officialModelsLoading"
-          :saving="officialModelsSaving"
-          @load="emit('loadOfficialModels')"
-          @save-token="emit('saveOfficialToken', $event)"
-          @clear-token="emit('clearOfficialToken')"
-          @set-model-enabled="
-            emit('setOfficialModelEnabled', $event.modelId, $event.enabled)
-          "
-        />
-
-        <SiteOfficialModelsPanel
-          v-else-if="activeCategory === 'site-official-models'"
-          :settings="modelSettings"
-          :saving="siteOfficialModelsSaving"
-          :refreshing="siteOfficialModelsRefreshing"
-          :quota="siteOfficialQuota"
-          :testing-model-id="testingModelId"
-          @test="emit('testModel', $event)"
-          @save-token="emit('saveSiteOfficialToken', $event)"
-          @clear-token="emit('clearSiteOfficialToken')"
-          @refresh="emit('refreshSiteOfficialModels')"
-          @set-model-enabled="
-            emit('setSiteOfficialModelEnabled', $event.modelId, $event.enabled)
-          "
-        />
-
         <GeneralSettingsPanel
           v-else-if="activeCategory === 'general'"
           :permission-mode="permissionMode"
@@ -370,7 +288,6 @@ async function selectCategory(id: string): Promise<void> {
           :language="language"
           :show-context-usage="showContextUsage"
           :show-in-menu-bar="showInMenuBar"
-          :use-network-proxy="useNetworkProxy"
           :workspace-pane-layout="workspacePaneLayout"
           @update-permission-mode="emit('updatePermissionMode', $event)"
           @update-auto-approve-cross-stage-operations="
@@ -380,7 +297,6 @@ async function selectCategory(id: string): Promise<void> {
           @update-language="emit('updateLanguage', $event)"
           @update-show-context-usage="emit('updateShowContextUsage', $event)"
           @update-show-in-menu-bar="emit('updateShowInMenuBar', $event)"
-          @update-use-network-proxy="emit('updateUseNetworkProxy', $event)"
           @update-workspace-pane-layout="
             emit('updateWorkspacePaneLayout', $event)
           "

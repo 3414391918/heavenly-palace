@@ -31,12 +31,12 @@ describe("App remote alerts", () => {
       '@open-official-models="featureHost.openOfficialModelsSettings"'
     );
     expect(featureHostSource).toContain(
-      'issueBackground(() => openSettings("official-models"))'
+      'issueBackground(() => openSettings("custom-models"))'
     );
-    expect(featureHostSource).toContain(
+    expect(featureHostSource).not.toContain(
       'if (initialCategory === "official-models")'
     );
-    expect(featureHostSource).toContain(
+    expect(featureHostSource).not.toContain(
       "issueBackground(options.loaders.loadOfficialModels)"
     );
   });

@@ -24,7 +24,6 @@ import WritingWorkspaceModule from "./components/WritingWorkspaceModule.vue";
 import { registerWorkspaceSystemEventRoutes } from "./events/registerWorkspaceSystemEventRoutes";
 import { systemEventCenter } from "./events/systemEventCenter";
 import {
-  ChatAssistantOverlay,
   LongWorkspaceModule,
   WorkspaceDialogLayer,
   WorkspaceFeatureModules
@@ -72,7 +71,6 @@ import { useWorkspaceResourceTreeCoordinator } from "./composables/useWorkspaceR
 import { useWorkspaceStageNavigator } from "./composables/useWorkspaceStageNavigator";
 import { useWorkspaceDialogModuleCoordinator } from "./composables/useWorkspaceDialogModuleCoordinator";
 import { useWorkspaceFeatureHostCoordinator } from "./composables/useWorkspaceFeatureHostCoordinator";
-import { useChatAssistant } from "./features/chat-assistant/useChatAssistant";
 import { uiMessage } from "./ui-feedback";
 import { resourceSections } from "./data/demoWorkspace";
 import { EMPTY_WORKSPACE_DOCUMENT } from "./data/emptyWorkspaceDocument";
@@ -1429,11 +1427,6 @@ const {
 
 conversationForKey("general");
 
-const chatAssistant = useChatAssistant({
-  ensureModelSettingsLoaded: loadModelSettings,
-  persistenceAdapter: conversationPersistenceAdapter
-});
-
 const {
   activeConversation: activeLongConversation,
   availableMaterialReferences: activeLongMaterialReferences,
@@ -2455,15 +2448,12 @@ onBeforeUnmount(() => {
       :revision-analysis-running="revisionAnalysisRunning"
       :short-book-analysis-running="shortBookAnalysisRunning"
       :library-entry-clipboard-domain="libraryEntryClipboardDomain"
-      :active-primary-feature="
-        chatAssistant.active.value ? 'chat-assistant' : activePrimaryFeature
-      "
+      :active-primary-feature="activePrimaryFeature"
       :marketplace-display-name="marketplaceDisplayName"
       :long-tree-actions-disabled="longBookActionPending"
       @collapse="leftCollapsed = true"
       @create-book="openCreateBookDialog"
       @open-dialog="featureHost.openWorkspaceDialog"
-      @open-chat-assistant="chatAssistant.open"
       @open-agent-teams="featureHost.openAgentTeams"
       @open-marketplace="featureHost.openMarketplace"
       @open-cloud-backup="featureHost.openCloudBackup"
@@ -2630,18 +2620,6 @@ onBeforeUnmount(() => {
       @keydown="handleResizeKeydown('left', $event)"
     />
   </div>
-
-  <Teleport to="body">
-    <ChatAssistantOverlay
-      v-if="chatAssistant.visible.value"
-      active
-      :conversation-for-key="conversationForKey"
-      :catalog-snapshot="catalogSnapshot"
-      :long-books="longBooks"
-      :runtime-available="hasDesktopRuntime"
-      @minimize="chatAssistant.minimize"
-    />
-  </Teleport>
 
   <WorkspaceDialogLayer
     v-if="workspaceDialogModule"

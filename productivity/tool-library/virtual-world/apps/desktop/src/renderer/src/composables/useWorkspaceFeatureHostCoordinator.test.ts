@@ -386,7 +386,7 @@ describe("useWorkspaceFeatureHostCoordinator", () => {
     expect(harness.loaders.loadModelSettings).toHaveBeenCalledTimes(3);
   });
 
-  it("preserves normal and official settings loading boundaries", async () => {
+  it("loads settings models without opening removed official model pages", async () => {
     const harness = createHarness();
 
     await harness.coordinator.openSettings("general");
@@ -400,9 +400,9 @@ describe("useWorkspaceFeatureHostCoordinator", () => {
     ).not.toHaveBeenCalled();
 
     harness.coordinator.closeSettings();
-    await harness.coordinator.openSettings("official-models");
-    expect(harness.loaders.loadOfficialModels).toHaveBeenCalledOnce();
-    expect(harness.loaders.loadModelSettings).toHaveBeenCalledOnce();
+    await harness.coordinator.openSettings("custom-models");
+    expect(harness.loaders.loadOfficialModels).not.toHaveBeenCalled();
+    expect(harness.loaders.loadModelSettings).toHaveBeenCalledTimes(2);
   });
 
   it("loads learning prompts when the imitation feature opens", async () => {
@@ -440,7 +440,7 @@ describe("useWorkspaceFeatureHostCoordinator", () => {
     const loading = vi.fn(() => pending.promise);
     vi.mocked(loadSettingsFeature).mockImplementationOnce(loading);
     const harness = createHarness();
-    const opening = harness.coordinator.openSettings("official-models");
+    const opening = harness.coordinator.openSettings("custom-models");
     await vi.waitFor(() => expect(loading).toHaveBeenCalledOnce());
     expect(harness.currentView.value).toBe("workspace");
 

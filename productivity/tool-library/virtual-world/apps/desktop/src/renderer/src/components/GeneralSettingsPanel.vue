@@ -13,7 +13,6 @@ defineProps<{
   language: AppLanguage;
   showContextUsage: boolean;
   showInMenuBar: boolean;
-  useNetworkProxy: boolean;
   workspacePaneLayout: WorkspacePaneLayout;
 }>();
 
@@ -24,7 +23,6 @@ const emit = defineEmits<{
   updateLanguage: [language: AppLanguage];
   updateShowContextUsage: [enabled: boolean];
   updateShowInMenuBar: [enabled: boolean];
-  updateUseNetworkProxy: [enabled: boolean];
   updateWorkspacePaneLayout: [layout: WorkspacePaneLayout];
 }>();
 
@@ -193,31 +191,6 @@ const workspacePaneLayoutOptions: Array<{
               )
             " /></span
       ></label>
-    </div>
-
-    <h2 class="settings-group-title">网络设置</h2>
-    <div class="settings-card">
-      <label class="settings-item">
-        <span class="settings-item-text"
-          ><strong>网络代理</strong
-          ><small
-            >默认直连模型服务。开启后使用系统或环境变量中的 HTTP 代理，适合需要
-            VPN 的接口。</small
-          ></span
-        >
-        <span class="settings-toggle"
-          ><input
-            type="checkbox"
-            :checked="useNetworkProxy"
-            aria-label="网络代理"
-            @change="
-              emit(
-                'updateUseNetworkProxy',
-                ($event.target as HTMLInputElement).checked
-              )
-            "
-        /></span>
-      </label>
     </div>
   </section>
 </template>

@@ -27,8 +27,6 @@ export const loadWorkspaceFeatureModules = () =>
 export const loadWorkspaceDialogLayer = () =>
   import("./WorkspaceDialogLayer.vue");
 export const loadAgentConversation = () => import("./AgentConversation.vue");
-export const loadChatAssistantOverlay = () =>
-  import("../features/chat-assistant/ChatAssistantOverlay.vue");
 export const loadBookResourceDialog = () => import("./BookResourceDialog.vue");
 export const loadBookTransferDialog = () => import("./BookTransferDialog.vue");
 export const loadCharacterItemDialog = () =>

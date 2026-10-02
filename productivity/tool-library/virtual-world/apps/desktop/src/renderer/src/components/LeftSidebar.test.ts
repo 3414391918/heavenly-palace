@@ -3,8 +3,7 @@ import { expectSourceToContain } from "../../../test-utils/sourceText";
 import moreFeaturesSource from "./sidebarMoreFeatures.ts?raw";
 import sidebarSource from "./LeftSidebar.vue?raw";
 import profileSource from "./SidebarProfileMenu.vue?raw";
-import updateDialogSource from "./VersionUpdateDialog.vue?raw";
-const source = `${sidebarSource}\n${profileSource}\n${updateDialogSource}\n${moreFeaturesSource}`;
+const source = `${sidebarSource}\n${profileSource}\n${moreFeaturesSource}`;
 
 describe("LeftSidebar account controls", () => {
   it("separates the account menu from the settings-page button", () => {
@@ -14,10 +13,10 @@ describe("LeftSidebar account controls", () => {
     expect(source).not.toContain("@click=\"emit('openSettings')\"");
   });
 
-  it("offers settings, updates and author contact without local name editing", () => {
+  it("offers settings and author contact without updates or local name editing", () => {
     expect(source).toContain("<span>设置</span>");
     expect(source).toContain('@click="openSettings"');
-    expect(source).toContain("<span>版本更新</span>");
+    expect(source).not.toContain("版本更新");
     expect(source).toContain("联系作者");
     expect(source).toContain('profileDialog.value = "contact"');
     expect(source).not.toContain("<span>姓名</span>");
@@ -59,6 +58,7 @@ describe("LeftSidebar account controls", () => {
   });
 
   it("keeps agent-team management in the primary navigation", () => {
+    expect(sidebarSource).not.toContain('label: "自定义模型配置"');
     expect(source).toContain('id: "agent-teams"');
     expect(source).toContain('emit("openAgentTeams")');
     expect(source).toContain("props.activePrimaryFeature");
@@ -103,15 +103,5 @@ describe("LeftSidebar account controls", () => {
     expect(source).not.toContain('{ id: "search", label: "全局检索"');
     expect(source).not.toContain('{ id: "transfer", label: "导入与导出"');
     expect(source).toContain('@click="activateMoreFeature(feature.id)"');
-  });
-
-  it("shows and locks the update dialog while macOS hands off to the installer", () => {
-    expectSourceToContain(
-      source,
-      'const updateInstalling = computed(() => updateState.value.status === "installing")'
-    );
-    expect(source).toContain("正在安全退出并准备安装…");
-    expect(source).toContain(':disabled="updateInstalling"');
-    expect(source).toContain("正在安装…");
   });
 });

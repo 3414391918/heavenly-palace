@@ -23,7 +23,6 @@ export type PrimaryFeature =
   | "revision-analysis"
   | "short-book-analysis"
   | "style-comparison"
-  | "chat-assistant"
   | "agent-teams"
   | "skill-marketplace"
   | "cloud-backup"

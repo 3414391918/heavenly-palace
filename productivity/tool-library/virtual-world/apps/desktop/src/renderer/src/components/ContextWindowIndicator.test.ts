@@ -5,7 +5,6 @@ import conversationSource from "./AgentConversation.vue?raw";
 import composerSource from "./ConversationComposer.vue?raw";
 import modelConfigSource from "./ConversationModelConfigSelect.vue?raw";
 import indicatorSource from "./ContextWindowIndicator.vue?raw";
-import chatAssistantComposerSource from "../features/chat-assistant/ChatAssistantComposer.vue?raw";
 
 describe("ContextWindowIndicator", () => {
   it("places the indicator after the unified model configuration", () => {
@@ -27,7 +26,6 @@ describe("ContextWindowIndicator", () => {
     expect(composerSource).toContain(
       'v-if="settingsStore.generalSettings.showContextUsage"'
     );
-    expect(chatAssistantComposerSource).not.toContain("ContextWindowIndicator");
   });
 
   it("teleports a keyboard-accessible tooltip outside the clipped composer", () => {
