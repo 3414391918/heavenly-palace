@@ -9,7 +9,6 @@ import {
   type LongAgentId,
   type LongWorkspaceIndexSnapshot,
   type ModelConfig,
-  type WorkspaceAgentId,
   type ThinkingLevel,
   type UserPromptAttachment
 } from "@deepwrite/contracts";
@@ -65,8 +64,8 @@ const props = withDefaults(
     bookTitle: string;
     stageLabel: string;
     agentLabel: string;
-    agentId: WorkspaceAgentId | LongAgentId | undefined;
-    agentWorkspaceType?: "short" | "script" | "long";
+    agentId: LongAgentId | undefined;
+    agentWorkspaceType?: "long";
     allowLiveEditReview?: boolean;
     libraryDomain: LibraryAgentDomain | undefined;
     librarySkills: readonly Pick<LibraryAgentSkill, "name">[] | undefined;

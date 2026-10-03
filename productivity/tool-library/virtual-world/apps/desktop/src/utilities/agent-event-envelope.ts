@@ -12,7 +12,6 @@ export function toEventEnvelope(
     sessionId: event.sessionId,
     runId: event.runId
   };
-
   if (event.type === "agent.evaluation_snapshot") {
     return createEnvelope(
       "agent.evaluation_snapshot",
@@ -26,7 +25,6 @@ export function toEventEnvelope(
       { id: createId("evt"), context }
     );
   }
-
   if (event.type === "agent.turn_started") {
     return createEnvelope(
       "agent.turn_started",
@@ -42,7 +40,6 @@ export function toEventEnvelope(
       { id: createId("evt"), context }
     );
   }
-
   if (event.type === "agent.retry_scheduled") {
     return createEnvelope(
       "agent.retry_scheduled",
@@ -62,7 +59,6 @@ export function toEventEnvelope(
       { id: createId("evt"), context }
     );
   }
-
   if (event.type === "agent.delta") {
     return createEnvelope(
       "agent.message_delta",
@@ -76,7 +72,6 @@ export function toEventEnvelope(
       { id: createId("evt"), context }
     );
   }
-
   if (event.type === "agent.thinking_delta") {
     return createEnvelope(
       "agent.thinking_delta",
@@ -90,7 +85,6 @@ export function toEventEnvelope(
       { id: createId("evt"), context }
     );
   }
-
   if (event.type === "agent.completed") {
     return createEnvelope(
       "agent.message_completed",
@@ -110,7 +104,6 @@ export function toEventEnvelope(
       { id: createId("evt"), context }
     );
   }
-
   if (event.type === "agent.usage_observed") {
     return createEnvelope(
       "agent.usage_observed",
@@ -122,7 +115,6 @@ export function toEventEnvelope(
       { id: createId("evt"), context }
     );
   }
-
   if (event.type === "subagent.started") {
     return createEnvelope(
       "subagent.started",
@@ -134,7 +126,6 @@ export function toEventEnvelope(
       { id: createId("evt"), context }
     );
   }
-
   if (event.type === "subagent.activity") {
     return createEnvelope(
       "subagent.activity",
@@ -146,7 +137,6 @@ export function toEventEnvelope(
       { id: createId("evt"), context }
     );
   }
-
   if (event.type === "subagent.completed") {
     return createEnvelope(
       "subagent.completed",
@@ -158,7 +148,6 @@ export function toEventEnvelope(
       { id: createId("evt"), context }
     );
   }
-
   if (event.type === "agent.tool_requested") {
     return createEnvelope(
       "tool.call_requested",
@@ -173,7 +162,6 @@ export function toEventEnvelope(
       { id: createId("evt"), context }
     );
   }
-
   if (event.type === "agent.tool_stream") {
     return createEnvelope(
       "tool.call_stream",
@@ -195,7 +183,6 @@ export function toEventEnvelope(
       { id: createId("evt"), context }
     );
   }
-
   if (event.type === "agent.tool_completed") {
     return createEnvelope(
       "tool.execution_completed",
@@ -211,7 +198,6 @@ export function toEventEnvelope(
       { id: createId("evt"), context }
     );
   }
-
   if (event.type === "agent.user_input_requested") {
     return createEnvelope(
       "agent.user_input_requested",
@@ -227,28 +213,6 @@ export function toEventEnvelope(
       { id: createId("evt"), context }
     );
   }
-
-  if (event.type === "workspace.editor_mutation") {
-    return createEnvelope(
-      "workspace.editor_mutation",
-      {
-        sessionId: event.sessionId,
-        runId: event.runId,
-        toolCallId: event.payload.toolCallId,
-        workspaceId: event.payload.workspaceId,
-        stageId: event.payload.stageId,
-        text: event.payload.text,
-        ...(event.payload.mutationTarget
-          ? { mutationTarget: event.payload.mutationTarget }
-          : {}),
-        baseRevision: event.payload.baseRevision,
-        summary: event.payload.summary,
-        runtime: event.payload.runtime
-      },
-      { id: createId("evt"), context }
-    );
-  }
-
   if (
     event.type === "long.mutation_proposal" ||
     event.type === "long.worldbuilding_file_proposal" ||
@@ -258,7 +222,6 @@ export function toEventEnvelope(
     event.type === "long.ledger_commit_proposal"
   )
     return longProposalEventEnvelope(event, correlationId);
-
   if (event.type === "library.editor_mutation") {
     return createEnvelope(
       "library.editor_mutation",
@@ -270,45 +233,8 @@ export function toEventEnvelope(
       { id: createId("evt"), context }
     );
   }
-
-  if (event.type === "workspace.stage_selection") {
-    return createEnvelope(
-      "workspace.stage_selection",
-      {
-        sessionId: event.sessionId,
-        runId: event.runId,
-        toolCallId: event.payload.toolCallId,
-        workspaceId: event.payload.workspaceId,
-        stageId: event.payload.stageId,
-        runtime: event.payload.runtime
-      },
-      { id: createId("evt"), context }
-    );
-  }
-
-  if (event.type === "learning_imitation.result_updated") {
-    return createEnvelope(
-      "learning_imitation.result_updated",
-      {
-        sessionId: event.sessionId,
-        runId: event.runId,
-        toolCallId: event.payload.toolCallId,
-        stageId: event.payload.stageId,
-        update: event.payload.update,
-        runtime: event.payload.runtime
-      },
-      { id: createId("evt"), context }
-    );
-  }
-
-  if (
-    event.type === "revision_analysis.result_updated" ||
-    event.type === "short_book_analysis.result_updated" ||
-    event.type === "long_book_analysis.note_updated" ||
-    event.type === "long_book_analysis.result_updated"
-  )
+  if (event.type === "revision_analysis.result_updated")
     return analysisEventEnvelope(event, correlationId);
-
   if (event.type === "subagent_authoring.draft_updated") {
     return createEnvelope(
       "subagent_authoring.draft_updated",
@@ -322,7 +248,6 @@ export function toEventEnvelope(
       { id: createId("evt"), context }
     );
   }
-
   return createEnvelope(
     "agent.error",
     {

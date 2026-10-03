@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import rendererStyles from "virtual:deepwrite-renderer-styles";
 import conversationSource from "./AgentConversation.vue?raw";
 import panelSource from "./AgentActivityFloatPanel.vue?raw";
-import workspaceSource from "../WorkspaceShell.vue?raw";
+import workspaceSource from "../test-support/workspaceShellSource";
 
 describe("agent activity floating panel", () => {
   it("renders the status list outside normal conversation layout", () => {

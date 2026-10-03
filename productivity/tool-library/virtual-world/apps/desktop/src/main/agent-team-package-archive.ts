@@ -87,10 +87,10 @@ function createSingleFileZip(name: string, data: Buffer, now: Date): Buffer {
 
 function readPackageEntry(archive: Buffer): Buffer {
   if (archive.length === 0 || archive.length > AGENT_TEAM_PACKAGE_MAX_BYTES) {
-    throw new Error("智能体团队压缩包为空或超过 5 MB 上限。");
+    throw new Error("子智能体团队压缩包为空或超过 5 MB 上限。");
   }
   if (archive.length < 30 || archive.readUInt32LE(0) !== LOCAL_FILE_SIGNATURE) {
-    throw new Error("所选文件不是有效的智能体团队压缩包。");
+    throw new Error("所选文件不是有效的子智能体团队压缩包。");
   }
   const flags = archive.readUInt16LE(6);
   const method = archive.readUInt16LE(8);
@@ -100,25 +100,25 @@ function readPackageEntry(archive: Buffer): Buffer {
   const nameLength = archive.readUInt16LE(26);
   const extraLength = archive.readUInt16LE(28);
   if ((flags & 0x0001) !== 0 || (flags & 0x0008) !== 0) {
-    throw new Error("智能体团队压缩包使用了不支持的加密或流式格式。");
+    throw new Error("子智能体团队压缩包使用了不支持的加密或流式格式。");
   }
   if (method !== 0 && method !== 8) {
-    throw new Error("智能体团队压缩包使用了不支持的压缩格式。");
+    throw new Error("子智能体团队压缩包使用了不支持的压缩格式。");
   }
   if (uncompressedSize > AGENT_TEAM_MANIFEST_MAX_BYTES) {
-    throw new Error("智能体团队配置超过 4 MB 上限。");
+    throw new Error("子智能体团队配置超过 4 MB 上限。");
   }
   const nameStart = 30;
   const dataStart = nameStart + nameLength + extraLength;
   const dataEnd = dataStart + compressedSize;
   if (dataEnd > archive.length) {
-    throw new Error("智能体团队压缩包内容不完整。");
+    throw new Error("子智能体团队压缩包内容不完整。");
   }
   const name = archive
     .subarray(nameStart, nameStart + nameLength)
     .toString("utf8");
   if (name !== PACKAGE_ENTRY_NAME) {
-    throw new Error(`智能体团队压缩包缺少 ${PACKAGE_ENTRY_NAME}。`);
+    throw new Error(`子智能体团队压缩包缺少 ${PACKAGE_ENTRY_NAME}。`);
   }
   const compressed = archive.subarray(dataStart, dataEnd);
   let data: Buffer;
@@ -130,10 +130,10 @@ function readPackageEntry(archive: Buffer): Buffer {
             maxOutputLength: AGENT_TEAM_MANIFEST_MAX_BYTES
           });
   } catch {
-    throw new Error("智能体团队压缩包中的配置无法解压。");
+    throw new Error("子智能体团队压缩包中的配置无法解压。");
   }
   if (data.length !== uncompressedSize || crc32(data) !== checksum) {
-    throw new Error("智能体团队压缩包校验失败，文件可能已损坏。");
+    throw new Error("子智能体团队压缩包校验失败，文件可能已损坏。");
   }
   const nextSignature =
     dataEnd + 4 <= archive.length ? archive.readUInt32LE(dataEnd) : 0;
@@ -141,7 +141,7 @@ function readPackageEntry(archive: Buffer): Buffer {
     nextSignature !== CENTRAL_DIRECTORY_SIGNATURE &&
     nextSignature !== END_OF_CENTRAL_DIRECTORY_SIGNATURE
   ) {
-    throw new Error("智能体团队压缩包包含未识别的额外内容。");
+    throw new Error("子智能体团队压缩包包含未识别的额外内容。");
   }
   return data;
 }
@@ -169,13 +169,26 @@ export function readAgentTeamPackage(archive: Buffer): AgentTeamProfile {
     raw = JSON.parse(readPackageEntry(archive).toString("utf8"));
   } catch (error: unknown) {
     if (error instanceof SyntaxError) {
-      throw new Error("智能体团队压缩包中的配置不是有效 JSON。");
+      throw new Error("子智能体团队压缩包中的配置不是有效 JSON。");
     }
     throw error;
   }
+  if (raw && typeof raw === "object" && "team" in raw) {
+    const team = (raw as { team?: unknown }).team;
+    if (
+      team &&
+      typeof team === "object" &&
+      "workspaceType" in team &&
+      (team.workspaceType === "short" || team.workspaceType === "script")
+    ) {
+      throw new Error(
+        "旧短篇、剧本团队包已停止支持；仅支持当前主智能体的子智能体团队包。"
+      );
+    }
+  }
   const parsed = AgentTeamPackageManifestSchema.safeParse(raw);
   if (!parsed.success) {
-    throw new Error("智能体团队压缩包版本或配置内容无效。");
+    throw new Error("子智能体团队压缩包版本或配置内容无效。");
   }
   return parsed.data.team;
 }

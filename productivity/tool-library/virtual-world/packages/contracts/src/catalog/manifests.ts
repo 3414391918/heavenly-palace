@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { DraftSectionIdSchema, DraftSectionTitleSchema } from "../expert-draft";
-import { MarketplaceSourceSchema } from "../marketplace";
+import { MarketplaceSourceSchema } from "../catalog-provenance";
 import {
   migrateBookPlotStageEnabled,
   migrateLegacyCharacterOverviewTitle,

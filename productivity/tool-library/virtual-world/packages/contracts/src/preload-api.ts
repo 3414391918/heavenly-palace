@@ -1,34 +1,4 @@
 import type {
-  BookTemplatesApi,
-  CreateBookFromTemplate
-} from "./book-templates";
-import type { WindowFrameApi } from "./window-frame";
-import type {
-  MarketplaceEmailCodeInput,
-  MarketplaceEmailCodeResult,
-  MarketplaceBindEmailInput
-} from "./marketplace-email";
-import type { TextContextMenuPreloadApi } from "./text-context-menu";
-import type { ConversationExportApi } from "./conversation-export";
-import type { LongPreloadApi } from "./long-preload-api";
-import type { BuiltinSubagentSettings } from "./builtin-subagents";
-import type {
-  SessionAbortAcceptedPayload,
-  SessionAbortCommandPayload,
-  SessionUserInputResponseAcceptedPayload,
-  SessionUserInputResponsePayload,
-  SessionPromptAcceptedPayload,
-  SessionPromptCommandPayload
-} from "./session";
-import type { ModelPreloadApi } from "./model-preload-api";
-import type { ModelUsageDashboard, ModelUsageQueryInput } from "./model-usage";
-import type { SystemEventEnvelope, SystemHealthPayload } from "./system";
-import type {
-  WorkspaceAgentId,
-  WorkspaceAgentSettings,
-  WorkspaceAgentSettingsInput
-} from "./workspace";
-import type {
   AgentTeamCatalogSnapshot,
   AgentTeamPackageExportResult,
   AgentTeamPackageInstallResult,
@@ -38,14 +8,7 @@ import type {
   AgentTeamProfileSetEnabledInput,
   AgentTeamProfileTargetInput
 } from "./agent-team-catalog";
-import type { WorkspaceType } from "./script-workspace";
-import type {
-  ReadWritingContextInput,
-  ReadWritingContextResult,
-  WriteWritingContextInput,
-  WriteWritingContextResult
-} from "./writing-context";
-import type { WorkspaceDirectorySettings } from "./workspace-directory";
+import type { AppAlertSnapshot } from "./app-alert";
 import type {
   AppearanceCustomFontId,
   AppearanceFontCatalogSnapshot,
@@ -54,122 +17,89 @@ import type {
   AppearanceSettings,
   AppearanceSettingsSnapshot
 } from "./appearance";
+import type { BuiltinSubagentSettings } from "./builtin-subagents";
 import type {
-  GeneralSettings,
-  GeneralSettingsSnapshot
-} from "./general-settings";
-import type {
-  ExportShortManuscriptInput,
-  ExportShortManuscriptResult
-} from "./short-manuscript-export";
-import type {
-  ExportLongManuscriptInput,
-  ExportLongManuscriptResult
-} from "./long-manuscript-export";
-import type {
-  LearningImitationSettings,
-  LearningImitationSettingsInput,
-  LearningImitationStageId
-} from "./learning-imitation";
-import type {
-  LongBookAnalysisSavedSourceCatalog,
-  LongBookAnalysisSettings,
-  LongBookAnalysisSettingsInput,
-  LongBookAnalysisSource,
-  LongBookAnalysisSourceKind
-} from "./long-book-analysis";
-import type {
-  LibraryAgentDomain,
-  LibraryAgentSettings,
-  LibraryAgentSettingsInput
-} from "./library-agent";
-import type {
-  CatalogDraftSection,
+  Book,
   CatalogDraftRecovery,
+  CatalogIndexSnapshot,
   CatalogLibrary,
-  CatalogLibraryGroup,
   CatalogLibraryEntry,
+  CatalogLibraryGroup,
+  CatalogLibraryProjectDomain,
   CatalogOpenProjectResult,
   CatalogProjectDomain,
-  CatalogIndexSnapshot,
   CatalogReadDocumentInput,
   CatalogReadDocumentResult,
   CatalogSnapshot,
-  CatalogLibraryProjectDomain,
   CreateLibraryEntryInput,
-  CreateDraftSectionInput,
-  CreateDraftSectionsInput,
-  CreateDraftSectionsResult,
   CreateLibraryGroupInput,
   CreateLibraryInput,
-  UpdateLibraryInput,
-  CreateScriptBookInput,
-  CreateShortBookInput,
+  DeleteBookResult,
   DeleteCatalogProjectInput,
   DeleteCatalogProjectResult,
   DuplicateCatalogProjectInput,
   DuplicateCatalogProjectResult,
   ExternalLibrarySelectionResult,
   ExternalLibrarySourceKind,
+  ImportLegacyLibraryResult,
   ImportLibraryEntriesInput,
   ImportLibraryEntriesResult,
-  DeleteBookResult,
-  DeleteDraftSectionInput,
-  DeleteDraftSectionResult,
-  MoveDraftSectionInput,
-  MoveDraftSectionResult,
-  RemoveLibraryEntryInput,
-  RemoveLibraryEntryResult,
   MoveLibraryEntryInput,
   MoveLibraryEntryResult,
+  RemoveLibraryEntryInput,
+  RemoveLibraryEntryResult,
   SaveDocumentInput,
   SaveDocumentResult,
   SaveLibraryEntryInput,
-  ScriptBook,
-  ShortBook,
-  Book,
-  ImportLegacyLibraryResult,
-  MutateCharacterStructureInput,
-  MutatePlotStructureInput,
   UnregisterCatalogProjectInput,
   UnregisterCatalogProjectResult,
   UpdateBookInput,
-  UpdateLibraryGroupInput
+  UpdateLibraryGroupInput,
+  UpdateLibraryInput
 } from "./catalog";
-
+import type { ChatAssistantConfigApi } from "./chat-assistant-config-api";
+import type { ConversationExportApi } from "./conversation-export";
+import type {
+  GeneralSettings,
+  GeneralSettingsSnapshot
+} from "./general-settings";
+import type {
+  LibraryAgentDomain,
+  LibraryAgentSettings,
+  LibraryAgentSettingsInput
+} from "./library-agent";
 import type {
   LongAgentSettings,
   LongAgentSettingsInput
 } from "./long-agent-settings";
+import type {
+  ExportLongManuscriptInput,
+  ExportLongManuscriptResult
+} from "./long-manuscript-export";
+import type { LongPreloadApi } from "./long-preload-api";
 import type { LongAgentId } from "./long-workspace";
-import type { UpdateState } from "./update";
-import type { AppAlertSnapshot } from "./app-alert";
-import type {
-  MarketplaceContentDetail,
-  MarketplaceContentPage,
-  MarketplaceContentRef,
-  MarketplaceContentSummary,
-  MarketplaceInstallInput,
-  MarketplaceInstallPreview,
-  MarketplaceInstallResult,
-  MarketplaceLikeInput,
-  MarketplaceLikeResult,
-  MarketplaceListFilter,
-  MarketplaceLoginInput,
-  MarketplacePublishInput,
-  MarketplaceRegisterInput,
-  MarketplaceSetEnabledInput,
-  MarketplaceSession,
-  MarketplaceUpdateInput
-} from "./marketplace";
-import type {
-  CloudBackupApplyResult,
-  CloudBackupPreview,
-  CloudBackupStatus
-} from "./cloud-backup";
+import type { ModelPreloadApi } from "./model-preload-api";
+import type { ModelUsageDashboard, ModelUsageQueryInput } from "./model-usage";
 import type { ConversationPersistenceApi } from "./renderer-state";
-import type { ChatAssistantConfigApi } from "./chat-assistant-config-api";
-
+import type {
+  SessionAbortAcceptedPayload,
+  SessionAbortCommandPayload,
+  SessionPromptAcceptedPayload,
+  SessionPromptCommandPayload,
+  SessionUserInputResponseAcceptedPayload,
+  SessionUserInputResponsePayload
+} from "./session";
+import type { SystemEventEnvelope, SystemHealthPayload } from "./system";
+import type { TextContextMenuPreloadApi } from "./text-context-menu";
+import type { UpdateState } from "./update";
+import type { WindowFrameApi } from "./window-frame";
+import type { WorkspaceDirectorySettings } from "./workspace-directory";
+import type {
+  ReadWritingContextInput,
+  ReadWritingContextResult,
+  WriteWritingContextInput,
+  WriteWritingContextResult
+} from "./writing-context";
 export interface DeepWriteApi
   extends TextContextMenuPreloadApi, ChatAssistantConfigApi {
   windowFrame?: WindowFrameApi;
@@ -189,46 +119,7 @@ export interface DeepWriteApi
     get(): Promise<AppAlertSnapshot>;
     acknowledgeDesktop(revision: string): Promise<void>;
   };
-  marketplace: {
-    sendEmailCode(
-      input: MarketplaceEmailCodeInput
-    ): Promise<MarketplaceEmailCodeResult>;
-    bindEmail(input: MarketplaceBindEmailInput): Promise<MarketplaceSession>;
-    session(): Promise<MarketplaceSession>;
-    register(input: MarketplaceRegisterInput): Promise<MarketplaceSession>;
-    login(input: MarketplaceLoginInput): Promise<MarketplaceSession>;
-    logout(): Promise<MarketplaceSession>;
-    list(filter?: MarketplaceListFilter): Promise<MarketplaceContentPage>;
-    detail(ref: MarketplaceContentRef): Promise<MarketplaceContentDetail>;
-    listMine(filter?: MarketplaceListFilter): Promise<MarketplaceContentPage>;
-    myDetail(ref: MarketplaceContentRef): Promise<MarketplaceContentDetail>;
-    publish(input: MarketplacePublishInput): Promise<MarketplaceContentDetail>;
-    update(input: MarketplaceUpdateInput): Promise<MarketplaceContentDetail>;
-    setEnabled(
-      input: MarketplaceSetEnabledInput
-    ): Promise<MarketplaceContentSummary>;
-    delete(ref: MarketplaceContentRef): Promise<void>;
-    like(input: MarketplaceLikeInput): Promise<MarketplaceLikeResult>;
-    previewInstall(
-      ref: MarketplaceContentRef
-    ): Promise<MarketplaceInstallPreview>;
-    install(input: MarketplaceInstallInput): Promise<MarketplaceInstallResult>;
-  };
-  deviceSync?: {
-    request(
-      input: import("./device-sync").SyncRequest
-    ): Promise<import("./device-sync").SyncResponse>;
-  };
-  cloudBackup: {
-    status(): Promise<CloudBackupStatus>;
-    previewBackup(): Promise<CloudBackupPreview>;
-    applyBackup(previewId: string): Promise<CloudBackupApplyResult>;
-    previewRestore(machineKey: string): Promise<CloudBackupPreview>;
-    applyRestore(previewId: string): Promise<CloudBackupApplyResult>;
-  };
-  bookTemplates: BookTemplatesApi;
   catalog: {
-    createBookFromTemplate: CreateBookFromTemplate;
     index(): Promise<CatalogIndexSnapshot>;
     readDocument(
       input: CatalogReadDocumentInput
@@ -242,8 +133,6 @@ export interface DeepWriteApi
     snapshot(): Promise<CatalogSnapshot>;
     loadDraftRecovery(): Promise<CatalogDraftRecovery>;
     saveDraftRecovery(drafts: CatalogDraftRecovery): Promise<void>;
-    createShortBook(input: CreateShortBookInput): Promise<ShortBook | null>;
-    createScriptBook(input: CreateScriptBookInput): Promise<ScriptBook | null>;
     createLibrary(input: CreateLibraryInput): Promise<CatalogLibrary | null>;
     updateLibrary(input: UpdateLibraryInput): Promise<CatalogLibrary>;
     createLibraryGroup(
@@ -256,27 +145,11 @@ export interface DeepWriteApi
       domain: CatalogLibraryProjectDomain
     ): Promise<ImportLegacyLibraryResult | null>;
     updateBook(input: UpdateBookInput): Promise<Book>;
-    mutateCharacterStructure(
-      input: MutateCharacterStructureInput
-    ): Promise<Book>;
-    mutatePlotStructure(input: MutatePlotStructureInput): Promise<Book>;
     updateLibraryGroup(
       input: UpdateLibraryGroupInput
     ): Promise<CatalogLibraryGroup>;
     deleteBook(bookId: string): Promise<DeleteBookResult>;
     saveDocument(input: SaveDocumentInput): Promise<SaveDocumentResult>;
-    createDraftSection(
-      input: CreateDraftSectionInput
-    ): Promise<CatalogDraftSection>;
-    createDraftSections(
-      input: CreateDraftSectionsInput
-    ): Promise<CreateDraftSectionsResult>;
-    deleteDraftSection(
-      input: DeleteDraftSectionInput
-    ): Promise<DeleteDraftSectionResult>;
-    moveDraftSection(
-      input: MoveDraftSectionInput
-    ): Promise<MoveDraftSectionResult>;
     saveLibraryEntry(
       input: SaveLibraryEntryInput
     ): Promise<CatalogLibraryEntry>;
@@ -321,17 +194,6 @@ export interface DeepWriteApi
   modelUsage: {
     query(input?: ModelUsageQueryInput): Promise<ModelUsageDashboard>;
   };
-
-  workspaceAgents: {
-    list(workspaceType: WorkspaceType): Promise<WorkspaceAgentSettings>;
-    save(
-      settings: WorkspaceAgentSettingsInput
-    ): Promise<WorkspaceAgentSettings>;
-    reset(
-      workspaceType: WorkspaceType,
-      agentId?: WorkspaceAgentId
-    ): Promise<WorkspaceAgentSettings>;
-  };
   longAgents: {
     list(): Promise<LongAgentSettings>;
     save(settings: LongAgentSettingsInput): Promise<LongAgentSettings>;
@@ -365,33 +227,7 @@ export interface DeepWriteApi
     save(settings: LibraryAgentSettingsInput): Promise<LibraryAgentSettings>;
     reset(domain?: LibraryAgentDomain): Promise<LibraryAgentSettings>;
   };
-  learningImitationSettings: {
-    list(): Promise<LearningImitationSettings>;
-    save(
-      settings: LearningImitationSettingsInput
-    ): Promise<LearningImitationSettings>;
-    reset(
-      stageId?: LearningImitationStageId
-    ): Promise<LearningImitationSettings>;
-  };
   revisionAnalysis: import("./revision-analysis").RevisionAnalysisApi;
-  shortBookAnalysis: import("./short-book-analysis").ShortBookAnalysisApi;
-  longBookAnalysis: {
-    chooseSource(
-      kind: LongBookAnalysisSourceKind
-    ): Promise<LongBookAnalysisSource | null>;
-    sources: {
-      list(): Promise<LongBookAnalysisSavedSourceCatalog>;
-      load(sourceId: string): Promise<LongBookAnalysisSource>;
-    };
-    presets: {
-      list(): Promise<LongBookAnalysisSettings>;
-      save(
-        settings: LongBookAnalysisSettingsInput
-      ): Promise<LongBookAnalysisSettings>;
-      reset(presetId?: string): Promise<LongBookAnalysisSettings>;
-    };
-  };
   workspaceDirectory: {
     list(): Promise<WorkspaceDirectorySettings>;
     choose(): Promise<WorkspaceDirectorySettings | null>;
@@ -413,9 +249,6 @@ export interface DeepWriteApi
     exportLong(
       input: ExportLongManuscriptInput
     ): Promise<ExportLongManuscriptResult>;
-    exportShort(
-      input: ExportShortManuscriptInput
-    ): Promise<ExportShortManuscriptResult>;
   };
   events: {
     subscribe(listener: (event: SystemEventEnvelope) => void): () => void;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { expectSourceToContain } from "../../../test-utils/sourceText";
-import appSource from "../WorkspaceShell.vue?raw";
+import appSource from "../test-support/workspaceShellSource";
 import featureModulesSource from "./WorkspaceFeatureModules.vue?raw";
 import featureHostCoordinatorSource from "../composables/useWorkspaceFeatureHostCoordinator.ts?raw";
 import featureHostModuleSource from "../composables/workspaceFeatureHostModule.ts?raw";
@@ -10,8 +10,6 @@ import generalPanelSource from "./GeneralSettingsPanel.vue?raw";
 import fontSource from "./AppearanceFontSettings.vue?raw";
 import appearancePanelSource from "./AppearanceSettingsPanel.vue?raw";
 import themeSource from "./AppearanceThemeSettings.vue?raw";
-import shortAgentSource from "./UnifiedShortAgentSettingsPanel.vue?raw";
-import workspaceAgentFormSource from "./WorkspaceAgentProfileForm.vue?raw";
 import source from "./SettingsPage.vue?raw";
 
 const generalSettingsSource = `${source}\n${generalPanelSource}`;
@@ -150,28 +148,6 @@ describe("SettingsPage", () => {
       ".settings-select-item { flex-wrap: wrap; }"
     );
     expect(generalPanelSource).toContain("flex: 0 1 210px;");
-  });
-
-  it("keeps learning-imitation prompts in the feature instead of settings", () => {
-    expect(source).not.toContain('label: "短篇学习仿写设置"');
-    expect(source).not.toContain("<LearningImitationSettingsPanel");
-    expect(featureModulesSource).toContain(
-      ':learning-imitation-settings="module.learningImitationSettings"'
-    );
-    expect(featureModulesSource).toContain(
-      "@save-learning-imitation=\"emit('saveLearningImitation', $event)\""
-    );
-  });
-
-  it("configures the default plot stages for newly created short books", () => {
-    expect(workspaceAgentFormSource).toContain("剧情默认阶段配置");
-    expect(workspaceAgentFormSource).toContain("下一本新建短篇");
-    expect(shortAgentSource).toContain("props.plotStages.map");
-    expect(shortAgentSource).toContain("selectedDefaultPlotStageIds");
-    expect(shortAgentSource).toContain("defaultPlotStageIds");
-    expect(featureModulesSource).toContain(
-      ':creative-plot-stages="module.creativePlotStages"'
-    );
   });
 
   it("keeps agent-team management outside the settings page", () => {

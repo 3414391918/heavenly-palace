@@ -37,7 +37,7 @@ function submit(): void {
   if (props.pending) return;
   const title = nameDraft.value.trim();
   if (!title) {
-    uiMessage.warning("请输入长篇名称");
+    uiMessage.warning("请输入小说名称");
     nameInput.value?.focus();
     return;
   }
@@ -64,7 +64,7 @@ onBeforeUnmount(() => document.removeEventListener("keydown", handleKeydown));
         <header>
           <div>
             <span class="dialog-eyebrow">{{ title }}</span>
-            <h2 id="long-book-rename-dialog-title">修改长篇名称</h2>
+            <h2 id="long-book-rename-dialog-title">修改小说名称</h2>
           </div>
           <button
             class="dialog-close"
@@ -79,18 +79,18 @@ onBeforeUnmount(() => document.removeEventListener("keydown", handleKeydown));
 
         <form class="dialog-content" @submit.prevent="submit">
           <label class="book-resource-name-field">
-            <span>长篇名称</span>
+            <span>小说名称</span>
             <input
               ref="nameInput"
               v-model="nameDraft"
               type="text"
               maxlength="256"
               autocomplete="off"
-              aria-label="长篇名称"
+              aria-label="小说名称"
             />
           </label>
           <p class="book-resource-help">
-            侧栏和长篇工作区显示名称会同步更新，本地项目文件夹名称不会被自动修改。
+            侧栏和小说工作区显示名称会同步更新，本地项目文件夹名称不会被自动修改。
           </p>
 
           <div class="dialog-actions">

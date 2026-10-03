@@ -1,13 +1,6 @@
-import type {
-  Book,
-  CatalogIndexSnapshot,
-  CatalogSnapshot,
-  DeepWriteApi
-} from "@deepwrite/contracts";
+import type { CatalogIndexSnapshot, DeepWriteApi } from "@deepwrite/contracts";
 import { ref, shallowRef, type Ref, type ShallowRef } from "vue";
 import {
-  resolveBookWorkspaceId,
-  resolvePreferredBookResourceId,
   resolveProjectedResourceTargetDocumentId,
   type CatalogWorkspaceProjection
 } from "../data/catalogWorkspace";
@@ -16,10 +9,8 @@ import type { CatalogProjectionReconcileResult } from "./useCatalogDocumentLoade
 import { longBookIdFromResourceId } from "../types/longWorkspace";
 import type { EditorDraftState, WorkspaceDocument } from "../types/workspace";
 import { reconcileCatalogRecoveryDrafts } from "../utils/catalogDraftRecoveryReconciliation";
-import { hasDirtyLegacyDraftRecoveries } from "../utils/legacyDraftRecoveryDetection";
-import type { LegacyDraftRecoveryMigrationResult } from "../utils/legacyDraftRecovery";
 
-type CatalogProjectionApi = Pick<DeepWriteApi["catalog"], "index" | "snapshot">;
+type CatalogProjectionApi = Pick<DeepWriteApi["catalog"], "index">;
 
 export interface CatalogWorkspaceProjectionIndexPort {
   snapshot: Readonly<ShallowRef<CatalogIndexSnapshot | null>>;
@@ -46,14 +37,6 @@ export interface CatalogWorkspaceProjectionScheduler {
   queueMicrotask(task: () => void): void;
 }
 
-export interface CatalogLegacyRecoveryMigratorModule {
-  migrateLegacyDraftRecoveries(
-    drafts: Readonly<Record<string, EditorDraftState>>,
-    snapshot: CatalogSnapshot,
-    projection: CatalogWorkspaceProjection
-  ): LegacyDraftRecoveryMigrationResult;
-}
-
 export interface CatalogWorkspaceProjectionCoordinatorOptions {
   api(): CatalogProjectionApi | undefined;
   index: CatalogWorkspaceProjectionIndexPort;
@@ -61,7 +44,6 @@ export interface CatalogWorkspaceProjectionCoordinatorOptions {
   state: {
     drafts: ShallowRef<Record<string, EditorDraftState>>;
     selectedResourceId: Ref<string>;
-    activeCreationResourceId: Ref<string>;
   };
   proposals: {
     all(): readonly AgentConversationController[];
@@ -69,7 +51,6 @@ export interface CatalogWorkspaceProjectionCoordinatorOptions {
   };
   scheduler: CatalogWorkspaceProjectionScheduler;
   notifications: CatalogWorkspaceProjectionNotifications;
-  loadLegacyRecoveryMigrator?(): Promise<CatalogLegacyRecoveryMigratorModule>;
 }
 
 interface CatalogSnapshotPair {
@@ -83,16 +64,6 @@ function diagnosticKey(
   return [diagnostic.projectId, diagnostic.code, diagnostic.message].join(
     "\u0000"
   );
-}
-
-function migrationFallback(
-  drafts: Readonly<Record<string, EditorDraftState>>
-): LegacyDraftRecoveryMigrationResult {
-  return {
-    drafts: { ...drafts },
-    migratedLegacyKeys: [],
-    unmappedLegacyKeys: []
-  };
 }
 
 /**
@@ -109,8 +80,6 @@ export function useCatalogWorkspaceProjectionCoordinator(
   const reconciliationVersion = ref(0);
 
   const seenDiagnosticKeys = new Set<string>();
-  const warnedUnmappedLegacyRecoveryKeys = new Set<string>();
-  const warnedLegacyRecoveryFailureKeys = new Set<string>();
 
   let recoveredDraftCount = 0;
   let lifecycleGeneration = 0;
@@ -119,10 +88,6 @@ export function useCatalogWorkspaceProjectionCoordinator(
   let activeLoad: Promise<boolean> | null = null;
   let trailingRefreshRequested = false;
   let runningTrailingRefresh = false;
-
-  const loadLegacyRecoveryMigrator =
-    options.loadLegacyRecoveryMigrator ??
-    (() => import("../utils/legacyDraftRecovery"));
 
   function pairIsCurrent(
     pair: CatalogSnapshotPair,
@@ -143,28 +108,6 @@ export function useCatalogWorkspaceProjectionCoordinator(
       reconciledSnapshot.value === options.index.snapshot.value &&
       reconciledProjection.value === options.index.projection.value
     );
-  }
-
-  function requestTrailingRefresh(): void {
-    if (!disposed && activeLoad && !runningTrailingRefresh) {
-      trailingRefreshRequested = true;
-    }
-  }
-
-  function findBook(bookId: string): Book | undefined {
-    return options.index.snapshot.value?.books.find(
-      (book) => book.id === bookId
-    );
-  }
-
-  function reportLegacyRecoveryFailure(
-    snapshot: CatalogIndexSnapshot,
-    message: string
-  ): void {
-    const key = `${snapshot.revision}\u0000${message}`;
-    if (warnedLegacyRecoveryFailureKeys.has(key)) return;
-    warnedLegacyRecoveryFailureKeys.add(key);
-    options.notifications.warning(message);
   }
 
   function publishDiagnostics(snapshot: CatalogIndexSnapshot): void {
@@ -188,25 +131,6 @@ export function useCatalogWorkspaceProjectionCoordinator(
     );
   }
 
-  function publishUnmappedLegacyRecoveryWarnings(
-    migration: LegacyDraftRecoveryMigrationResult
-  ): void {
-    const currentKeys = new Set(migration.unmappedLegacyKeys);
-    for (const key of warnedUnmappedLegacyRecoveryKeys) {
-      if (!currentKeys.has(key)) warnedUnmappedLegacyRecoveryKeys.delete(key);
-    }
-    const newlyUnmapped = migration.unmappedLegacyKeys.filter(
-      (key) => !warnedUnmappedLegacyRecoveryKeys.has(key)
-    );
-    if (newlyUnmapped.length === 0) return;
-    newlyUnmapped.forEach((key) => warnedUnmappedLegacyRecoveryKeys.add(key));
-    options.notifications.warning(
-      `旧版恢复稿与当前正文的磁盘版本或剧集/小节结构不一致，原恢复稿已保留，请核对当前正文目录${
-        newlyUnmapped.length > 1 ? `（共 ${newlyUnmapped.length} 份）` : ""
-      }`
-    );
-  }
-
   function selectionExists(
     projection: CatalogWorkspaceProjection,
     resourceId: string
@@ -214,22 +138,6 @@ export function useCatalogWorkspaceProjectionCoordinator(
     if (!resourceId || longBookIdFromResourceId(resourceId)) return true;
     return projection.index.workspaceDocumentById.has(
       resolveProjectedResourceTargetDocumentId(projection, resourceId)
-    );
-  }
-
-  function fallbackResourceId(
-    projection: CatalogWorkspaceProjection,
-    workspaceAnchor: string | undefined,
-    documents: readonly WorkspaceDocument[]
-  ): string {
-    return (
-      (workspaceAnchor
-        ? resolvePreferredBookResourceId(projection, workspaceAnchor)
-        : undefined) ??
-      projection.draftDirectories[0]?.id ??
-      documents.find((document) => document.domain === "creation")?.id ??
-      documents[0]?.id ??
-      ""
     );
   }
 
@@ -248,24 +156,11 @@ export function useCatalogWorkspaceProjectionCoordinator(
     });
   }
 
-  function applySnapshotPair(
-    pair: CatalogSnapshotPair,
-    migration: LegacyDraftRecoveryMigrationResult
-  ): void {
-    const previousProjection = reconciledProjection.value ?? undefined;
+  function applySnapshotPair(pair: CatalogSnapshotPair): void {
     const selectedBeforeCommit = options.state.selectedResourceId.value;
-    const activeBeforeCommit = options.state.activeCreationResourceId.value;
-    const selectedWorkspaceAnchor = resolveBookWorkspaceId(
-      previousProjection,
-      selectedBeforeCommit
-    );
-    const activeWorkspaceAnchor = resolveBookWorkspaceId(
-      previousProjection,
-      activeBeforeCommit
-    );
     const projectedDocuments = pair.projection.index.workspaceDocumentById;
     const nextDrafts = reconcileCatalogRecoveryDrafts(
-      migration.drafts,
+      options.state.drafts.value,
       projectedDocuments
     );
 
@@ -274,42 +169,12 @@ export function useCatalogWorkspaceProjectionCoordinator(
     );
     options.state.drafts.value = nextDrafts;
 
-    let selectedAfterCommit = selectedBeforeCommit;
     if (
       selectedBeforeCommit &&
       !selectionExists(pair.projection, selectedBeforeCommit)
     ) {
-      selectedAfterCommit = fallbackResourceId(
-        pair.projection,
-        selectedWorkspaceAnchor,
-        reconciliation.documents
-      );
-      options.state.selectedResourceId.value = selectedAfterCommit;
-    }
-
-    if (
-      activeBeforeCommit &&
-      !selectionExists(pair.projection, activeBeforeCommit)
-    ) {
-      const selectedTargetId = resolveProjectedResourceTargetDocumentId(
-        pair.projection,
-        selectedAfterCommit
-      );
-      options.state.activeCreationResourceId.value =
-        (activeWorkspaceAnchor
-          ? resolvePreferredBookResourceId(
-              pair.projection,
-              activeWorkspaceAnchor
-            )
-          : undefined) ??
-        (projectedDocuments.get(selectedTargetId)?.domain === "creation"
-          ? selectedAfterCommit
-          : undefined) ??
-        fallbackResourceId(
-          pair.projection,
-          undefined,
-          reconciliation.documents
-        );
+      options.state.selectedResourceId.value =
+        reconciliation.documents[0]?.id ?? "";
     }
 
     recoveredDraftCount = Object.keys(nextDrafts).filter((documentId) =>
@@ -319,7 +184,6 @@ export function useCatalogWorkspaceProjectionCoordinator(
     reconciledProjection.value = pair.projection;
     reconciliationVersion.value += 1;
     publishDiagnostics(pair.snapshot);
-    publishUnmappedLegacyRecoveryWarnings(migration);
     scheduleProposalResume(pair);
   }
 
@@ -341,62 +205,12 @@ export function useCatalogWorkspaceProjectionCoordinator(
         return currentPairIsReconciled();
       }
 
-      const hasLegacyRecovery = hasDirtyLegacyDraftRecoveries(
-        options.state.drafts.value,
-        snapshot
-      );
       if (
-        !hasLegacyRecovery &&
         reconciledSnapshot.value === snapshot &&
         reconciledProjection.value === projection
-      ) {
+      )
         return true;
-      }
-
-      let migration = migrationFallback(options.state.drafts.value);
-      if (hasLegacyRecovery) {
-        try {
-          const recoverySnapshot = await api.snapshot();
-          if (!pairIsCurrent(pair, requestLifecycleGeneration)) {
-            return currentPairIsReconciled();
-          }
-          if (recoverySnapshot.revision !== snapshot.revision) {
-            requestTrailingRefresh();
-            reportLegacyRecoveryFailure(
-              snapshot,
-              "旧版恢复稿迁移期间目录版本发生变化，原恢复稿已保留并将重新加载。"
-            );
-          } else {
-            const migrator = await loadLegacyRecoveryMigrator();
-            if (!pairIsCurrent(pair, requestLifecycleGeneration)) {
-              return currentPairIsReconciled();
-            }
-            migration = migrator.migrateLegacyDraftRecoveries(
-              options.state.drafts.value,
-              recoverySnapshot,
-              projection
-            );
-            warnedLegacyRecoveryFailureKeys.clear();
-          }
-        } catch (error: unknown) {
-          if (!pairIsCurrent(pair, requestLifecycleGeneration)) {
-            return currentPairIsReconciled();
-          }
-          reportLegacyRecoveryFailure(
-            snapshot,
-            error instanceof Error
-              ? `旧版恢复稿暂时无法迁移：${error.message}`
-              : "旧版恢复稿暂时无法迁移，原恢复稿已保留。"
-          );
-        }
-      } else {
-        warnedLegacyRecoveryFailureKeys.clear();
-      }
-
-      if (!pairIsCurrent(pair, requestLifecycleGeneration)) {
-        return currentPairIsReconciled();
-      }
-      applySnapshotPair(pair, migration);
+      applySnapshotPair(pair);
       return true;
     } catch (error: unknown) {
       if (disposed || requestLifecycleGeneration !== lifecycleGeneration) {
@@ -478,12 +292,9 @@ export function useCatalogWorkspaceProjectionCoordinator(
     trailingRefreshRequested = false;
     runningTrailingRefresh = false;
     seenDiagnosticKeys.clear();
-    warnedUnmappedLegacyRecoveryKeys.clear();
-    warnedLegacyRecoveryFailureKeys.clear();
   }
 
   return {
-    findBook,
     loadSnapshot,
     notifyRecoveredDrafts,
     recordRecoveredDraftCount,

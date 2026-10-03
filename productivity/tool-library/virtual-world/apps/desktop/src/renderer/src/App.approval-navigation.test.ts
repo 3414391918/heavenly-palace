@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import appSource from "./WorkspaceShell.vue?raw";
+import appSource from "./test-support/workspaceShellSource";
 import editorSource from "./components/LongWorkspaceEditor.vue?raw";
 import coordinatorSource from "./composables/useApprovalNavigationCoordinator.ts?raw";
 import lazyCoordinatorSource from "./composables/useLazyApprovalNavigationCoordinator.ts?raw";
@@ -53,7 +53,7 @@ describe("accepted approval navigation wiring", () => {
     expect(appSource).toContain(
       "preferredLongResourceId: preferredLongResourceIdForSelection"
     );
-    expect(coordinatorSource).toContain("if (!target.sectionId)");
+    expect(coordinatorSource).not.toContain("shortWorkspace");
     expect(coordinatorSource).toContain("await context.catalog.refresh()");
     expect(coordinatorSource).toContain("requestIsCurrent(requestId)");
     expect(appSource).toContain(

@@ -98,7 +98,7 @@ export function useLongLedgerCommitDeletionCoordinator(options: {
       const refreshed = await options.refreshActiveWorkspace(target.bookId);
       if (!refreshed) {
         options.notifications.warning(
-          "提交记录已删除，但界面未能同步最新状态；请重新打开长篇。"
+          "提交记录已删除，但界面未能同步最新状态；请重新打开小说。"
         );
         return;
       }

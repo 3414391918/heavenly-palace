@@ -1,18 +1,12 @@
 import {
-  SHORT_WORKSPACE_STAGE_IDS,
-  SHORT_WORKSPACE_TEXT_STAGE_IDS,
   createDeferredApi,
-  createDraftCoordinatorDocument,
   createEnvelope,
-  createShortWorkspaceContentRevision,
-  createShortWorkspaceDocuments,
   describe,
   document,
   eventOptions,
   expect,
   it,
   runtime,
-  shortStageTitle,
   useAgentConversation,
   vi
 } from "./useAgentConversation.test-support";
@@ -674,88 +668,5 @@ describe("agent conversation controller: failures-retries-and-timeouts", () => {
     expect(controller.messages.value.at(-1)?.status).toBe("error");
     expect(controller.isBusy.value).toBe(false);
     controller.dispose();
-  });
-
-  it("builds the default text stages plus the physical expert-draft directory", async () => {
-    for (const [index, activeStageId] of SHORT_WORKSPACE_STAGE_IDS.entries()) {
-      const deferred = createDeferredApi();
-      const controller = useAgentConversation({
-        api: () => deferred.api,
-        idleTimeoutMs: 10_000
-      });
-      const workspaceDocuments = createShortWorkspaceDocuments();
-      const activeDocument =
-        activeStageId === "draft"
-          ? createDraftCoordinatorDocument(workspaceDocuments)
-          : workspaceDocuments.find(
-              (candidate) => candidate.stageId === activeStageId
-            );
-      if (!activeDocument)
-        throw new Error(`Missing stage document: ${activeStageId}`);
-
-      controller.draft.value = `检查 ${activeStageId}`;
-      const sending = controller.sendMessage(
-        activeDocument,
-        [...workspaceDocuments].reverse()
-      );
-      const sessionId = controller.sessionId.value;
-      deferred.resolveAccepted(0, {
-        sessionId,
-        runId: `run_short_snapshot_${index}`,
-        acceptedAt: new Date().toISOString(),
-        runtime
-      });
-      await sending;
-
-      const context = deferred.prompts[0]?.workspaceContext;
-      expect(context?.shortWorkspace).toMatchObject({
-        id: "short_story_1",
-        title: "雨夜来信",
-        categories: ["都市", "悬疑"],
-        activeStageId,
-        stages: SHORT_WORKSPACE_TEXT_STAGE_IDS.map((stageId) => ({
-          stageId,
-          title: shortStageTitle(stageId),
-          content: `${stageId} 的实时内容`,
-          revision: createShortWorkspaceContentRevision(`${stageId} 的实时内容`)
-        })),
-        expertDraft: {
-          id: "draft",
-          title: "正文",
-          sections: [
-            expect.objectContaining({
-              id: "intro",
-              body: expect.objectContaining({
-                documentId: "short_draft_intro_body",
-                content: ""
-              }),
-              characterState: expect.objectContaining({
-                documentId: "short_draft_intro_state",
-                content: ""
-              })
-            }),
-            expect.objectContaining({
-              id: "section-1",
-              body: expect.objectContaining({
-                documentId: "short_draft_section-1_body",
-                content: "draft 的实时内容"
-              }),
-              characterState: expect.objectContaining({
-                documentId: "short_draft_section-1_state",
-                content: "第一节人物状态"
-              })
-            })
-          ]
-        }
-      });
-      expect(context?.activeResource?.content).toBe(
-        activeStageId === "draft" ? "" : `${activeStageId} 的实时内容`
-      );
-      if (activeStageId === "draft") {
-        expect(context?.activeResource?.id).toBe("draft");
-        expect(context?.shortWorkspace?.activeAgentId).toBe("short");
-      }
-      controller.dispose();
-    }
   });
 });

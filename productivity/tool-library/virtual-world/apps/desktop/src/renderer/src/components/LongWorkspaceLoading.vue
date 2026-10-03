@@ -32,7 +32,7 @@ const emit = defineEmits<{ expandLeft: [] }>();
   <div
     v-show="paneLayout === 'agent-editor' || !rightPane.collapsed"
     class="long-agent-column"
-    aria-label="长篇创作空间"
+    aria-label="小说创作空间"
   >
     <LongWorkspacePanePlaceholder kind="agent" :loading="pending" />
   </div>

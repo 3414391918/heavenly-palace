@@ -23,8 +23,8 @@ type Coordinator = LongStructureTransactionsCoordinator;
 type Guard = () => boolean;
 type Skipped = (message: string) => void;
 
-const CANCELED_MESSAGE = "长篇结构操作已取消。";
-const LOAD_FAILURE_MESSAGE = "加载长篇结构协调器失败。";
+const CANCELED_MESSAGE = "小说结构操作已取消。";
+const LOAD_FAILURE_MESSAGE = "加载小说结构协调器失败。";
 const MIGRATION_EVIDENCE_CATEGORY_PREFIX = "world_migration-evidence-";
 
 /**
@@ -90,7 +90,7 @@ export function useLazyLongStructureTransactionsCoordinator(
   function reportVoidFailure(error: unknown): void {
     if (disposed) return;
     context.notifications.error(
-      error instanceof Error ? error.message : "长篇结构操作失败。"
+      error instanceof Error ? error.message : "小说结构操作失败。"
     );
   }
 

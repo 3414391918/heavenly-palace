@@ -28,6 +28,7 @@ export default defineConfig({
       "apps/desktop/src/extras/**/*.test.ts",
       "apps/desktop/src/renderer/**/*.test.ts"
     ],
-    environment: "node"
+    environment: "node",
+    maxWorkers: 4
   }
 });

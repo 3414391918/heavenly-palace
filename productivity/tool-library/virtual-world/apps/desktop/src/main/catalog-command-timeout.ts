@@ -7,13 +7,7 @@ const CATALOG_INTERACTIVE_WRITE_COMMANDS = new Set<CommandEnvelope["type"]>([
   "catalog.writeWritingContext",
   "catalog.updateLibrary",
   "catalog.saveLibraryEntry",
-  "catalog.createLibraryEntry",
-  "catalog.mutatePlotStructure",
-  "catalog.mutateCharacterStructure",
-  "catalog.createDraftSection",
-  "catalog.createDraftSections",
-  "catalog.deleteDraftSection",
-  "catalog.moveDraftSection"
+  "catalog.createLibraryEntry"
 ]);
 
 const CATALOG_INTERACTIVE_READ_COMMANDS = new Set<CommandEnvelope["type"]>([

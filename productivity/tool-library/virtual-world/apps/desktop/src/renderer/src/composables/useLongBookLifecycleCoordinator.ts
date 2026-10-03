@@ -198,7 +198,7 @@ export function useLongBookLifecycleCoordinator(
   function createLongBook(input: CreateLongBookInput): Promise<void> {
     const api = options.api();
     if (!api) {
-      uiMessage.warning("浏览器预览不能保存长篇作品，请使用桌面客户端创建。");
+      uiMessage.warning("浏览器预览不能保存小说作品，请使用桌面客户端创建。");
       return Promise.resolve();
     }
     const lease = acquirePendingLease("mutation");
@@ -215,10 +215,10 @@ export function useLongBookLifecycleCoordinator(
         if (!leaseIsCurrent(lease)) return;
         await catalog.refreshWorkspaceDirectory();
         if (!leaseIsCurrent(lease)) return;
-        uiMessage.success(`已创建长篇“${opened.book.title}”`);
+        uiMessage.success(`已创建小说“${opened.book.title}”`);
       } catch (error: unknown) {
         if (leaseIsCurrent(lease)) {
-          uiMessage.error(errorMessage(error, "创建长篇作品失败。"));
+          uiMessage.error(errorMessage(error, "创建小说作品失败。"));
         }
       }
     });
@@ -227,7 +227,7 @@ export function useLongBookLifecycleCoordinator(
   function openExistingLongBook(): Promise<void> {
     const api = options.api();
     if (!api) {
-      uiMessage.warning("浏览器预览不能打开本地长篇，请使用桌面客户端。");
+      uiMessage.warning("浏览器预览不能打开本地小说，请使用桌面客户端。");
       return Promise.resolve();
     }
     const lease = acquirePendingLease("mutation");
@@ -241,11 +241,11 @@ export function useLongBookLifecycleCoordinator(
         activateLongBookWorkspace(opened);
         await catalog.loadBookList({ force: true });
         if (leaseIsCurrent(lease)) {
-          uiMessage.success(`已打开长篇“${opened.book.title}”`);
+          uiMessage.success(`已打开小说“${opened.book.title}”`);
         }
       } catch (error: unknown) {
         if (leaseIsCurrent(lease)) {
-          uiMessage.error(errorMessage(error, "打开已有长篇失败。"));
+          uiMessage.error(errorMessage(error, "打开已有小说失败。"));
         }
       }
     });
@@ -291,7 +291,7 @@ export function useLongBookLifecycleCoordinator(
   function importPortableLongBook(): Promise<void> {
     const api = options.api();
     if (!api) {
-      uiMessage.warning("浏览器预览不能导入可移植长篇，请使用桌面客户端。");
+      uiMessage.warning("浏览器预览不能导入可移植小说，请使用桌面客户端。");
       return Promise.resolve();
     }
     const lease = acquirePendingLease("mutation");
@@ -305,11 +305,11 @@ export function useLongBookLifecycleCoordinator(
         activateLongBookWorkspace(imported);
         await catalog.loadBookList({ force: true });
         if (leaseIsCurrent(lease)) {
-          uiMessage.success(`已导入可移植长篇“${imported.book.title}”`);
+          uiMessage.success(`已导入可移植小说“${imported.book.title}”`);
         }
       } catch (error: unknown) {
         if (leaseIsCurrent(lease)) {
-          uiMessage.error(errorMessage(error, "导入可移植长篇失败。"));
+          uiMessage.error(errorMessage(error, "导入可移植小说失败。"));
         }
       }
     });
@@ -364,7 +364,7 @@ export function useLongBookLifecycleCoordinator(
         }
         if (leaseIsCurrent(lease) && dialogRequestIsCurrent(requestId)) {
           uiMessage.success(
-            `已导入长篇“${imported.book.title}”：${imported.importedChapterCount} 章，最后一章等待连续性核验`
+            `已导入小说“${imported.book.title}”：${imported.importedChapterCount} 章，最后一章等待连续性核验`
           );
         }
       } catch (error: unknown) {
@@ -412,7 +412,7 @@ export function useLongBookLifecycleCoordinator(
         }
       } catch (error: unknown) {
         if (leaseIsCurrent(lease)) {
-          uiMessage.error(errorMessage(error, "复制长篇失败。"));
+          uiMessage.error(errorMessage(error, "复制小说失败。"));
         }
       }
     });
@@ -500,7 +500,7 @@ export function useLongBookLifecycleCoordinator(
         }
         if (!(await session.refreshActiveWorkspace(bookId))) {
           if (leaseIsCurrent(lease)) {
-            uiMessage.error("无法读取长篇工作区，本次同步未执行。");
+            uiMessage.error("无法读取小说工作区，本次同步未执行。");
           }
           return;
         }
@@ -538,7 +538,7 @@ export function useLongBookLifecycleCoordinator(
           targetCurrent &&
           dialogRequestIsCurrent(requestId)
         ) {
-          uiMessage.success(`已将旧版本“${preview.sourceTitle}”同步到当前长篇`);
+          uiMessage.success(`已将旧版本“${preview.sourceTitle}”同步到当前小说`);
         }
       } catch (error: unknown) {
         if (leaseIsCurrent(lease) && dialogRequestIsCurrent(requestId)) {
@@ -619,7 +619,7 @@ export function useLongBookLifecycleCoordinator(
           }
           if (!(await session.refreshActiveWorkspace(target.bookId))) {
             if (leaseIsCurrent(lease)) {
-              uiMessage.error("无法读取长篇工作区，本次改名未执行。");
+              uiMessage.error("无法读取小说工作区，本次改名未执行。");
             }
             return;
           }
@@ -637,7 +637,7 @@ export function useLongBookLifecycleCoordinator(
         );
         if (!summary) {
           state.bookRenameTarget.value = null;
-          uiMessage.warning("未找到要修改名称的长篇。");
+          uiMessage.warning("未找到要修改名称的小说。");
           return;
         }
         const updated = await api.rename({
@@ -664,7 +664,7 @@ export function useLongBookLifecycleCoordinator(
         }
       } catch (error: unknown) {
         if (leaseIsCurrent(lease) && dialogRequestIsCurrent(requestId)) {
-          uiMessage.error(errorMessage(error, "修改长篇名称失败。"));
+          uiMessage.error(errorMessage(error, "修改小说名称失败。"));
         }
       }
     });
@@ -736,7 +736,7 @@ export function useLongBookLifecycleCoordinator(
         }
         if (!(await session.refreshActiveWorkspace(target.bookId))) {
           if (leaseIsCurrent(lease)) {
-            uiMessage.error("无法读取长篇工作区，本次绑定修改未执行。");
+            uiMessage.error("无法读取小说工作区，本次绑定修改未执行。");
           }
           return;
         }
@@ -772,12 +772,12 @@ export function useLongBookLifecycleCoordinator(
         await catalog.loadBookList({ force: true });
         if (leaseIsCurrent(lease) && targetCurrent) {
           uiMessage.success(
-            `已更新长篇“${updated.book.title}”的${bindingLabel}`
+            `已更新小说“${updated.book.title}”的${bindingLabel}`
           );
         }
       } catch (error: unknown) {
         if (leaseIsCurrent(lease) && dialogRequestIsCurrent(target.requestId)) {
-          uiMessage.error(errorMessage(error, `更新长篇${bindingLabel}失败。`));
+          uiMessage.error(errorMessage(error, `更新小说${bindingLabel}失败。`));
         }
       }
     });
@@ -811,7 +811,7 @@ export function useLongBookLifecycleCoordinator(
         const api = options.api();
         if (!api) {
           state.structureAgentsMdPending.value = false;
-          uiMessage.warning("当前环境未连接长篇工作区。");
+          uiMessage.warning("当前环境未连接小说工作区。");
           return;
         }
         try {
@@ -822,8 +822,8 @@ export function useLongBookLifecycleCoordinator(
           if (!dialogRequestIsCurrent(requestId)) return;
           uiMessage.warning(
             error instanceof Error
-              ? `读取长篇上下文失败：${error.message}`
-              : "读取长篇上下文失败，请重试。"
+              ? `读取小说上下文失败：${error.message}`
+              : "读取小说上下文失败，请重试。"
           );
           state.structureAgentsMd.value = "";
         } finally {
@@ -859,7 +859,7 @@ export function useLongBookLifecycleCoordinator(
       await workflow.reactivateBook(bookId);
     } catch (error: unknown) {
       if (!disposed) {
-        uiMessage.error(errorMessage(error, "恢复长篇运行状态失败。"));
+        uiMessage.error(errorMessage(error, "恢复小说运行状态失败。"));
       }
     }
   }
@@ -914,7 +914,7 @@ export function useLongBookLifecycleCoordinator(
           if (!leaseIsCurrent(lease)) return;
           if (targetIsCurrent(state.bookRemovalTarget, target, requestId)) {
             state.bookRemovalTarget.value = null;
-            uiMessage.warning("该长篇已经不在当前创作空间中。");
+            uiMessage.warning("该小说已经不在当前创作空间中。");
           }
           await catalog.loadBookList({ force: true });
           return;
@@ -947,12 +947,12 @@ export function useLongBookLifecycleCoordinator(
         ) {
           if (cleanupError) {
             uiMessage.error(
-              errorMessage(cleanupError, "长篇已移除，但本地运行状态清理失败。")
+              errorMessage(cleanupError, "小说已移除，但本地运行状态清理失败。")
             );
           } else {
             uiMessage.success(
               target.action === "delete"
-                ? `已永久删除长篇“${target.title}”`
+                ? `已永久删除小说“${target.title}”`
                 : `已从创作空间移除“${target.title}”，磁盘文件仍保留`
             );
           }
@@ -962,7 +962,7 @@ export function useLongBookLifecycleCoordinator(
           await compensateQuarantine(target.bookId);
         }
         if (leaseIsCurrent(lease) && dialogRequestIsCurrent(requestId)) {
-          uiMessage.error(errorMessage(error, "处理长篇项目失败。"));
+          uiMessage.error(errorMessage(error, "处理小说项目失败。"));
         }
       }
     });
@@ -979,7 +979,7 @@ export function useLongBookLifecycleCoordinator(
   ): Promise<void> {
     if (disposed) return Promise.resolve();
     if (!options.api()) {
-      uiMessage.warning("浏览器预览不能管理本地长篇，请使用桌面客户端。");
+      uiMessage.warning("浏览器预览不能管理本地小说，请使用桌面客户端。");
       return Promise.resolve();
     }
     const { longBookId: bookId } = payload.node;
@@ -1015,7 +1015,7 @@ export function useLongBookLifecycleCoordinator(
     const bookId = state.activeBookId.value;
     const api = options.api();
     if (!bookId || !api) {
-      const message = "当前长篇结构尚未就绪。";
+      const message = "当前小说结构尚未就绪。";
       uiMessage.warning(message);
       completion.fail(message);
       return;
@@ -1028,7 +1028,7 @@ export function useLongBookLifecycleCoordinator(
       const message =
         error instanceof Error
           ? error.message
-          : "保存长篇上下文失败，请稍后重试。";
+          : "保存小说上下文失败，请稍后重试。";
       uiMessage.error(message);
       completion.fail(message);
     }

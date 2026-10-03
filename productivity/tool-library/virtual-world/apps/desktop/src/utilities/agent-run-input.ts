@@ -9,13 +9,11 @@ import type {
   MaterialCommandExecutor
 } from "@deepwrite/pi-runtime-adapter";
 import type { UtilityCommandHandlerContext } from "./runtime";
-
 function abortedError(): Error {
   const error = new Error("Long workspace Core request was aborted.");
   error.name = "AbortError";
   return error;
 }
-
 function createCoreCommandExecutor(
   context: UtilityCommandHandlerContext
 ): (
@@ -28,7 +26,7 @@ function createCoreCommandExecutor(
   return (command, signal) => {
     if (signal?.aborted) return Promise.reject(abortedError());
     const request = context.requestInternalCommand("core", command, {
-      timeoutMs: 60_000
+      timeoutMs: 60000
     });
     if (!signal) return request;
     return new Promise((resolve, reject) => {
@@ -51,7 +49,6 @@ function createCoreCommandExecutor(
     });
   };
 }
-
 export function createAgentRunInput(
   payload: AgentPromptCommandPayload,
   runId: string,
@@ -99,10 +96,6 @@ export function createAgentRunInput(
       payload.chatAssistant?.webSearchEnabled === true)
       ? { webSearchEnabled: true }
       : {}),
-    ...(payload.agentProfile ? { agentProfile: payload.agentProfile } : {}),
-    ...(payload.scriptAgentProfile
-      ? { scriptAgentProfile: payload.scriptAgentProfile }
-      : {}),
     ...(payload.longAgentProfile
       ? { longAgentProfile: payload.longAgentProfile }
       : {}),
@@ -126,15 +119,6 @@ export function createAgentRunInput(
       : {}),
     ...(payload.libraryAgentProfile
       ? { libraryAgentProfile: payload.libraryAgentProfile }
-      : {}),
-    ...(payload.learningImitationProfile
-      ? { learningImitationProfile: payload.learningImitationProfile }
-      : {}),
-    ...(payload.shortBookAnalysisProfile
-      ? { shortBookAnalysisProfile: payload.shortBookAnalysisProfile }
-      : {}),
-    ...(payload.longBookAnalysisProfile
-      ? { longBookAnalysisProfile: payload.longBookAnalysisProfile }
       : {}),
     ...(payload.workspaceContext
       ? { workspaceContext: payload.workspaceContext }

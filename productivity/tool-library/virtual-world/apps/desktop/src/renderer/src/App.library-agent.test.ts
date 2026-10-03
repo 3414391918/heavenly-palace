@@ -1,15 +1,22 @@
 import libraryStagingSource from "./composables/proposal-coordinator/library-staging.ts?raw";
 import { describe, expect, it } from "vitest";
-import appSource from "./WorkspaceShell.vue?raw";
-import coordinatorSource from "./composables/useProposalCoordinator.ts?raw";
+import appSource from "./test-support/workspaceShellSource";
+import coordinatorSource from "./test-support/proposalCoordinatorSource";
 import resourceSource from "./composables/useWorkspaceResourceCoordinator.ts?raw";
 import eventRoutesSource from "./events/registerWorkspaceSystemEventRoutes.ts?raw";
 import settingsCoordinatorSource from "./composables/useSettingsFeatureCoordinator.ts?raw";
-import shortConversationSource from "./composables/useShortConversationCoordinator.ts?raw";
+import conversationSource from "./composables/useLibraryConversationCoordinator.ts?raw";
+import contextSource from "./composables/libraryConversationContext.ts?raw";
+import sendSource from "./composables/useLibraryConversationSend.ts?raw";
+const shortConversationSource = [
+  conversationSource,
+  contextSource,
+  sendSource
+].join("\n");
 
 describe("library management agent wiring", () => {
   it("routes selected libraries into a bounded management context", () => {
-    expect(resourceSource).toContain("activeAgentDocumentForSelection(");
+    expect(resourceSource).toContain('document.domain !== "creation"');
     expect(shortConversationSource).toContain(
       "function libraryEntryReferences("
     );
@@ -61,7 +68,7 @@ describe("library management agent wiring", () => {
   it("loads and saves both library agent settings without loading the catalog again", () => {
     expect(appSource).toContain("loadLibraryAgentSettings,");
     expect(appSource).toContain("saveLibraryAgentSettings,");
-    expect(appSource).toContain("resetLibraryAgentSettings,");
+    expect(appSource).toMatch(/\bresetLibraryAgentSettings\b/u);
     expect(settingsCoordinatorSource).toContain("api.libraryAgents.list()");
     expect(settingsCoordinatorSource).toContain(
       "settingsStore.ensureLibraryAgentsLoaded"

@@ -29,7 +29,7 @@ export async function chooseWorkspaceDirectory(options: {
 }): Promise<ReturnType<typeof WorkspaceDirectorySettingsSchema.parse> | null> {
   const current = await options.requireWorkspaceDirectoryStore().list();
   const selection = await options.dialog.showOpenDialog({
-    title: "选择 DeepWrite 工作目录",
+    title: "选择虚拟世界工作目录",
     defaultPath: current.path ?? options.getDocumentsPath(),
     properties: ["openDirectory", "createDirectory"]
   });

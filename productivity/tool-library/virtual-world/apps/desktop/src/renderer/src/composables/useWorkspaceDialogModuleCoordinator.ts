@@ -1,52 +1,12 @@
-import type {
-  Book,
-  CatalogIndexSnapshot,
-  LongBookSummary,
-  LongWorkspaceIndexSnapshot
-} from "@deepwrite/contracts";
+import type { WorkspaceDialogModuleCoordinatorOptions } from "./workspaceDialogState";
 import { computed, type Ref } from "vue";
 import type {
   WorkspaceDialogKind,
   WorkspaceDialogModule
 } from "../components/WorkspaceDialogLayer.types";
-import type { ResourceTreeNode } from "../types/workspace";
-import type { LongWorldbuildingSyncBookOption } from "../utils/longWorldbuildingSync";
-import type {
-  LibraryGroupDialogState,
-  LibraryProjectDialogState,
-  LibraryRemovalDialogState,
-  PendingLibraryEntryMove
-} from "./useCatalogLibraryTransactionsCoordinator";
-import type { ExternalLibraryImportDialogState } from "./useExternalLibraryImportCoordinator";
-import type { SaveConflictState } from "./useCatalogDocumentPersistence";
-import type { ShortBookLifecycleTarget } from "./useShortBookLifecycleCoordinator";
-import type {
-  CharacterItemDialogState,
-  PendingExpertSectionCreation,
-  PendingExpertSectionDeletion
-} from "./useShortWorkspaceStructureCoordinator";
-import type {
-  LongBookRemovalTarget,
-  LongBookRenameTarget,
-  LongChapterCardCreateTarget,
-  LongCharacterCreateTarget,
-  LongDraftSectionDeleteTarget,
-  LongLedgerCommitDeleteTarget,
-  LongPlotPointCreateTarget,
-  LongTreeItemDeleteTarget,
-  LongVolumeCreateTarget,
-  LongWorldbuildingItemCreateTarget
-} from "../stores/longWorkspaceStore";
-
-type DialogModule<Kind extends WorkspaceDialogKind> = Extract<
-  WorkspaceDialogModule,
-  { kind: Kind }
->;
 export const WORKSPACE_DIALOG_PRIORITY = [
   "startup-alert",
   "save-conflict",
-  "create-expert-section",
-  "delete-expert-section",
   "continuation-import",
   "legacy-sync",
   "create-long-character",
@@ -61,9 +21,6 @@ export const WORKSPACE_DIALOG_PRIORITY = [
   "long-rename",
   "long-removal",
   "long-structure",
-  "character-item",
-  "plot-structure",
-  "export-short",
   "export-long",
   "library-removal",
   "library-project",
@@ -71,107 +28,8 @@ export const WORKSPACE_DIALOG_PRIORITY = [
   "library-entry-move",
   "library-group",
   "create-book",
-  "book-transfer",
-  "book-resource"
+  "book-transfer"
 ] as const satisfies readonly WorkspaceDialogKind[];
-
-export interface WorkspaceDialogStartupState {
-  messages: Readonly<Ref<readonly string[]>>;
-}
-
-export interface WorkspaceDialogSaveState {
-  conflict: Readonly<Ref<SaveConflictState | null>>;
-  submitting: Readonly<Ref<boolean>>;
-}
-
-export interface WorkspaceDialogShortStructureState {
-  expertCreation: Readonly<Ref<PendingExpertSectionCreation | null>>;
-  expertDeletion: Readonly<Ref<PendingExpertSectionDeletion | null>>;
-  characterDialog: Readonly<Ref<CharacterItemDialogState | null>>;
-  plotBookId: Readonly<Ref<string | null>>;
-  plotBook: Readonly<Ref<Book | null>>;
-  writingContext?: Readonly<Ref<string | null>>;
-  writingContextLoading?: Readonly<Ref<boolean>>;
-  writingContextPending?: Readonly<Ref<boolean>>;
-}
-
-export interface WorkspaceDialogLongStructureState {
-  characterCreation: Readonly<Ref<LongCharacterCreateTarget | null>>;
-  worldbuildingItemCreation: Readonly<
-    Ref<LongWorldbuildingItemCreateTarget | null>
-  >;
-  plotPointCreation: Readonly<Ref<LongPlotPointCreateTarget | null>>;
-  chapterCardCreation: Readonly<Ref<LongChapterCardCreateTarget | null>>;
-  draftDeletion: Readonly<Ref<LongDraftSectionDeleteTarget | null>>;
-  treeDeletion: Readonly<Ref<LongTreeItemDeleteTarget | null>>;
-  ledgerCommitDeletion: Readonly<Ref<LongLedgerCommitDeleteTarget | null>>;
-  volumeCreation: Readonly<Ref<LongVolumeCreateTarget | null>>;
-  dialogOpen: Readonly<Ref<boolean>>;
-  agentsMd: Readonly<Ref<string | null>>;
-  agentsMdPending: Readonly<Ref<boolean>>;
-  syncBookOptions: Readonly<Ref<readonly LongWorldbuildingSyncBookOption[]>>;
-}
-
-export interface WorkspaceDialogLongLifecycleState {
-  continuationPreview: Readonly<
-    Ref<DialogModule<"continuation-import">["preview"] | null>
-  >;
-  legacyPreview: Readonly<Ref<DialogModule<"legacy-sync">["preview"]>>;
-  legacyResult: Readonly<Ref<DialogModule<"legacy-sync">["result"]>>;
-  mutationPending: Readonly<Ref<boolean>>;
-  activeBookSummary: Readonly<Ref<LongBookSummary | null>>;
-  activeBookId: Readonly<Ref<string | null>>;
-  workspaceIndex: Readonly<Ref<LongWorkspaceIndexSnapshot | null>>;
-  bindingsMode: Readonly<Ref<"skill" | "material" | null>>;
-  bookActionPending: Readonly<Ref<boolean>>;
-  renameTarget: Readonly<Ref<LongBookRenameTarget | null>>;
-  removalTarget: Readonly<Ref<LongBookRemovalTarget | null>>;
-  exportTarget: Readonly<Ref<LongBookRenameTarget | null>>;
-  manuscriptExportPending: Readonly<Ref<boolean>>;
-}
-
-export interface WorkspaceDialogShortLifecycleState {
-  exportTarget: Readonly<Ref<ShortBookLifecycleTarget | null>>;
-  manuscriptExportPending: Readonly<Ref<boolean>>;
-  createDialogOpen: Readonly<Ref<boolean>>;
-  createFromTemplate?: Readonly<Ref<boolean>>;
-  transferMode: Readonly<Ref<DialogModule<"book-transfer">["mode"] | null>>;
-  resourceMode: Readonly<Ref<DialogModule<"book-resource">["mode"] | null>>;
-  activeBookTarget: Readonly<Ref<ShortBookLifecycleTarget | null>>;
-}
-
-export interface WorkspaceDialogLibraryState {
-  removalDialog: Readonly<Ref<LibraryRemovalDialogState | null>>;
-  projectDialog: Readonly<Ref<LibraryProjectDialogState | null>>;
-  externalLibraryImportDialog: Readonly<
-    Ref<ExternalLibraryImportDialogState | null>
-  >;
-  entryMove: Readonly<Ref<PendingLibraryEntryMove | null>>;
-  groupDialog: Readonly<Ref<LibraryGroupDialogState | null>>;
-  activeGroup: Readonly<Ref<DialogModule<"library-group">["group"]>>;
-}
-
-export interface WorkspaceDialogCatalogState {
-  snapshot: Readonly<Ref<CatalogIndexSnapshot | null>>;
-  loading: Readonly<Ref<boolean>>;
-  mutationPending: Readonly<Ref<boolean>>;
-  skillLibraries: Readonly<Ref<ResourceTreeNode[]>>;
-  materialLibraries: Readonly<Ref<ResourceTreeNode[]>>;
-  materialStageOptions(
-    materialKind: PendingLibraryEntryMove["targetMaterialKind"]
-  ): DialogModule<"library-entry-move">["options"];
-}
-
-export interface WorkspaceDialogModuleCoordinatorOptions {
-  startup: WorkspaceDialogStartupState;
-  save: WorkspaceDialogSaveState;
-  shortStructure: WorkspaceDialogShortStructureState;
-  longStructure: WorkspaceDialogLongStructureState;
-  longLifecycle: WorkspaceDialogLongLifecycleState;
-  shortLifecycle: WorkspaceDialogShortLifecycleState;
-  library: WorkspaceDialogLibraryState;
-  catalog: WorkspaceDialogCatalogState;
-}
 
 /**
  * Projects coordinator-owned dialog intents into one low-frequency render
@@ -198,26 +56,6 @@ export function useWorkspaceDialogModuleCoordinator(
         draftContent: conflict.payload.content,
         diskContent: conflict.diskContent,
         submitting: options.save.submitting.value
-      };
-    }
-
-    const expertCreation = options.shortStructure.expertCreation.value;
-    if (expertCreation) {
-      return {
-        kind: "create-expert-section",
-        suggestedTitle: expertCreation.suggestedTitle,
-        workspaceType: expertCreation.workspaceType,
-        pending: options.catalog.mutationPending.value
-      };
-    }
-
-    const expertDeletion = options.shortStructure.expertDeletion.value;
-    if (expertDeletion) {
-      return {
-        kind: "delete-expert-section",
-        sectionTitle: expertDeletion.sectionTitle,
-        hasContent: expertDeletion.hasContent,
-        workspaceType: expertDeletion.workspaceType
       };
     }
 
@@ -375,39 +213,6 @@ export function useWorkspaceDialogModuleCoordinator(
       };
     }
 
-    const characterDialog = options.shortStructure.characterDialog.value;
-    if (characterDialog) {
-      return {
-        kind: "character-item",
-        mode: characterDialog.mode,
-        title: characterDialog.title,
-        pending: options.catalog.mutationPending.value
-      };
-    }
-
-    if (options.shortStructure.plotBookId.value) {
-      return {
-        kind: "plot-structure",
-        book: options.shortStructure.plotBook.value,
-        pending: options.catalog.mutationPending.value,
-        writingContext: options.shortStructure.writingContext?.value ?? null,
-        writingContextLoading:
-          options.shortStructure.writingContextLoading?.value ?? false,
-        writingContextPending:
-          options.shortStructure.writingContextPending?.value ?? false
-      };
-    }
-
-    const shortExportTarget = options.shortLifecycle.exportTarget.value;
-    if (shortExportTarget) {
-      return {
-        kind: "export-short",
-        bookTitle: shortExportTarget.label,
-        workspaceType: shortExportTarget.workspaceType,
-        submitting: options.shortLifecycle.manuscriptExportPending.value
-      };
-    }
-
     const longExportTarget = options.longLifecycle.exportTarget.value;
     if (longExportTarget) {
       return {
@@ -508,11 +313,10 @@ export function useWorkspaceDialogModuleCoordinator(
       };
     }
 
-    if (options.shortLifecycle.createDialogOpen.value) {
+    if (options.creation.createDialogOpen.value) {
       const snapshot = options.catalog.snapshot.value;
       return {
         kind: "create-book",
-        fromTemplate: options.shortLifecycle.createFromTemplate?.value ?? false,
         materials: snapshot?.materials ?? [],
         materialGroups: snapshot?.materialGroups ?? [],
         skills: snapshot?.skills ?? [],
@@ -524,7 +328,7 @@ export function useWorkspaceDialogModuleCoordinator(
       };
     }
 
-    const transferMode = options.shortLifecycle.transferMode.value;
+    const transferMode = options.creation.transferMode.value;
     if (transferMode) {
       return {
         kind: "book-transfer",
@@ -535,22 +339,16 @@ export function useWorkspaceDialogModuleCoordinator(
       };
     }
 
-    const resourceMode = options.shortLifecycle.resourceMode.value;
-    if (resourceMode) {
-      const snapshot = options.catalog.snapshot.value;
-      return {
-        kind: "book-resource",
-        mode: resourceMode,
-        book: options.shortLifecycle.activeBookTarget.value?.node ?? null,
-        skillLibraries: options.catalog.skillLibraries.value,
-        materialLibraries: options.catalog.materialLibraries.value,
-        materialGroups: snapshot?.materialGroups ?? [],
-        skillGroups: snapshot?.skillGroups ?? [],
-        loading: options.catalog.loading.value,
-        submitting: options.catalog.mutationPending.value
-      };
-    }
-
     return null;
   });
 }
+
+export type {
+  WorkspaceDialogStartupState,
+  WorkspaceDialogSaveState,
+  WorkspaceDialogLongStructureState,
+  WorkspaceDialogLongLifecycleState,
+  WorkspaceDialogLibraryState,
+  WorkspaceDialogCatalogState,
+  WorkspaceDialogModuleCoordinatorOptions
+} from "./workspaceDialogState";

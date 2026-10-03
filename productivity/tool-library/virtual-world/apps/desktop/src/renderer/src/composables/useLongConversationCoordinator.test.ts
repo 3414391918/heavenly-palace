@@ -36,7 +36,7 @@ function deferred<Value>() {
 function bookSummary(): LongBookSummary {
   return {
     id: BOOK_ID,
-    title: "长篇测试书",
+    title: "小说测试书",
     updatedAt: NOW,
     linkedMaterialIdsByKind: {
       character: [],
@@ -82,7 +82,7 @@ function selection(key = "plot-design:book-line"): LongWorkspaceSelection {
     key,
     root: "plot_design",
     title: "全书故事线",
-    breadcrumbs: ["长篇测试书", "剧情设计"],
+    breadcrumbs: ["小说测试书", "剧情设计"],
     files: [],
     preferredRole: "body"
   };
@@ -118,7 +118,7 @@ function controllerFixture() {
     {
       id: "user-long-history",
       role: "user",
-      content: "长篇历史问题",
+      content: "小说历史问题",
       createdAt: "2026-08-25T08:00:00.000Z",
       status: "completed"
     }
@@ -399,14 +399,14 @@ describe("useLongConversationCoordinator", () => {
       {
         id: "skill:skill-library:skill-entry",
         label: "剧情方法 · 冲突升级",
-        detail: "剧情设计技能库 · 当前长篇已绑定"
+        detail: "剧情设计技能库 · 当前小说已绑定"
       }
     ]);
     expect(test.coordinator.availableMaterialReferences.value).toEqual([
       {
         id: "material:material-library:material-entry",
         label: "人物素材 · 主角档案",
-        detail: "人设素材库 · 当前长篇已绑定"
+        detail: "人设素材库 · 当前小说已绑定"
       }
     ]);
     expect(test.hydratedSnapshot).not.toHaveBeenCalled();
@@ -427,7 +427,7 @@ describe("useLongConversationCoordinator", () => {
     const test = createHarness();
     const readAgentsMd = vi.fn(async () => ({
       bookId: BOOK_ID,
-      content: "# 长篇上下文\n\n## 正文阶段\n写当前章。",
+      content: "# 小说上下文\n\n## 正文阶段\n写当前章。",
       truncated: false
     }));
     test.options.workspace.api = vi.fn(
@@ -444,7 +444,7 @@ describe("useLongConversationCoordinator", () => {
     const [context] = test.conversation.sendLongMessage.mock.calls[0]!;
     expect(context).toMatchObject({
       bookId: BOOK_ID,
-      agentsMd: "# 长篇上下文\n\n## 正文阶段\n写当前章。"
+      agentsMd: "# 小说上下文\n\n## 正文阶段\n写当前章。"
     });
   });
 
@@ -464,7 +464,7 @@ describe("useLongConversationCoordinator", () => {
 
     expect(readAgentsMd).toHaveBeenCalledWith({ bookId: BOOK_ID });
     expect(test.notifications.warning).toHaveBeenCalledWith(
-      "长篇上下文未注入：工作区未就绪"
+      "小说上下文未注入：工作区未就绪"
     );
     expect(test.conversation.sendLongMessage).toHaveBeenCalledOnce();
     const [context] = test.conversation.sendLongMessage.mock.calls[0]!;
@@ -544,7 +544,7 @@ describe("useLongConversationCoordinator", () => {
     await test.coordinator.sendLongMessage();
 
     expect(test.notifications.info).toHaveBeenCalledWith(
-      "正在准备上一条长篇消息，请稍候。"
+      "正在准备上一条小说消息，请稍候。"
     );
     await waitForCall(test.ensureAgentSettingsLoaded);
     expect(test.ensureAgentSettingsLoaded).toHaveBeenCalledOnce();
@@ -555,11 +555,11 @@ describe("useLongConversationCoordinator", () => {
 
   it("saves and refreshes the long workspace before resending edited history", async () => {
     const test = createHarness();
-    test.conversation.draft.value = "保留长篇主输入草稿";
+    test.conversation.draft.value = "保留小说主输入草稿";
 
     const result = await test.coordinator.resendLongMessage({
       messageId: "user-long-history",
-      content: "修改后的长篇问题"
+      content: "修改后的小说问题"
     });
 
     expect(result).toBe(true);
@@ -570,7 +570,7 @@ describe("useLongConversationCoordinator", () => {
     expect(test.conversation.resendLongMessage).toHaveBeenCalledWith(
       {
         messageId: "user-long-history",
-        content: "修改后的长篇问题"
+        content: "修改后的小说问题"
       },
       expect.objectContaining({
         bookId: BOOK_ID
@@ -578,7 +578,7 @@ describe("useLongConversationCoordinator", () => {
       { attachedSkills: [], attachedMaterials: [] }
     );
     expect(test.conversation.sendLongMessage).not.toHaveBeenCalled();
-    expect(test.conversation.draft.value).toBe("保留长篇主输入草稿");
+    expect(test.conversation.draft.value).toBe("保留小说主输入草稿");
   });
 
   it("keeps long history when preflight fails", async () => {
@@ -632,7 +632,7 @@ describe("useLongConversationCoordinator", () => {
 
     expect(test.conversation.newConversation).not.toHaveBeenCalled();
     expect(test.notifications.warning).toHaveBeenCalledWith(
-      "请先停止当前长篇回复，再新建对话。"
+      "请先停止当前小说回复，再新建对话。"
     );
     expect(test.showConversation).not.toHaveBeenCalled();
   });
@@ -651,7 +651,7 @@ describe("useLongConversationCoordinator", () => {
     expect(test.refreshActiveWorkspace).not.toHaveBeenCalled();
     expect(test.conversation.sendLongMessage).not.toHaveBeenCalled();
     expect(test.notifications.info).toHaveBeenCalledWith(
-      "长篇上下文、会话、模型设置或输入内容已切换，本次发送已取消。"
+      "小说上下文、会话、模型设置或输入内容已切换，本次发送已取消。"
     );
   });
 
@@ -677,7 +677,7 @@ describe("useLongConversationCoordinator", () => {
     expect(test.refreshActiveWorkspace).not.toHaveBeenCalled();
     expect(test.conversation.sendLongMessage).not.toHaveBeenCalled();
     expect(test.notifications.info).toHaveBeenCalledWith(
-      "长篇上下文、会话、模型设置或输入内容已切换，本次发送已取消。"
+      "小说上下文、会话、模型设置或输入内容已切换，本次发送已取消。"
     );
   });
 
@@ -710,7 +710,7 @@ describe("useLongConversationCoordinator", () => {
     expect(test.conversation.sendLongMessage).not.toHaveBeenCalled();
     expect(test.sendPreflightPending.value).toBe(false);
     expect(test.notifications.info).not.toHaveBeenCalledWith(
-      "长篇上下文、会话、模型设置或输入内容已切换，本次发送已取消。"
+      "小说上下文、会话、模型设置或输入内容已切换，本次发送已取消。"
     );
   });
 

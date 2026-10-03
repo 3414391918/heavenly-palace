@@ -7,7 +7,7 @@ describe("LibraryProjectDialog create-library form", () => {
     expect(source).toContain("skillKind: libraryKind.value");
     expect(source).not.toContain("libraryType: libraryType.value");
     expect(source).not.toContain("适用创作类型");
-    expect(source).toContain("此资料库由短篇、剧本和长篇共用");
+    expect(source).toContain("此资料库可在任意作品中绑定");
     expect(source).toContain("通用技能库");
     expect(source).not.toContain('{ value: "mixed", label: "综合素材库" }');
   });

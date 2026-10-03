@@ -144,7 +144,7 @@ function continuityFileTargets(
   const targets = new Map<string, LongContinuityFileTarget>();
   const add = (target: LongContinuityFileTarget): void => {
     if (targets.has(target.file.id)) {
-      throw new Error("长篇工作区包含重复的连续性文件标识。");
+      throw new Error("小说工作区包含重复的连续性文件标识。");
     }
     targets.set(target.file.id, target);
   };
@@ -527,7 +527,7 @@ export function useLongWorkspaceProposals(
     if (!api) {
       updateItem(event.payload.bookId, event.id, {
         status: "error",
-        error: "当前环境未连接长篇工作区。",
+        error: "当前环境未连接小说工作区。",
         errorPhase: "preview",
         errorRetryable: true,
         clearPreview: true
@@ -557,7 +557,7 @@ export function useLongWorkspaceProposals(
           latest.bookId !== event.payload.bookId ||
           latest.workspaceIndex.bookId !== event.payload.bookId
         ) {
-          throw new Error("长篇工作区索引返回了错误的项目。");
+          throw new Error("小说工作区索引返回了错误的项目。");
         }
         const continuityTargets =
           event.type === "long.continuity_file_proposal"
@@ -670,7 +670,7 @@ export function useLongWorkspaceProposals(
         })
       );
       if (result.bookId !== event.payload.bookId) {
-        throw new Error("结构影响预览返回了错误的长篇项目。");
+        throw new Error("结构影响预览返回了错误的小说项目。");
       }
       if (!currentItem(event.payload.bookId, event.id)) return;
       updateItem(event.payload.bookId, event.id, {
@@ -683,7 +683,7 @@ export function useLongWorkspaceProposals(
       if (!currentItem(event.payload.bookId, event.id)) return;
       updateItem(event.payload.bookId, event.id, {
         status: "error",
-        error: errorMessage(error, "预览长篇结构影响失败。"),
+        error: errorMessage(error, "预览小说结构影响失败。"),
         errorPhase: "preview",
         errorRetryable: isRetryableLongProposalError(error),
         clearPreview: true
@@ -755,7 +755,7 @@ export function useLongWorkspaceProposals(
       });
       try {
         const api = options.api();
-        if (!api) throw new Error("当前环境未连接长篇工作区。");
+        if (!api) throw new Error("当前环境未连接小说工作区。");
         await commitLongContinuityFinalization(api, event);
       } catch (error: unknown) {
         const message = errorMessage(error, "连续性文件归档失败。");
@@ -782,7 +782,7 @@ export function useLongWorkspaceProposals(
         await options.onApplied?.(event);
       } catch (error: unknown) {
         options.notifications.warning(
-          `连续性文件已经归档，但后续刷新失败：${errorMessage(error, "请手动刷新长篇工作区。")}`
+          `连续性文件已经归档，但后续刷新失败：${errorMessage(error, "请手动刷新小说工作区。")}`
         );
       }
     }
@@ -803,7 +803,7 @@ export function useLongWorkspaceProposals(
         } catch (error: unknown) {
           const message = errorMessage(
             error,
-            "长篇文件实时自动保存前检查失败。"
+            "小说文件实时自动保存前检查失败。"
           );
           updateItem(event.payload.bookId, event.id, {
             status: "error",
@@ -847,7 +847,7 @@ export function useLongWorkspaceProposals(
         } catch (error: unknown) {
           const message = errorMessage(
             error,
-            "长篇提案实时自动保存前检查失败。"
+            "小说提案实时自动保存前检查失败。"
           );
           updateItem(event.payload.bookId, event.id, {
             status: "error",
@@ -941,7 +941,7 @@ export function useLongWorkspaceProposals(
         return eventId;
       }
     }
-    throw new Error("无法为手工长篇结构提案生成唯一事件 ID。");
+    throw new Error("无法为手工小说结构提案生成唯一事件 ID。");
   }
 
   async function enqueueManualMutation(
@@ -979,7 +979,7 @@ export function useLongWorkspaceProposals(
     );
     activateBook(input.bookId);
     if (!(await enqueueProposalEvent(event, "request-approval"))) {
-      throw new Error("手工长篇结构提案事件 ID 冲突，请重试。");
+      throw new Error("手工小说结构提案事件 ID 冲突，请重试。");
     }
     return event;
   }
@@ -1021,7 +1021,7 @@ export function useLongWorkspaceProposals(
     const api = options.api();
     if (!item || !api || item.status === "submitting") {
       if (!api) {
-        options.notifications.warning("当前环境未连接长篇工作区。");
+        options.notifications.warning("当前环境未连接小说工作区。");
       }
       return;
     }
@@ -1083,7 +1083,7 @@ export function useLongWorkspaceProposals(
         );
       } else {
         throw new Error(
-          "章节正文必须通过会话 diff 审批卡保存，不能进入旧长篇提案队列。"
+          "章节正文必须通过会话 diff 审批卡保存，不能进入旧小说提案队列。"
         );
       }
     } catch (error: unknown) {
@@ -1108,12 +1108,12 @@ export function useLongWorkspaceProposals(
       }
       updateItem(bookId, eventId, {
         status: "error",
-        error: errorMessage(error, "处理长篇提案失败。"),
+        error: errorMessage(error, "处理小说提案失败。"),
         errorPhase: "apply",
         errorRetryable: isRetryableLongProposalError(error),
         clearPreview: true
       });
-      options.notifications.error(errorMessage(error, "处理长篇提案失败。"));
+      options.notifications.error(errorMessage(error, "处理小说提案失败。"));
       return;
     }
 
@@ -1130,7 +1130,7 @@ export function useLongWorkspaceProposals(
     }
     options.notifications.success(
       item.event.type === "long.mutation_proposal"
-        ? "长篇结构提案已应用。"
+        ? "小说结构提案已应用。"
         : item.event.type === "long.worldbuilding_file_proposal"
           ? "世界观文件变更已保存到本地 Markdown。"
           : item.event.type === "long.character_file_proposal"
@@ -1141,7 +1141,7 @@ export function useLongWorkspaceProposals(
       await options.onApplied?.(item.event);
     } catch (error: unknown) {
       options.notifications.warning(
-        `长篇提案已经写入，但后续刷新失败：${errorMessage(error, "请手动刷新长篇工作区。")}`
+        `小说提案已经写入，但后续刷新失败：${errorMessage(error, "请手动刷新小说工作区。")}`
       );
     }
     if (isBatchProposal(item.event)) {

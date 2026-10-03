@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { expectSourceToContain } from "../../test-utils/sourceText";
-import source from "./WorkspaceShell.vue?raw";
+import source from "./test-support/workspaceShellSource";
 import resourceSource from "./composables/useWorkspaceResourceCoordinator.ts?raw";
 import layoutSource from "./stores/layoutStore.ts?raw";
 
@@ -36,20 +36,12 @@ describe("App right pane preference integration", () => {
     );
   });
 
-  it("keys short and script widths from the selected resource area", () => {
-    const preferenceBlock = resourceSource.slice(
-      resourceSource.indexOf("const activeRightPanePreferenceKey = computed"),
-      resourceSource.indexOf("const liveWorkspaceDocuments = computed")
+  it("keys library widths from the selected resource area", () => {
+    expect(resourceSource).toContain("domain: activeDocument.value.domain");
+    expect(resourceSource).toContain(
+      "stageId: activeDocument.value.stageCategoryId"
     );
-    expect(preferenceBlock).toContain("const document = activeDocument.value");
-    expect(preferenceBlock).toContain(
-      "const stageId = document.stageId ?? nodeStageId"
-    );
-    expect(preferenceBlock).toContain(
-      "const workspaceType = document.workspaceType"
-    );
-    expect(preferenceBlock).not.toContain("activeAgentDocument.value.stageId");
-    expect(preferenceBlock).toContain("all plot stages share one width");
+    expect(resourceSource).not.toContain("activeAgentDocument.value.stageId");
   });
 
   it("uses saved widths when reconciling window size without replacing them", () => {

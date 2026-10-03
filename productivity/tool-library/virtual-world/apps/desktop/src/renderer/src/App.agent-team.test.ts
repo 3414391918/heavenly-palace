@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { expectSourceToContain } from "../../test-utils/sourceText";
-import source from "./WorkspaceShell.vue?raw";
+import source from "./test-support/workspaceShellSource";
 import featureModulesSource from "./components/WorkspaceFeatureModules.vue?raw";
 import featureHostSource from "./composables/useWorkspaceFeatureHostCoordinator.ts?raw";
 import coordinatorSource from "./composables/useSettingsFeatureCoordinator.ts?raw";
@@ -17,8 +17,8 @@ describe("App agent-team integration", () => {
     );
     expect(layoutSource).toContain("export type WorkspaceMainView =");
     expect(layoutSource).toContain('| "agent-team"');
-    expect(layoutSource).toContain('| "marketplace"');
-    expect(featureModulesSource).toContain("<AgentTeamSettingsPanel");
+    expect(layoutSource).not.toContain('| "marketplace"');
+    expect(featureModulesSource).toContain("<AgentTeamCatalogFeature");
     expect(featureModulesSource).toContain(':models="module.models"');
     expect(featureModulesSource).toContain('class="agent-team-main-view"');
   });
@@ -67,7 +67,7 @@ describe("App agent-team integration", () => {
       'class="workspace-settings-main-view"'
     );
     expect(featureModulesSource).toContain(
-      'class="learning-imitation-main-view"'
+      'class="revision-analysis-main-view"'
     );
     expectSourceToContain(
       source,
@@ -85,31 +85,12 @@ describe("App agent-team integration", () => {
     );
   });
 
-  it("loads and saves long agent profiles independently from short and script", () => {
-    expect(settingsSource).toContain("const longAgentLoading = ref(false)");
-    expect(settingsSource).toContain("const longAgentSaving = ref(false)");
-    expect(coordinatorSource).toContain("loadShortAndScriptAgentSettings()");
-    expect(coordinatorSource).toContain("loadLongAgentSettings()");
-    expect(featureModulesSource).toContain(
-      ':long-agent-loading="module.longAgentLoading"'
-    );
-    expect(featureModulesSource).toContain(
-      ':long-agent-saving="module.longAgentSaving"'
-    );
-    expect(settingsSource).toContain(
-      "const longAgentLoadError = ref<string | null>(null)"
-    );
-    expect(coordinatorSource).toContain("settingsStore.ensureLongAgentsLoaded");
-    expect(coordinatorSource).toContain("ensureLongAgentSettingsLoaded()");
-    expect(source).toContain('@retry-long-agents="loadLongAgentSettings"');
-  });
-
   it("routes agent-setting feedback through top-centered uiMessage", () => {
     expect(source).toContain('import { uiMessage } from "./ui-feedback"');
     expect(source).toContain("notifications: uiMessage");
     expect(coordinatorSource).toContain("uiMessage.success(");
-    expect(coordinatorSource).toContain("保存创作空间智能体设置失败。");
-    expect(coordinatorSource).toContain("保存长篇智能体设置失败。");
+    expect(coordinatorSource).toContain("保存主智能体设置失败。");
+    expect(coordinatorSource).toContain("保存主智能体设置失败。");
     expect(source).not.toContain("function showWorkspaceAgentFeedback");
     expect(source).not.toContain("function showLongAgentFeedback");
     expect(featureModulesSource).toContain(
@@ -122,9 +103,7 @@ describe("App agent-team integration", () => {
       "options.ensureFeatureDependencies(options.activeFeature.value)"
     );
     expect(featureHostSource).toContain('feature === "conversation"');
-    expect(featureHostSource).toContain(
-      "options.loaders.loadShortAndScriptAgentSettings()"
-    );
+    expect(featureHostSource).not.toContain("loadShortAndScriptAgentSettings");
     expect(featureHostSource).toContain(
       "options.loaders.ensureLongAgentSettingsLoaded()"
     );

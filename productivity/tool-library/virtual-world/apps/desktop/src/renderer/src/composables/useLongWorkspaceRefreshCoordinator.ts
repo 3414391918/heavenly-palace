@@ -81,11 +81,11 @@ export function useLongWorkspaceRefreshCoordinator(
         return false;
       }
       if (result.bookId !== bookId) {
-        throw new Error("长篇工作区刷新返回了其他书籍。");
+        throw new Error("小说工作区刷新返回了其他书籍。");
       }
       const currentSummary = state.activeBookSummary.value;
       if (!currentSummary || currentSummary.id !== bookId) {
-        throw new Error("活动长篇摘要已经切换，无法发布刷新结果。");
+        throw new Error("活动小说摘要已经切换，无法发布刷新结果。");
       }
       const nextSummary: LongBookSummary = {
         ...currentSummary,
@@ -131,7 +131,7 @@ export function useLongWorkspaceRefreshCoordinator(
         refreshClock.isCurrent(bookId, requestId)
       ) {
         const message =
-          error instanceof Error ? error.message : "刷新长篇工作区索引失败。";
+          error instanceof Error ? error.message : "刷新小说工作区索引失败。";
         state.refreshStatus.value = {
           bookId,
           requestId,

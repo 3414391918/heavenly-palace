@@ -347,7 +347,7 @@ describe("agent conversation controller: proposal-persistence", () => {
           }
         },
         discardSnapshot: {
-          beforeText: "旧长篇内容",
+          beforeText: "旧小说内容",
           beforeTitle: "旧标题"
         },
         discardState: {
@@ -462,7 +462,7 @@ describe("agent conversation controller: proposal-persistence", () => {
             {
               id: "assistant_legacy_long",
               role: "assistant",
-              content: "旧版长篇建议",
+              content: "旧版小说建议",
               createdAt: timestamp,
               runId: "run_edit_1",
               status: "completed",

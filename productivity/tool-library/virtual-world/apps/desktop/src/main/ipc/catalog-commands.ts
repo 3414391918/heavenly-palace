@@ -2,245 +2,40 @@ import {
   BookSchema,
   CatalogDraftRecoverySaveResultSchema,
   CatalogDraftRecoverySchema,
-  CatalogDraftSectionSchema,
   CatalogIndexSnapshotSchema,
   CatalogLibraryEntrySchema,
   CatalogLibraryGroupSchema,
   CatalogLibrarySchema,
-  CatalogOpenProjectResultSchema,
   CatalogReadDocumentResultSchema,
   CatalogSnapshotSchema,
-  CommandEnvelopeSchema,
-  CreateDraftSectionsResultSchema,
   DeleteBookResultSchema,
   DeleteCatalogProjectResultSchema,
-  DeleteDraftSectionResultSchema,
   DuplicateCatalogProjectResultSchema,
   ExternalLibrarySelectionResultSchema,
   ImportLibraryEntriesResultSchema,
-  MoveDraftSectionResultSchema,
   MoveLibraryEntryResultSchema,
-  RemoveLibraryEntryResultSchema,
   ReadWritingContextResultSchema,
+  RemoveLibraryEntryResultSchema,
   SaveDocumentResultSchema,
-  ScriptBookSchema,
-  ShortBookSchema,
   UnregisterCatalogProjectResultSchema,
   WriteWritingContextResultSchema,
-  createEnvelope,
   type CommandEnvelope,
   type CommandResult
 } from "@deepwrite/contracts";
-import { LEGACY_LIBRARY_FILE_SELECTION_PROPERTIES } from "../legacy-library-import-batch";
-import { UtilityCommandTimeoutError } from "../supervisor";
 import {
   catalogCommandTimeoutMessage,
   catalogCommandTimeoutMs
 } from "../catalog-command-timeout";
-import { safeErrorDetails } from "./errors";
+import { UtilityCommandTimeoutError } from "../supervisor";
+import { handleCatalogProjectCommands } from "./catalog-project-commands";
 import type { IpcCommandContext } from "./command-types";
-
+import { safeErrorDetails } from "./errors";
 export async function handleCatalogCommands(
   ctx: IpcCommandContext,
   command: CommandEnvelope
 ): Promise<CommandResult | undefined> {
-  if (
-    command.type === "catalog.createShortBook" ||
-    command.type === "catalog.createScriptBook" ||
-    command.type === "catalog.createLibrary" ||
-    command.type === "catalog.createLibraryGroup" ||
-    command.type === "catalog.openProject" ||
-    command.type === "catalog.importLegacyLibrary"
-  ) {
-    try {
-      const workspaceDirectory = await ctx.requireSelectedWorkspaceDirectory();
-      if (!workspaceDirectory) {
-        return {
-          status: "accepted",
-          requestId: command.id,
-          payload: null
-        };
-      }
-
-      const domain =
-        command.type === "catalog.createShortBook" ||
-        command.type === "catalog.createScriptBook"
-          ? "book"
-          : command.payload.domain;
-      const defaultPath =
-        command.type === "catalog.createLibraryGroup"
-          ? ctx.workspaceGroupParent(workspaceDirectory, command.payload.domain)
-          : ctx.workspaceResourceParent(workspaceDirectory, domain);
-      let selectedPaths: string[];
-      if (
-        command.type === "catalog.createShortBook" ||
-        command.type === "catalog.createScriptBook" ||
-        command.type === "catalog.createLibrary" ||
-        command.type === "catalog.createLibraryGroup"
-      ) {
-        selectedPaths = [defaultPath];
-      } else {
-        const selection = await ctx.dialog.showOpenDialog({
-          title:
-            command.type === "catalog.importLegacyLibrary"
-              ? `导入旧版${domain === "material" ? "素材" : "技能"}库压缩包`
-              : domain === "book"
-                ? "打开已有书籍"
-                : domain === "material"
-                  ? "打开已有素材库"
-                  : "打开已有技能库",
-          defaultPath,
-          ...(command.type === "catalog.importLegacyLibrary"
-            ? {
-                properties:
-                  command.type === "catalog.importLegacyLibrary"
-                    ? LEGACY_LIBRARY_FILE_SELECTION_PROPERTIES
-                    : (["openFile"] as const),
-                filters: [
-                  {
-                    name: `旧版${domain === "material" ? "素材" : "技能"}库压缩包`,
-                    extensions: ["zip"]
-                  }
-                ]
-              }
-            : { properties: ["openDirectory"] as const })
-        });
-        if (selection.canceled || selection.filePaths.length === 0) {
-          return {
-            status: "accepted",
-            requestId: command.id,
-            payload: null
-          };
-        }
-        selectedPaths = selection.filePaths;
-      }
-
-      const selectedPath = selectedPaths[0]!;
-
-      const internalCommand = CommandEnvelopeSchema.parse(
-        command.type === "catalog.createShortBook"
-          ? createEnvelope(
-              "catalog.createShortBookAtPath",
-              {
-                parentDirectory: selectedPath,
-                input: command.payload
-              },
-              { id: command.id, context: command.context }
-            )
-          : command.type === "catalog.createScriptBook"
-            ? createEnvelope(
-                "catalog.createScriptBookAtPath",
-                {
-                  parentDirectory: selectedPath,
-                  input: command.payload
-                },
-                { id: command.id, context: command.context }
-              )
-            : command.type === "catalog.createLibrary"
-              ? createEnvelope(
-                  "catalog.createLibraryAtPath",
-                  {
-                    ...command.payload,
-                    parentDirectory: selectedPath
-                  },
-                  { id: command.id, context: command.context }
-                )
-              : command.type === "catalog.createLibraryGroup"
-                ? createEnvelope(
-                    "catalog.createLibraryGroupAtPath",
-                    {
-                      parentDirectory: selectedPath,
-                      input: command.payload
-                    },
-                    { id: command.id, context: command.context }
-                  )
-                : command.type === "catalog.openProject"
-                  ? createEnvelope(
-                      "catalog.openProjectAtPath",
-                      {
-                        projectDirectory: selectedPath,
-                        domain: command.payload.domain
-                      },
-                      { id: command.id, context: command.context }
-                    )
-                  : createEnvelope(
-                      "catalog.importLegacyLibraryAtPath",
-                      {
-                        domain: command.payload.domain,
-                        archivePath: selectedPath,
-                        parentDirectory: defaultPath
-                      },
-                      { id: command.id, context: command.context }
-                    )
-      );
-
-      if (command.type === "catalog.importLegacyLibrary") {
-        const payload = await ctx.importLegacyLibraryArchives(
-          selectedPaths,
-          async (archivePath, index) => {
-            const result = await ctx.supervisor.requestCommand(
-              "core",
-              createEnvelope(
-                "catalog.importLegacyLibraryAtPath",
-                {
-                  domain: command.payload.domain,
-                  archivePath,
-                  parentDirectory: defaultPath
-                },
-                {
-                  id: `${command.id}_${index + 1}`,
-                  context: command.context
-                }
-              ),
-              0
-            );
-            if (result.status === "rejected") {
-              throw new Error(result.error.message);
-            }
-            return result.payload;
-          }
-        );
-        return {
-          status: "accepted",
-          requestId: command.id,
-          payload
-        };
-      }
-
-      const result = await ctx.supervisor.requestCommand(
-        "core",
-        internalCommand,
-        0
-      );
-      if (result.status === "rejected") {
-        return result;
-      }
-      const payload =
-        command.type === "catalog.createShortBook"
-          ? ShortBookSchema.parse(result.payload)
-          : command.type === "catalog.createScriptBook"
-            ? ScriptBookSchema.parse(result.payload)
-            : command.type === "catalog.createLibrary"
-              ? CatalogLibrarySchema.parse(result.payload)
-              : command.type === "catalog.createLibraryGroup"
-                ? CatalogLibraryGroupSchema.parse(result.payload)
-                : command.type === "catalog.openProject"
-                  ? CatalogOpenProjectResultSchema.parse(result.payload)
-                  : CatalogLibrarySchema.parse(result.payload);
-      return { status: "accepted", requestId: command.id, payload };
-    } catch (error: unknown) {
-      return {
-        status: "rejected",
-        requestId: command.id,
-        error: {
-          code: "catalog.forward_failed",
-          message: error instanceof Error ? error.message : "目录操作失败。",
-          details: safeErrorDetails(error)
-        }
-      };
-    }
-  }
-
+  const projectResult = await handleCatalogProjectCommands(ctx, command);
+  if (projectResult) return projectResult;
   if (command.type === "catalog.chooseExternalLibraryEntries") {
     try {
       const selection =
@@ -305,7 +100,6 @@ export async function handleCatalogCommands(
       };
     }
   }
-
   if (
     command.type === "catalog.index" ||
     command.type === "catalog.readDocument" ||
@@ -315,16 +109,10 @@ export async function handleCatalogCommands(
     command.type === "catalog.loadDraftRecovery" ||
     command.type === "catalog.saveDraftRecovery" ||
     command.type === "catalog.updateBook" ||
-    command.type === "catalog.mutateCharacterStructure" ||
-    command.type === "catalog.mutatePlotStructure" ||
     command.type === "catalog.updateLibraryGroup" ||
     command.type === "catalog.updateLibrary" ||
     command.type === "catalog.deleteBook" ||
     command.type === "catalog.saveDocument" ||
-    command.type === "catalog.createDraftSection" ||
-    command.type === "catalog.createDraftSections" ||
-    command.type === "catalog.deleteDraftSection" ||
-    command.type === "catalog.moveDraftSection" ||
     command.type === "catalog.saveLibraryEntry" ||
     command.type === "catalog.createLibraryEntry" ||
     command.type === "catalog.importLibraryEntries" ||
@@ -372,18 +160,6 @@ export async function handleCatalogCommands(
         case "catalog.saveDocument":
           payload = SaveDocumentResultSchema.parse(result.payload);
           break;
-        case "catalog.createDraftSection":
-          payload = CatalogDraftSectionSchema.parse(result.payload);
-          break;
-        case "catalog.createDraftSections":
-          payload = CreateDraftSectionsResultSchema.parse(result.payload);
-          break;
-        case "catalog.deleteDraftSection":
-          payload = DeleteDraftSectionResultSchema.parse(result.payload);
-          break;
-        case "catalog.moveDraftSection":
-          payload = MoveDraftSectionResultSchema.parse(result.payload);
-          break;
         case "catalog.saveLibraryEntry":
         case "catalog.createLibraryEntry":
           payload = CatalogLibraryEntrySchema.parse(result.payload);
@@ -410,8 +186,6 @@ export async function handleCatalogCommands(
           payload = DuplicateCatalogProjectResultSchema.parse(result.payload);
           break;
         case "catalog.updateBook":
-        case "catalog.mutateCharacterStructure":
-        case "catalog.mutatePlotStructure":
           payload = BookSchema.parse(result.payload);
           break;
         case "catalog.updateLibraryGroup":

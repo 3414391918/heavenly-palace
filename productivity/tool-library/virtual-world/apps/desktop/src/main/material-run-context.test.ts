@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 import {
-  DEFAULT_SHORT_WORKSPACE_AGENT_PROFILES,
-  DEFAULT_SCRIPT_WORKSPACE_AGENT_PROFILES,
+  DEFAULT_LONG_AGENT_PROFILES,
   type CommandEnvelope,
   type MaterialCatalogEntry,
   type MaterialReadScope
 } from "@deepwrite/contracts";
-import { shortWorkspace as fixtureWorkspace } from "../../../../packages/pi-runtime-adapter/src/short-agent-tools.test-support";
+import { workspace } from "../../../../packages/pi-runtime-adapter/src/long-agent-tools.test-support";
+const fixtureWorkspace = () => workspace("long", "character_design");
 import {
   prepareMaterialRunContext,
   resolveMaterialReadScope
@@ -19,7 +19,7 @@ import {
 
 const scope: MaterialReadScope = {
   bookId: "book-test",
-  bookType: "short",
+  bookType: "long",
   stageId: "character_design",
   kinds: ["character"]
 };
@@ -39,45 +39,20 @@ const entry: MaterialCatalogEntry = {
 };
 
 describe("Main-owned material queries", () => {
-  it.each(["character_design", "plot_design", "draft", "custom-stage"])(
-    "keeps profile material kinds in short and script stage %s",
-    (activeStageId) => {
-      const workspace = fixtureWorkspace(activeStageId);
-      for (const bookType of ["short", "script"] as const) {
-        const agentProfile =
-          bookType === "short"
-            ? DEFAULT_SHORT_WORKSPACE_AGENT_PROFILES[0]!
-            : DEFAULT_SCRIPT_WORKSPACE_AGENT_PROFILES[0]!;
-        const workspaceContext =
-          bookType === "short"
-            ? { shortWorkspace: workspace }
-            : {
-                scriptWorkspace: {
-                  ...workspace,
-                  activeAgentId: "script" as const
-                }
-              };
-        expect(
-          resolveMaterialReadScope({ workspaceContext, agentProfile })?.kinds
-        ).toEqual(agentProfile.readAccess.material);
-      }
-    }
-  );
-
   it("derives kind restrictions from the profile and ignores a supplied catalog scope", async () => {
     const workspace = fixtureWorkspace();
-    const agentProfile = DEFAULT_SHORT_WORKSPACE_AGENT_PROFILES.find(
-      (profile) => profile.id === "short"
+    const longAgentProfile = DEFAULT_LONG_AGENT_PROFILES.find(
+      (profile) => profile.id === "long"
     )!;
     const workspaceContext = {
-      shortWorkspace: workspace,
+      longWorkspace: workspace,
       materialCatalog: { scope, entries: [entry], total: 1, notices: [] }
     };
     const trusted = resolveMaterialReadScope({
       workspaceContext,
-      agentProfile
+      longAgentProfile
     })!;
-    expect(trusted.bookId).toBe(workspace.id);
+    expect(trusted.bookId).toBe(workspace.bookId);
     const request = vi.fn(async (command: CommandEnvelope) => ({
       status: "accepted" as const,
       requestId: command.id,
@@ -90,7 +65,7 @@ describe("Main-owned material queries", () => {
       }
     }));
     const prepared = await prepareMaterialRunContext(
-      { workspaceContext, agentProfile },
+      { workspaceContext, longAgentProfile },
       request
     );
     expect(prepared?.materialCatalog?.scope).toEqual(trusted);
@@ -116,8 +91,8 @@ describe("Main-owned material queries", () => {
     }));
     const result = await prepareMaterialRunContext(
       {
-        workspaceContext: { shortWorkspace: fixtureWorkspace() },
-        agentProfile: DEFAULT_SHORT_WORKSPACE_AGENT_PROFILES[0]!,
+        workspaceContext: { longWorkspace: fixtureWorkspace() },
+        longAgentProfile: DEFAULT_LONG_AGENT_PROFILES[0]!,
         snapshotMode: true
       },
       request

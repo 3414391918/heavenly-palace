@@ -62,7 +62,7 @@ function workspaceIndex(
 function bookSummary(
   bookId = BOOK_A,
   _sequence = 1,
-  title = `长篇 ${bookId}`
+  title = `小说 ${bookId}`
 ): LongBookSummary {
   return {
     id: bookId,
@@ -85,7 +85,7 @@ function bookSummary(
 function openedBook(
   bookId = BOOK_A,
   sequence = 1,
-  title = `长篇 ${bookId}`
+  title = `小说 ${bookId}`
 ): LongOpenBookResult {
   return {
     book: {
@@ -100,7 +100,7 @@ function openedBook(
 function bookAction(
   action: LongBookResourceNodeActionPayload["action"],
   bookId = BOOK_A,
-  label = `长篇 ${bookId}`
+  label = `小说 ${bookId}`
 ): LongBookResourceNodeActionPayload {
   return {
     action,
@@ -162,7 +162,7 @@ function createHarness(overrides: HarnessOverrides = {}) {
     writeDocument: vi.fn(),
     readAgentsMd: vi.fn(async ({ bookId }) => ({
       bookId,
-      content: "# 长篇上下文",
+      content: "# 小说上下文",
       truncated: false
     })),
     writeAgentsMd: vi.fn(async ({ bookId }) => ({ bookId })),
@@ -291,7 +291,7 @@ function createHarness(overrides: HarnessOverrides = {}) {
 describe("useLongBookLifecycleCoordinator", () => {
   it("activates a created book and refreshes the book catalog and workspace directory", async () => {
     const events: string[] = [];
-    const created = openedBook(BOOK_B, 4, "第二部长篇");
+    const created = openedBook(BOOK_B, 4, "第二部小说");
     const test = createHarness({
       api: {
         create: vi.fn(async () => {
@@ -316,7 +316,7 @@ describe("useLongBookLifecycleCoordinator", () => {
       }
     });
 
-    await test.coordinator.createLongBook({ title: "第二部长篇" } as never);
+    await test.coordinator.createLongBook({ title: "第二部小说" } as never);
 
     expect(events).toEqual([
       "save",
@@ -330,7 +330,7 @@ describe("useLongBookLifecycleCoordinator", () => {
     expect(test.resources.showConversation).toHaveBeenCalledOnce();
     expect(test.resources.revealEditor).toHaveBeenCalledOnce();
     expect(test.notifications.success).toHaveBeenCalledWith(
-      "已创建长篇“第二部长篇”"
+      "已创建小说“第二部小说”"
     );
   });
 
@@ -413,7 +413,7 @@ describe("useLongBookLifecycleCoordinator", () => {
 
   it("refreshes the active book before updating bindings directly", async () => {
     const updateBindings = vi.fn(async () =>
-      openedBook(BOOK_A, 10, "绑定长篇")
+      openedBook(BOOK_A, 10, "绑定小说")
     );
     const test = createHarness({ api: { updateBindings } });
     vi.mocked(test.session.refreshActiveWorkspace).mockImplementationOnce(
@@ -666,7 +666,7 @@ describe("useLongBookLifecycleCoordinator", () => {
 
     expect(test.api.readAgentsMd).toHaveBeenCalledWith({ bookId: BOOK_A });
     expect(test.state.structureDialogOpen.value).toBe(true);
-    expect(test.state.structureAgentsMd.value).toBe("# 长篇上下文");
+    expect(test.state.structureAgentsMd.value).toBe("# 小说上下文");
     expect(test.state.structureAgentsMdPending.value).toBe(false);
 
     const completion = {
@@ -674,13 +674,13 @@ describe("useLongBookLifecycleCoordinator", () => {
       fail: vi.fn(),
       appliedButRefreshFailed: vi.fn()
     };
-    await test.coordinator.saveLongAgentsMd("自定义长篇上下文", completion);
+    await test.coordinator.saveLongAgentsMd("自定义小说上下文", completion);
 
     expect(test.api.writeAgentsMd).toHaveBeenCalledWith({
       bookId: BOOK_A,
-      content: "自定义长篇上下文"
+      content: "自定义小说上下文"
     });
-    expect(test.state.structureAgentsMd.value).toBe("自定义长篇上下文");
+    expect(test.state.structureAgentsMd.value).toBe("自定义小说上下文");
     expect(completion.succeed).toHaveBeenCalledOnce();
     expect(completion.fail).not.toHaveBeenCalled();
     expect(test.api.applyOperations).not.toHaveBeenCalled();

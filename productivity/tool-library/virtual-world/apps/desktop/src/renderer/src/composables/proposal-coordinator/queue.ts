@@ -367,3 +367,5 @@ export function createProposalQueue(options: ProposalQueueOptions) {
     isDisposed: () => disposed
   };
 }
+
+export type ProposalQueue = ReturnType<typeof createProposalQueue>;

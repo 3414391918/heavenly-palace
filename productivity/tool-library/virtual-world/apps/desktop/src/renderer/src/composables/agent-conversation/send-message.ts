@@ -235,9 +235,7 @@ export async function sendMessage(
         ? {}
         : {
             writeApprovalMode: ctx.approvalModeByAttempt.get(attemptId),
-            ...(contextSnapshot?.shortWorkspace ||
-            contextSnapshot?.scriptWorkspace ||
-            contextSnapshot?.longWorkspace
+            ...(contextSnapshot?.longWorkspace
               ? { agentTeamMode: requestedAgentTeamMode }
               : {}),
             autoApproveCrossStageOperations:

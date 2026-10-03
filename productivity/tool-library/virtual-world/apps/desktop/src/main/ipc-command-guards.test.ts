@@ -1,246 +1,139 @@
-import { readFileSync } from "node:fs";
-import { describe, expect, it } from "vitest";
-import { expectSourceToContain } from "../test-utils/sourceText";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { BrowserWindow } from "electron";
+import {
+  createEnvelope,
+  IPC_COMMAND_CHANNEL,
+  type CommandResult
+} from "@deepwrite/contracts";
+import type { IpcCommandContext } from "./ipc/command-types";
 
-describe("IPC command requestId handling", () => {
-  it("main preserves raw command id on early rejects and surfaces validation issues", () => {
-    const source = readFileSync(new URL("./index.ts", import.meta.url), "utf8");
-    expect(source).toContain("function extractCommandRequestId");
-    expect(source).toContain("function summarizeCommandValidationIssues");
-    expect(source).toContain(
-      "const requestId = extractCommandRequestId(rawCommand)"
-    );
-    expect(source).toContain("mainWindow.isDestroyed()");
-    expect(source).not.toContain('requestId: "unknown"');
-    expect(source).toContain('return "unknown"');
-    expect(source).toContain("Command envelope failed schema validation.");
+const mocks = vi.hoisted(() => ({ handle: vi.fn(), dispatch: vi.fn() }));
+vi.mock("electron", () => ({ ipcMain: { handle: mocks.handle } }));
+vi.mock("./ipc/dispatch-command", () => ({ dispatchCommand: mocks.dispatch }));
+import { registerDesktopCommandIpc } from "./ipc/register-command-ipc";
+
+function register(destroyed = false, missingWindow = false) {
+  const sender = { id: 17 };
+  const window = {
+    webContents: sender,
+    isDestroyed: () => destroyed
+  } as unknown as BrowserWindow;
+  const context = { senderWebContentsId: sender.id } as IpcCommandContext;
+  const getContext = vi.fn(() => context);
+  registerDesktopCommandIpc({
+    getMainWindow: () => (missingWindow ? undefined : window),
+    getContext
+  });
+  expect(mocks.handle).toHaveBeenCalledWith(
+    IPC_COMMAND_CHANNEL,
+    expect.any(Function)
+  );
+  const handler = mocks.handle.mock.calls[0]![1] as (
+    event: { sender: { id: number } },
+    raw: unknown
+  ) => Promise<CommandResult>;
+  return {
+    sender,
+    context,
+    getContext,
+    invoke: (raw: unknown, eventSender = sender) =>
+      handler({ sender: eventSender }, raw)
+  };
+}
+
+describe("desktop command IPC security", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
   });
 
-  it("preload surfaces rejected IPC errors instead of masking them as requestId mismatches", () => {
-    const source = readFileSync(
-      new URL("../preload/invoke.ts", import.meta.url),
-      "utf8"
+  it("rejects another window even if it reports the same webContents id", async () => {
+    const ipc = register();
+    const result = await ipc.invoke(
+      createEnvelope("system.health", {}, { id: "health_1" }),
+      { id: 17 }
     );
-    expect(source).toContain("const expectedRequestId = command.id");
-    expect(source).toContain('if (result.status === "rejected")');
-    expect(source).toContain(
-      "`IPC result requestId does not match command id. expected=${expectedRequestId} actual=${result.requestId}`"
-    );
-    expect(source).not.toContain(
-      'throw new Error("IPC result requestId does not match command id.");'
-    );
+    expect(result).toMatchObject({
+      status: "rejected",
+      requestId: "health_1",
+      error: { code: "ipc.untrusted_sender" }
+    });
+    expect(ipc.getContext).not.toHaveBeenCalled();
+    expect(mocks.dispatch).not.toHaveBeenCalled();
   });
 
-  it("routes screenplay creation through preload, main, and the core utility", () => {
-    const mainSource = readFileSync(
-      new URL("./index.ts", import.meta.url),
-      "utf8"
-    );
-    const preloadSource = readFileSync(
-      new URL("../preload/index.ts", import.meta.url),
-      "utf8"
-    );
-    const coreSource = readFileSync(
-      new URL("../utilities/core-entry.ts", import.meta.url),
-      "utf8"
-    );
+  it.each([
+    [true, false],
+    [false, true]
+  ])(
+    "rejects when the active window is unavailable (%s, %s)",
+    async (destroyed, missing) => {
+      const ipc = register(destroyed, missing);
+      expect(await ipc.invoke({ id: "  original_request  " })).toMatchObject({
+        requestId: "original_request",
+        error: { code: "ipc.untrusted_sender" }
+      });
+      expect(mocks.dispatch).not.toHaveBeenCalled();
+    }
+  );
 
-    expect(preloadSource).toContain("async function createScriptBook");
-    expect(preloadSource).toContain('"catalog.createScriptBook"');
-    expect(mainSource).toContain('"catalog.createScriptBookAtPath"');
-    const creationSource = readFileSync(
-      new URL("./ipc/catalog-project-commands.ts", import.meta.url),
-      "utf8"
-    );
-    expect(mainSource).toContain("await handleCatalogProjectCommands(");
-    expect(creationSource).toContain("ScriptBookSchema.parse(result.payload)");
-    expect(coreSource).toContain(
-      'command.type === "catalog.createScriptBookAtPath"'
-    );
-    expect(coreSource).toContain("catalogStore.createScriptBook(");
-    expect(mainSource).toContain(
-      "command.payload.workspaceContext?.scriptWorkspace"
-    );
-    expect(mainSource).toContain("creativeWorkspaceType");
-    expect(mainSource).toContain(
-      "creativeWorkspace,\n                creativeWorkspaceType"
-    );
-    expect(mainSource).toContain("{ scriptAgentProfile: agentProfile }");
+  it("preserves the request id and limits validation details for malformed commands", async () => {
+    const ipc = register();
+    const result = await ipc.invoke({
+      id: "  malformed_request  ",
+      type: "session.prompt",
+      payload: {}
+    });
+    expect(result).toMatchObject({
+      status: "rejected",
+      requestId: "malformed_request",
+      error: { code: "ipc.invalid_command" }
+    });
+    if (result.status !== "rejected") throw new Error("Expected rejection");
+    const details = result.error.details as {
+      issueCount: number;
+      issues: unknown[];
+    };
+    expect(details.issueCount).toBeGreaterThan(0);
+    expect(details.issues.length).toBeLessThanOrEqual(3);
+    expect(ipc.getContext).not.toHaveBeenCalled();
   });
 
-  it("routes idempotent draft-section batches through preload, main, and core", () => {
-    const mainSource = readFileSync(
-      new URL("./index.ts", import.meta.url),
-      "utf8"
-    );
-    const preloadSource = readFileSync(
-      new URL("../preload/index.ts", import.meta.url),
-      "utf8"
-    );
-    const coreSource = readFileSync(
-      new URL("../utilities/core-entry.ts", import.meta.url),
-      "utf8"
-    );
-
-    expect(preloadSource).toContain("async function createDraftSections");
-    expect(preloadSource).toContain('"catalog.createDraftSections"');
-    expect(mainSource).toContain(
-      'command.type === "catalog.createDraftSections"'
-    );
-    expect(mainSource).toContain(
-      "CreateDraftSectionsResultSchema.parse(result.payload)"
-    );
-    expect(coreSource).toContain(
-      "await catalogStore.createDraftSections(command.payload)"
-    );
+  it("rejects retired workflows before creating a dispatch context", async () => {
+    const ipc = register();
+    expect(
+      await ipc.invoke(
+        createEnvelope(
+          "catalog.createShortBook",
+          { title: "旧入口" },
+          { id: "retired_create" }
+        )
+      )
+    ).toMatchObject({
+      status: "rejected",
+      error: { code: "ipc.invalid_command" }
+    });
+    expect(mocks.dispatch).not.toHaveBeenCalled();
   });
 
-  it("routes remote model listing through preload and main", () => {
-    const mainSource = readFileSync(
-      new URL("./index.ts", import.meta.url),
-      "utf8"
-    );
-    const modelCommandSource = readFileSync(
-      new URL("./ipc/model-commands.ts", import.meta.url),
-      "utf8"
-    );
-    const preloadModelSource = readFileSync(
-      new URL("../preload/session-models-api.ts", import.meta.url),
-      "utf8"
-    );
-
-    expect(preloadModelSource).toContain("function listRemoteModels");
-    expect(preloadModelSource).toContain('"models.listRemote"');
-    expect(preloadModelSource).toContain("listRemote: listRemoteModels");
-    expect(mainSource).toContain("handleModelCommands(");
-    expect(modelCommandSource).toContain(
-      'command.type === "models.listRemote"'
-    );
-    expect(modelCommandSource).toContain("resolveDraftApiKey(");
-    expect(modelCommandSource).toContain("ctx.listRemoteModels({");
-    expect(modelCommandSource).toContain(
-      "RemoteModelListResultSchema.parse({ models })"
-    );
-    expect(mainSource).toContain("electronRemoteFetch");
-    expect(mainSource).toContain("cachedGeneralSettings.useNetworkProxy");
-    expect(mainSource).toContain("applyNetworkProxyPreference(");
-    expect(mainSource).toContain('restartWorker("agent"');
-    const supervisorSource = readFileSync(
-      new URL("./supervisor.ts", import.meta.url),
-      "utf8"
-    );
-    expect(supervisorSource).toContain("env: { ...process.env }");
-    expect(supervisorSource).toContain("async restartWorker(");
+  it("passes a validated command and the trusted sender context to dispatch", async () => {
+    const ipc = register();
+    const command = createEnvelope("system.health", {}, { id: "health_2" });
+    const expected = {
+      status: "accepted",
+      requestId: command.id,
+      payload: { status: "ok" }
+    };
+    mocks.dispatch.mockResolvedValueOnce(expected);
+    expect(await ipc.invoke(command)).toEqual(expected);
+    expect(ipc.getContext).toHaveBeenCalledWith(17);
+    expect(mocks.dispatch).toHaveBeenCalledWith(ipc.context, command);
   });
 
-  it("routes model capacity resolution through preload, main, and the agent utility", () => {
-    const mainSource = readFileSync(
-      new URL("./index.ts", import.meta.url),
-      "utf8"
-    );
-    const modelCommandSource = readFileSync(
-      new URL("./ipc/model-commands.ts", import.meta.url),
-      "utf8"
-    );
-    const preloadModelSource = readFileSync(
-      new URL("../preload/session-models-api.ts", import.meta.url),
-      "utf8"
-    );
-    const agentSource = readFileSync(
-      new URL("../utilities/agent-entry.ts", import.meta.url),
-      "utf8"
-    );
-
-    expect(preloadModelSource).toContain("function resolveModelCapacity");
-    expect(preloadModelSource).toContain('"models.resolveCapacity"');
-    expect(preloadModelSource).toContain(
-      "resolveCapacity: resolveModelCapacity"
-    );
-    expect(mainSource).toContain('command.type === "agent.model_capacity"');
-    expect(modelCommandSource).toContain(
-      'command.type === "models.resolveCapacity"'
-    );
-    expect(modelCommandSource).toContain('"agent.model_capacity"');
-    expect(agentSource).toContain('command.type === "agent.model_capacity"');
-    expect(agentSource).toContain("runtime.resolveModelCapacity(");
-  });
-
-  it("routes metadata index and on-demand document reads through every boundary", () => {
-    const mainSource = readFileSync(
-      new URL("./index.ts", import.meta.url),
-      "utf8"
-    );
-    const preloadSource = readFileSync(
-      new URL("../preload/index.ts", import.meta.url),
-      "utf8"
-    );
-    const apiSource = readFileSync(
-      new URL(
-        "../../../../packages/contracts/src/preload-api.ts",
-        import.meta.url
-      ),
-      "utf8"
-    );
-    const coreSource = readFileSync(
-      new URL("../utilities/core-entry.ts", import.meta.url),
-      "utf8"
-    );
-    const initialization = coreSource.slice(
-      coreSource.indexOf("async function requireCatalogStore"),
-      coreSource.indexOf("async function handleCatalogCommand")
-    );
-
-    expect(apiSource).toContain("index(): Promise<CatalogIndexSnapshot>");
-    expectSourceToContain(
-      apiSource,
-      "readDocument(input: CatalogReadDocumentInput): Promise<CatalogReadDocumentResult>"
-    );
-    expect(preloadSource).toContain("async function getCatalogIndex");
-    expect(preloadSource).toContain("async function readCatalogDocument");
-    expect(preloadSource).toContain('"catalog.index"');
-    expect(preloadSource).toContain('"catalog.readDocument"');
-    expect(mainSource).toContain('command.type === "catalog.index"');
-    expect(mainSource).toContain('command.type === "catalog.readDocument"');
-    expect(mainSource).toContain(
-      "CatalogIndexSnapshotSchema.parse(result.payload)"
-    );
-    expect(mainSource).toContain(
-      "CatalogReadDocumentResultSchema.parse(result.payload)"
-    );
-    expect(coreSource).toContain("await catalogStore.indexSnapshot()");
-    expect(coreSource).toContain(
-      "await catalogStore.readDocument(command.payload)"
-    );
-    expect(initialization).toContain(
-      "await existingFolderStore.indexSnapshot()"
-    );
-    expect(initialization).toContain("await folderStore.indexSnapshot()");
-    expect(initialization).not.toContain("existingFolderStore.snapshot()");
-    expect(initialization).not.toContain("folderStore.snapshot()");
-  });
-
-  it("bounds editor index, reads, saves, and snapshots instead of waiting forever", () => {
-    const mainSource = readFileSync(
-      new URL("./index.ts", import.meta.url),
-      "utf8"
-    );
-    const catalogForwarding = mainSource.slice(
-      mainSource.indexOf('command.type === "catalog.index"'),
-      mainSource.indexOf("const modelCommandResult")
-    );
-
-    expect(catalogForwarding).toContain(
-      "catalogCommandTimeoutMs(command.type)"
-    );
-    expect(catalogForwarding).toContain(
-      "error instanceof UtilityCommandTimeoutError"
-    );
-    expectSourceToContain(
-      catalogForwarding,
-      'code: timedOut ? "catalog.command_timeout"'
-    );
-    expect(catalogForwarding).not.toContain(
-      'supervisor.requestCommand("core", command, 0)'
-    );
+  it("returns a bounded fallback id for commands with no usable id", async () => {
+    const ipc = register();
+    expect(await ipc.invoke(null)).toMatchObject({
+      requestId: "unknown",
+      error: { code: "ipc.invalid_command" }
+    });
   });
 });

@@ -1,20 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
-  AgentPromptCommandPayloadSchema,
-  AgentTeamSettingsInputSchema,
-  CommandEnvelopeSchema,
-  DEFAULT_AGENT_TEAM_SETTINGS,
-  DEFAULT_LONG_AGENT_TEAM_SETTINGS,
-  DEFAULT_SCRIPT_AGENT_TEAM_SETTINGS,
-  DEFAULT_SHORT_WORKSPACE_AGENT_PROFILES,
-  LongAgentTeamSettingsSchema,
-  ScriptAgentTeamSettingsSchema,
-  SubagentActivityEventEnvelopeSchema,
-  createEnvelope,
-  createDefaultCreativePlotStages,
-  createShortWorkspaceContentRevision,
+  ShortAgentSubagentDefinitionSchema,
+  ShortAgentSubagentDefinitionsSchema,
   type ShortAgentSubagentDefinition
-} from "./index";
+} from "./agent-team";
+import {
+  DEFAULT_LONG_AGENT_TEAM_SETTINGS,
+  LongAgentTeamSettingsSchema
+} from "./long-agent-team";
 
 const definition: ShortAgentSubagentDefinition = {
   id: "continuity_reviewer",
@@ -26,62 +19,14 @@ const definition: ShortAgentSubagentDefinition = {
 };
 
 function completeSettings() {
-  return {
-    workspaceType: "short" as const,
-    teams: DEFAULT_AGENT_TEAM_SETTINGS.teams.map((team) => ({
-      parentAgentId: team.parentAgentId,
-      subagents: [{ ...definition }]
-    }))
-  };
-}
-
-function shortWorkspace() {
-  const revision = createShortWorkspaceContentRevision("");
-  return {
-    id: "book-1",
-    title: "雨夜来信",
-    categories: ["悬疑"],
-    activeStageId: "outline" as const,
-    plotStages: createDefaultCreativePlotStages(),
-    expertDraft: {
-      id: "draft" as const,
-      title: "正文",
-      revision,
-      sections: [
-        {
-          id: "section-1",
-          title: "第一节",
-          wordCountRequirement: "1000 字",
-          body: {
-            documentId: "draft:section-1:body",
-            title: "第一节",
-            content: "",
-            revision
-          },
-          characterState: {
-            documentId: "draft:section-1:character-state",
-            title: "第一节 · 人物状态",
-            content: "",
-            revision
-          }
-        }
-      ]
-    },
-    stages: [
-      "character_design",
-      ...createDefaultCreativePlotStages().map(({ id }) => id)
-    ].map((stageId) => ({
-      stageId,
-      title: stageId,
-      content: "",
-      revision
-    }))
-  };
+  const settings = structuredClone(DEFAULT_LONG_AGENT_TEAM_SETTINGS);
+  settings.teams[0]!.subagents = [{ ...definition }];
+  return settings;
 }
 
 describe("agent-team contracts", () => {
-  it("accepts the single-team short workspace shape", () => {
-    expect(AgentTeamSettingsInputSchema.parse(completeSettings())).toEqual(
+  it("accepts the single main-agent team shape", () => {
+    expect(LongAgentTeamSettingsSchema.parse(completeSettings())).toEqual(
       completeSettings()
     );
   });
@@ -97,7 +42,7 @@ describe("agent-team contracts", () => {
         enabled: true
       } as ShortAgentSubagentDefinition
     ];
-    const parsed = AgentTeamSettingsInputSchema.parse(legacy);
+    const parsed = LongAgentTeamSettingsSchema.parse(legacy);
     expect(parsed.teams[0]?.subagents[0]).toMatchObject({
       modelMode: "inherit"
     });
@@ -110,7 +55,7 @@ describe("agent-team contracts", () => {
       }
     ];
     expect(
-      AgentTeamSettingsInputSchema.safeParse(customMissingModel).success
+      LongAgentTeamSettingsSchema.safeParse(customMissingModel).success
     ).toBe(false);
 
     const customWithModel = completeSettings();
@@ -122,9 +67,9 @@ describe("agent-team contracts", () => {
         thinkingLevel: "medium"
       }
     ];
-    expect(
-      AgentTeamSettingsInputSchema.safeParse(customWithModel).success
-    ).toBe(true);
+    expect(LongAgentTeamSettingsSchema.safeParse(customWithModel).success).toBe(
+      true
+    );
 
     const customOffWithoutTemperature = completeSettings();
     customOffWithoutTemperature.teams[0]!.subagents = [
@@ -136,8 +81,7 @@ describe("agent-team contracts", () => {
       }
     ];
     expect(
-      AgentTeamSettingsInputSchema.safeParse(customOffWithoutTemperature)
-        .success
+      LongAgentTeamSettingsSchema.safeParse(customOffWithoutTemperature).success
     ).toBe(false);
 
     const customOffWithTemperature = completeSettings();
@@ -151,7 +95,7 @@ describe("agent-team contracts", () => {
       }
     ];
     expect(
-      AgentTeamSettingsInputSchema.safeParse(customOffWithTemperature).success
+      LongAgentTeamSettingsSchema.safeParse(customOffWithTemperature).success
     ).toBe(true);
   });
 
@@ -162,7 +106,7 @@ describe("agent-team contracts", () => {
       { ...definition, id: "other", name: definition.name.toUpperCase() }
     ];
 
-    const result = AgentTeamSettingsInputSchema.safeParse(duplicate);
+    const result = LongAgentTeamSettingsSchema.safeParse(duplicate);
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.issues.map((issue) => issue.path.at(-1))).toContain(
@@ -171,85 +115,32 @@ describe("agent-team contracts", () => {
     }
   });
 
-  it("keeps subagent definitions internal to agent.prompt", () => {
-    const profile = DEFAULT_SHORT_WORKSPACE_AGENT_PROFILES[0]!;
-    expect(
-      AgentPromptCommandPayloadSchema.safeParse({
-        sessionId: "session-1",
-        message: "审阅大纲",
-        workspaceContext: { shortWorkspace: shortWorkspace() },
-        agentProfile: profile,
-        subagentDefinitions: [definition]
-      }).success
-    ).toBe(true);
-    expect(
-      AgentPromptCommandPayloadSchema.safeParse({
-        sessionId: "session-1",
-        message: "审阅大纲",
-        subagentDefinitions: [definition]
-      }).success
-    ).toBe(false);
-  });
-
-  it("allows 60 short, script, and long subagents and rejects exceeding the limit", () => {
+  it("accepts 60 members and rejects exceeding the limit", () => {
     const definitions = Array.from({ length: 60 }, (_, index) => ({
       ...definition,
-      id: `helper_${index + 1}`,
-      name: `助手 ${index + 1}`
+      id: `helper_${index}`,
+      name: `助手 ${index}`
     }));
     expect(
-      AgentTeamSettingsInputSchema.safeParse({
-        workspaceType: "short",
-        teams: [{ parentAgentId: "short", subagents: definitions }]
+      ShortAgentSubagentDefinitionsSchema.safeParse(definitions).success
+    ).toBe(true);
+    expect(
+      LongAgentTeamSettingsSchema.safeParse({
+        workspaceType: "long",
+        teams: [{ parentAgentId: "long", subagents: definitions }]
       }).success
     ).toBe(true);
-
-    const script = structuredClone(DEFAULT_SCRIPT_AGENT_TEAM_SETTINGS);
-    script.teams[0]!.subagents = definitions;
-    expect(ScriptAgentTeamSettingsSchema.safeParse(script).success).toBe(true);
-    script.teams[0]!.subagents = [
-      ...definitions,
-      { ...definition, id: "helper_61", name: "助手 61" }
-    ];
-    expect(ScriptAgentTeamSettingsSchema.safeParse(script).success).toBe(false);
-
-    const long = structuredClone(DEFAULT_LONG_AGENT_TEAM_SETTINGS);
-    long.teams[0]!.subagents = definitions;
-    expect(LongAgentTeamSettingsSchema.safeParse(long).success).toBe(true);
-    long.teams[0]!.subagents = [
-      ...definitions,
-      { ...definition, id: "helper_61", name: "助手 61" }
-    ];
-    expect(LongAgentTeamSettingsSchema.safeParse(long).success).toBe(false);
+    expect(
+      ShortAgentSubagentDefinitionsSchema.safeParse([
+        ...definitions,
+        { ...definition, id: "extra", name: "额外" }
+      ]).success
+    ).toBe(false);
   });
-
-  it("registers agentTeams commands and validates subagent event parent identity", () => {
-    const command = createEnvelope("agentTeams.list", {}, { id: "cmd-1" });
-    expect(CommandEnvelopeSchema.safeParse(command).success).toBe(true);
-
-    const event = createEnvelope(
-      "subagent.activity",
-      {
-        sessionId: "session-1",
-        runId: "run-1",
-        parentToolCallId: "tool-parent",
-        subagentRunId: "sub-run-1",
-        subagentId: definition.id,
-        name: definition.name,
-        runtime: {
-          provider: "local",
-          model: "test",
-          mode: "local-faux" as const
-        },
-        activity: { type: "message_delta" as const, delta: "完成" }
-      },
-      {
-        id: "evt-1",
-        context: { sessionId: "session-1", runId: "wrong-run" }
-      }
-    );
-    expect(SubagentActivityEventEnvelopeSchema.safeParse(event).success).toBe(
-      false
+  it("retains compatibility for the shared legacy member shape", () => {
+    const { modelMode: _modelMode, ...legacy } = definition;
+    expect(ShortAgentSubagentDefinitionSchema.parse(legacy).modelMode).toBe(
+      "inherit"
     );
   });
 });

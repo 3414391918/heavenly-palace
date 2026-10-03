@@ -10,11 +10,13 @@ describe("appearance IPC wiring", () => {
     const mainSource = source("./index.ts");
     const modularSource = source("./ipc/settings-commands.ts");
 
-    expect(mainSource).toContain("handleAppearanceCommands(");
+    expect(source("./ipc/dispatch-command.ts")).toContain(
+      "handleSettingsCommands(ctx, command)"
+    );
     expect(mainSource).toContain("requireAppearanceService");
     expect(mainSource).toContain("registerAppearanceFontScheme();");
     expect(mainSource).toContain(
-      "installAppearanceFontProtocolHandler(appearanceService);"
+      "installAppearanceFontProtocolHandler(services.appearanceService);"
     );
     expect(mainSource).not.toContain('if (command.type === "appearance.list")');
     expect(modularSource).toContain("handleAppearanceCommands(ctx, command)");

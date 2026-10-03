@@ -163,13 +163,13 @@ function proposalStatusMessage(): string {
   if (discardMessage) return discardMessage;
   if (!proposal.statusMessage && isLongProposal()) {
     if (proposal.status === "accepting") {
-      return "正在直接保存这项长篇修改……";
+      return "正在直接保存这项小说修改……";
     }
     if (proposal.status === "conflict") {
       return "目标内容或关联关系已经变化，本次修改尚未保存。";
     }
     if (proposal.status === "error") {
-      return "这项长篇修改未能保存，请检查运行详情。";
+      return "这项小说修改未能保存，请检查运行详情。";
     }
   }
   if (
@@ -361,7 +361,7 @@ function review(decision: "accept" | "reject"): void {
     <section
       v-if="longExpectedImpact"
       class="long-proposal-impact"
-      aria-label="本次长篇修改的精确影响"
+      aria-label="本次小说修改的精确影响"
     >
       <strong>本次结构与关联影响</strong>
       <ul v-if="longExpectedImpactLines.length">

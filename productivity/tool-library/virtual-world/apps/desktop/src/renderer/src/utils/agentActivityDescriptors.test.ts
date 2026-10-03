@@ -1,8 +1,6 @@
 import {
   DEFAULT_LIBRARY_AGENT_SETTINGS,
   DEFAULT_LONG_AGENT_SETTINGS,
-  DEFAULT_SCRIPT_WORKSPACE_AGENT_SETTINGS,
-  DEFAULT_SHORT_WORKSPACE_AGENT_SETTINGS,
   type LongBookSummary
 } from "@deepwrite/contracts";
 import { describe, expect, it } from "vitest";
@@ -20,28 +18,22 @@ import {
 
 const emptyTree = createResourceTreeLookup([]);
 const defaults = {
-  workspaceAgents: [
-    DEFAULT_SHORT_WORKSPACE_AGENT_SETTINGS,
-    DEFAULT_SCRIPT_WORKSPACE_AGENT_SETTINGS
-  ],
   longAgents: DEFAULT_LONG_AGENT_SETTINGS,
   libraryAgents: DEFAULT_LIBRARY_AGENT_SETTINGS,
   longBooks: [] as LongBookSummary[]
 };
 
 describe("resolveAgentActivityDescriptor", () => {
-  it("maps short-form and library controllers back to visible resources", () => {
+  it("maps material and skill library controllers back to visible resources", () => {
     const character: WorkspaceDocument = {
-      id: "character-overview",
-      domain: "creation",
-      title: "人物概览",
-      eyebrow: "短篇",
-      path: ["测试短篇", "人物", "概览"],
+      id: "material-entry",
+      domain: "material",
+      title: "人物素材",
+      eyebrow: "素材库",
+      path: ["测试素材库", "人物素材"],
       content: "",
-      workspaceId: "book-one",
-      workspaceType: "short",
-      workspaceTitle: "测试短篇",
-      stageId: "character_design"
+      libraryId: "material-library",
+      catalogEntryId: "material-entry"
     };
     const skill: WorkspaceDocument = {
       id: "skill-entry",
@@ -54,13 +46,13 @@ describe("resolveAgentActivityDescriptor", () => {
     };
     const sections: ResourceTreeSection[] = [
       {
-        id: "creation",
-        label: "创作",
+        id: "material",
+        label: "素材",
         icon: "book",
         nodes: [
           {
             id: "character-node",
-            label: "人物概览",
+            label: "人物素材",
             targetDocumentId: character.id
           }
         ]
@@ -85,10 +77,13 @@ describe("resolveAgentActivityDescriptor", () => {
     };
 
     expect(
-      resolveAgentActivityDescriptor("book-one:chat", sources)
+      resolveAgentActivityDescriptor(
+        "library:material:material-library",
+        sources
+      )
     ).toMatchObject({
-      agentLabel: "短篇智能体",
-      contextLabel: "测试短篇",
+      agentLabel: "素材库管理智能体",
+      contextLabel: "测试素材库 · 人物素材",
       targetResourceId: "character-node"
     });
     expect(
@@ -104,14 +99,14 @@ describe("resolveAgentActivityDescriptor", () => {
     const bookId = "long:shared-book";
     const bookNode = {
       id: longBookResourceId(bookId),
-      label: "统一长篇",
+      label: "统一小说",
       longBookId: bookId,
       workspaceType: "long" as const
     };
     const sources = {
       ...defaults,
       documents: [],
-      longBooks: [{ id: bookId, title: "统一长篇" } as LongBookSummary],
+      longBooks: [{ id: bookId, title: "统一小说" } as LongBookSummary],
       resourceTree: createResourceTreeLookup([
         { id: "creation", label: "创作", icon: "book", nodes: [bookNode] }
       ])
@@ -119,8 +114,8 @@ describe("resolveAgentActivityDescriptor", () => {
     const conversationKey = `long:${encodeURIComponent(bookId)}:chat`;
     const descriptor = resolveAgentActivityDescriptor(conversationKey, sources);
     expect(descriptor).toMatchObject({
-      agentLabel: "长篇智能体",
-      contextLabel: "统一长篇",
+      agentLabel: "主智能体",
+      contextLabel: "统一小说",
       targetResourceId: bookNode.id
     });
     expect(
@@ -150,7 +145,7 @@ describe("resolveAgentActivityDescriptor", () => {
               key: "root:draft",
               root: "draft",
               title: "正文",
-              breadcrumbs: ["测试长篇", "正文"],
+              breadcrumbs: ["测试小说", "正文"],
               files: [],
               preferredRole: "content",
               description: ""
@@ -165,7 +160,7 @@ describe("resolveAgentActivityDescriptor", () => {
                   key: "draft:chapter-one",
                   root: "draft",
                   title: "第一章",
-                  breadcrumbs: ["测试长篇", "正文", "第一章"],
+                  breadcrumbs: ["测试小说", "正文", "第一章"],
                   files: [],
                   preferredRole: "content",
                   description: "",
@@ -188,13 +183,13 @@ describe("resolveAgentActivityDescriptor", () => {
         ...defaults,
         documents: [],
         resourceTree,
-        longBooks: [{ id: bookId, title: "测试长篇" } as LongBookSummary]
+        longBooks: [{ id: bookId, title: "测试小说" } as LongBookSummary]
       }
     );
 
     expect(descriptor).toMatchObject({
-      agentLabel: "长篇智能体",
-      contextLabel: "测试长篇 · 正文",
+      agentLabel: "主智能体",
+      contextLabel: "测试小说 · 正文",
       targetResourceId: rootId
     });
   });
@@ -220,7 +215,7 @@ describe("resolveAgentActivityDescriptor", () => {
         nodes: [
           {
             id: longBookResourceId(bookId),
-            label: "测试长篇",
+            label: "测试小说",
             longBookId: bookId,
             workspaceType: "long",
             children: [
@@ -233,7 +228,7 @@ describe("resolveAgentActivityDescriptor", () => {
                   key: "root:worldbuilding",
                   root: "worldbuilding",
                   title: "世界观",
-                  breadcrumbs: ["测试长篇", "世界观"],
+                  breadcrumbs: ["测试小说", "世界观"],
                   files: [],
                   preferredRole: "content"
                 },
@@ -247,7 +242,7 @@ describe("resolveAgentActivityDescriptor", () => {
                       key: "worldbuilding:world_rules",
                       root: "worldbuilding",
                       title: "规则",
-                      breadcrumbs: ["测试长篇", "世界观", "规则"],
+                      breadcrumbs: ["测试小说", "世界观", "规则"],
                       files: [],
                       preferredRole: "content"
                     }
@@ -263,7 +258,7 @@ describe("resolveAgentActivityDescriptor", () => {
                   key: "root:plot_design",
                   root: "plot_design",
                   title: "剧情设计",
-                  breadcrumbs: ["测试长篇", "剧情设计"],
+                  breadcrumbs: ["测试小说", "剧情设计"],
                   files: [],
                   preferredRole: "content"
                 },
@@ -277,7 +272,7 @@ describe("resolveAgentActivityDescriptor", () => {
                       key: "root:plot-chapter-cards",
                       root: "plot_design",
                       title: "章卡",
-                      breadcrumbs: ["测试长篇", "剧情设计", "章卡"],
+                      breadcrumbs: ["测试小说", "剧情设计", "章卡"],
                       files: [],
                       preferredRole: "book-line"
                     },
@@ -292,7 +287,7 @@ describe("resolveAgentActivityDescriptor", () => {
                           root: "plot_design",
                           title: "第二章",
                           breadcrumbs: [
-                            "测试长篇",
+                            "测试小说",
                             "剧情设计",
                             "章卡",
                             "第一卷",
@@ -321,7 +316,7 @@ describe("resolveAgentActivityDescriptor", () => {
       ...defaults,
       documents: [],
       resourceTree,
-      longBooks: [{ id: bookId, title: "测试长篇" } as LongBookSummary]
+      longBooks: [{ id: bookId, title: "测试小说" } as LongBookSummary]
     };
     const conversationKey = [
       "long",
@@ -333,7 +328,7 @@ describe("resolveAgentActivityDescriptor", () => {
     expect(
       resolveAgentActivityDescriptor(conversationKey, sources)
     ).toMatchObject({
-      contextLabel: "测试长篇 · 剧情设计",
+      contextLabel: "测试小说 · 剧情设计",
       targetResourceId: plotRootId
     });
     expect(

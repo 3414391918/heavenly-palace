@@ -4,14 +4,14 @@ import { createShortWorkspaceContentRevision } from "@deepwrite/contracts";
 import type { AgentEditProposal } from "../../types/conversation";
 import { AcceptedEditDiscardConflictError } from "../../utils/acceptedEditDiscard";
 import type { ProposalCoordinatorContext } from "../proposal-coordinator/types";
-import { discardAcceptedCatalogTextEdit } from "./short";
+import { discardAcceptedLibraryTextEdit } from "./library";
 
 function acceptedProposal(): AgentEditProposal {
   return {
     id: "proposal-1",
     runId: "run-1",
-    workspaceId: "book-1",
-    stageId: "draft",
+    workspaceId: "library:material:library-1",
+    stageId: "library",
     documentId: "document-1",
     title: "第一章",
     summary: "修改正文",
@@ -24,6 +24,13 @@ function acceptedProposal(): AgentEditProposal {
     hunks: [],
     createdAt: "2026-08-25T00:00:00.000Z",
     updatedAt: "2026-08-25T00:00:01.000Z",
+    libraryTarget: {
+      operation: "edit",
+      domain: "material",
+      libraryId: "library-1",
+      entryId: "entry-1",
+      stageId: "character"
+    },
     discardSnapshot: {
       beforeText: "修改前",
       beforeTitle: "第一章"
@@ -31,16 +38,25 @@ function acceptedProposal(): AgentEditProposal {
   };
 }
 
-function shortContext(options: { dirty?: boolean; content?: string } = {}) {
+function libraryContext(options: { dirty?: boolean; content?: string } = {}) {
   const applyAcceptedDocumentLocally = vi.fn();
+  const saveLibraryEntry = vi.fn(async () => ({
+    id: "entry-1",
+    title: "第一章",
+    body: "修改前",
+    revision: "saved"
+  }));
   const context = {
-    api: () => undefined,
+    api: () => ({ catalog: { saveLibraryEntry } }),
     editor: {
       documents: ref([
         {
           id: "document-1",
           title: "第一章",
-          content: options.content ?? "修改后"
+          content: options.content ?? "修改后",
+          domain: "material",
+          libraryId: "library-1",
+          catalogEntryId: "entry-1"
         }
       ]),
       drafts: ref(
@@ -56,34 +72,36 @@ function shortContext(options: { dirty?: boolean; content?: string } = {}) {
       )
     },
     catalog: {
-      applyAcceptedDocumentLocally
+      applyAcceptedDocumentLocally,
+      findCatalogLibrary: () => ({ projectRevision: 4 }),
+      applySavedLibraryEntry: vi.fn(async () => 5)
     }
   } as unknown as ProposalCoordinatorContext;
-  return { context, applyAcceptedDocumentLocally };
+  return { context, applyAcceptedDocumentLocally, saveLibraryEntry };
 }
 
 describe("accepted edit discard operations", () => {
-  it("restores the short document snapshot when the accepted content is current", async () => {
-    const { context, applyAcceptedDocumentLocally } = shortContext();
+  it("restores the library document snapshot when the accepted content is current", async () => {
+    const { context, applyAcceptedDocumentLocally } = libraryContext();
 
-    await discardAcceptedCatalogTextEdit(context, acceptedProposal());
+    await discardAcceptedLibraryTextEdit(context, acceptedProposal());
 
     expect(applyAcceptedDocumentLocally).toHaveBeenCalledWith(
       { id: "document-1", title: "第一章", content: "修改前" },
-      undefined,
+      5,
       undefined
     );
   });
 
-  it("does not overwrite later or unsaved short-document edits", async () => {
-    const later = shortContext({ content: "后续修改" });
-    const dirty = shortContext({ dirty: true });
+  it("does not overwrite later or unsaved library-document edits", async () => {
+    const later = libraryContext({ content: "后续修改" });
+    const dirty = libraryContext({ dirty: true });
 
     await expect(
-      discardAcceptedCatalogTextEdit(later.context, acceptedProposal())
+      discardAcceptedLibraryTextEdit(later.context, acceptedProposal())
     ).rejects.toBeInstanceOf(AcceptedEditDiscardConflictError);
     await expect(
-      discardAcceptedCatalogTextEdit(dirty.context, acceptedProposal())
+      discardAcceptedLibraryTextEdit(dirty.context, acceptedProposal())
     ).rejects.toBeInstanceOf(AcceptedEditDiscardConflictError);
     expect(later.applyAcceptedDocumentLocally).not.toHaveBeenCalled();
     expect(dirty.applyAcceptedDocumentLocally).not.toHaveBeenCalled();

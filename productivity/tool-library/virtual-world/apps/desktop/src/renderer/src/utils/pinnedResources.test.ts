@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resourceSections } from "../data/demoWorkspace";
+import { resourceSections } from "../data/demoWorkspace.test-support";
 import {
   collectPinnedResourceNodes,
   excludePinnedResourceNodes,

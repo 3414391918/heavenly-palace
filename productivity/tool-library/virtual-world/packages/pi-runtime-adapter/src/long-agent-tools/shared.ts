@@ -35,11 +35,11 @@ export function preflightLongMutationProposal(
       impact_mismatch: "关联影响已经变化",
       invalid_order: "排序范围或顺序不完整",
       invalid_document_write: "文档写入目标无效",
-      invalid_result: "操作后的结构不满足长篇约束"
+      invalid_result: "操作后的结构不满足创作约束"
     };
     return textResult(
       [
-        `未形成长篇结构变更提案：${reasonLabels[error.code]}（${error.code}）。`,
+        `未形成创作结构变更提案：${reasonLabels[error.code]}（${error.code}）。`,
         `校验详情：${error.message}`,
         "不会生成审批卡。请先根据最新结构修正操作；如果修正会改变用户原意，请直接告知用户当前约束和可选方案，不要重复提交相同参数，也不要声称变更已经保存。"
       ].join("\n")

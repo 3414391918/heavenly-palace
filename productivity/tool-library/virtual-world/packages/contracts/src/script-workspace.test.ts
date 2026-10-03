@@ -1,11 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
-  AgentPromptCommandPayloadSchema,
   CreativeWorkspaceSnapshotSchema,
   DEFAULT_SCRIPT_AGENT_READ_ACCESS,
   DEFAULT_SCRIPT_WORKSPACE_AGENT_PROFILES,
   DEFAULT_SCRIPT_WORKSPACE_AGENT_SETTINGS,
-  DEFAULT_SHORT_WORKSPACE_AGENT_PROFILES,
   SCRIPT_SCREENPLAY_FORMAT_REQUIREMENTS,
   SCRIPT_WORKSPACE_AGENT_IDS,
   SCRIPT_WORKSPACE_STAGE_IDS,
@@ -16,11 +14,6 @@ import {
   WorkspaceAgentProfileSchema,
   WorkspaceAgentSettingsInputSchema,
   WorkspaceAgentSettingsSchema,
-  WorkspaceAgentsListCommandEnvelopeSchema,
-  WorkspaceAgentsResetCommandEnvelopeSchema,
-  WorkspaceAgentsSaveCommandEnvelopeSchema,
-  WorkspaceRuntimeContextSchema,
-  createEnvelope,
   createDefaultCreativePlotStages,
   createExpertDraftDirectoryRevision,
   createShortWorkspaceContentRevision,
@@ -256,143 +249,5 @@ describe("script workspace contracts", () => {
         }
       })
     ).toThrow();
-  });
-
-  it("validates script runtime context and its independent active profile", () => {
-    const scriptWorkspace = ScriptWorkspaceSnapshotSchema.parse(
-      scriptWorkspaceSnapshot()
-    );
-    const context = {
-      activeResource: {
-        id: "plot-refine",
-        domain: "creation" as const,
-        title: "剧情细化",
-        path: ["测试剧本", "剧情细化"],
-        source: "live-editor" as const,
-        content: "停电触发密室冲突。"
-      },
-      scriptWorkspace
-    };
-    expect(
-      WorkspaceRuntimeContextSchema.parse(context).scriptWorkspace?.id
-    ).toBe("script_1");
-    expect(() =>
-      WorkspaceRuntimeContextSchema.parse({
-        ...context,
-        activeResource: { ...context.activeResource, content: "不匹配" }
-      })
-    ).toThrow();
-
-    const longPlotContent = `停电触发密室冲突。${"长".repeat(20_000)}`;
-    const workspaceWithLongPlot = ScriptWorkspaceSnapshotSchema.parse({
-      ...scriptWorkspaceSnapshot(),
-      stages: scriptWorkspaceSnapshot().stages.map((stage) =>
-        stage.stageId === "plot_refine"
-          ? {
-              ...stage,
-              content: longPlotContent,
-              revision: createShortWorkspaceContentRevision(longPlotContent)
-            }
-          : stage
-      )
-    });
-    const truncatedActiveResource = {
-      ...context.activeResource,
-      content: longPlotContent.slice(0, 20_000),
-      truncated: true as const,
-      originalLength: longPlotContent.length
-    };
-    expect(() =>
-      WorkspaceRuntimeContextSchema.parse({
-        activeResource: truncatedActiveResource,
-        scriptWorkspace: workspaceWithLongPlot
-      })
-    ).not.toThrow();
-    expect(() =>
-      WorkspaceRuntimeContextSchema.parse({
-        activeResource: {
-          ...truncatedActiveResource,
-          content: `错${truncatedActiveResource.content.slice(1)}`
-        },
-        scriptWorkspace: workspaceWithLongPlot
-      })
-    ).toThrow();
-    expect(() =>
-      WorkspaceRuntimeContextSchema.parse({
-        activeResource: {
-          ...truncatedActiveResource,
-          originalLength: longPlotContent.length - 1
-        },
-        scriptWorkspace: workspaceWithLongPlot
-      })
-    ).toThrow();
-
-    const plotProfile = DEFAULT_SCRIPT_WORKSPACE_AGENT_PROFILES[0]!;
-    expect(
-      AgentPromptCommandPayloadSchema.parse({
-        sessionId: "session_1",
-        message: "细化密室冲突",
-        workspaceContext: { scriptWorkspace },
-        scriptAgentProfile: plotProfile
-      }).scriptAgentProfile?.id
-    ).toBe("script");
-    expect(() =>
-      AgentPromptCommandPayloadSchema.parse({
-        sessionId: "session_1",
-        message: "细化密室冲突",
-        workspaceContext: { scriptWorkspace }
-      })
-    ).toThrow();
-    expect(() =>
-      AgentPromptCommandPayloadSchema.parse({
-        sessionId: "session_1",
-        message: "细化密室冲突",
-        workspaceContext: { scriptWorkspace },
-        scriptAgentProfile: plotProfile,
-        agentProfile: DEFAULT_SHORT_WORKSPACE_AGENT_PROFILES[0]
-      })
-    ).toThrow();
-  });
-
-  it("accepts script workspace-agent command envelopes", () => {
-    const input = {
-      workspaceType: "script" as const,
-      agents: DEFAULT_SCRIPT_WORKSPACE_AGENT_PROFILES.map(
-        ({ id, systemPrompt, welcomeShortcuts, readAccess }) => ({
-          id,
-          systemPrompt,
-          welcomeShortcuts,
-          readAccess
-        })
-      )
-    };
-    expect(
-      WorkspaceAgentsListCommandEnvelopeSchema.parse(
-        createEnvelope(
-          "workspaceAgents.list",
-          { workspaceType: "script" as const },
-          { id: "script_agents_list" }
-        )
-      ).payload.workspaceType
-    ).toBe("script");
-    expect(
-      WorkspaceAgentsSaveCommandEnvelopeSchema.parse(
-        createEnvelope("workspaceAgents.save", input, {
-          id: "script_agents_save"
-        })
-      ).payload.workspaceType
-    ).toBe("script");
-    expect(
-      WorkspaceAgentsResetCommandEnvelopeSchema.parse(
-        createEnvelope(
-          "workspaceAgents.reset",
-          {
-            workspaceType: "script" as const,
-            agentId: "script" as const
-          },
-          { id: "script_agents_reset" }
-        )
-      ).payload.workspaceType
-    ).toBe("script");
   });
 });

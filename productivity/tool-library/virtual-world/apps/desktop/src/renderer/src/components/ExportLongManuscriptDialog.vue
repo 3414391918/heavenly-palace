@@ -142,7 +142,7 @@ onBeforeUnmount(() => document.removeEventListener("keydown", handleKeydown));
         <header>
           <div>
             <span class="dialog-eyebrow">{{ bookTitle }}</span>
-            <h2 id="export-long-title">导出长篇</h2>
+            <h2 id="export-long-title">导出小说</h2>
           </div>
           <button
             class="dialog-close"

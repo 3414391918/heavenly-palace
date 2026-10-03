@@ -3,22 +3,16 @@ import type {
   BodyTextFormats,
   AgentTeamCatalogSnapshot,
   CatalogSnapshot,
-  CreativePlotStage,
   GeneralPermissionMode,
-  LearningImitationSettings,
   LibraryAgentSettings,
   LongAgentSettings,
   ModelConfig,
-  MarketplaceSession,
   ModelSettings,
   ModelUsageDashboard,
   SkillLibrary,
   TextViewMode,
-  WorkspacePaneLayout,
-  WorkspaceAgentSettings
+  WorkspacePaneLayout
 } from "@deepwrite/contracts";
-import type { LearningImitationController } from "../composables/useLearningImitation";
-import type { LongBookAnalysisController } from "../extras/long-book-analysis/useLongBookAnalysis";
 import type { SubagentAuthoringController } from "../composables/useSubagentAuthoring";
 
 export interface SettingsFeatureModule {
@@ -33,11 +27,7 @@ export interface SettingsFeatureModule {
   workspacePaneLayout: WorkspacePaneLayout;
   defaultTextViewMode: TextViewMode;
   bodyTextFormats: BodyTextFormats;
-  workspaceAgentSettings: readonly WorkspaceAgentSettings[];
-  creativePlotStages: readonly CreativePlotStage[];
   longAgentSettings: LongAgentSettings | null;
-  workspaceAgentLoading: boolean;
-  workspaceAgentSaving: boolean;
   longAgentLoading: boolean;
   longAgentSaving: boolean;
   longAgentError: string | null;
@@ -86,45 +76,6 @@ export interface ModelsFeatureModule {
   alertMessages: readonly string[];
 }
 
-export interface ImitationFeatureModule {
-  kind: "imitation";
-  controller: LearningImitationController | null;
-  models: readonly ModelConfig[];
-  catalogSnapshot: CatalogSnapshot | null;
-  approvalMode: GeneralPermissionMode;
-  learningImitationSettings: LearningImitationSettings | null;
-  learningImitationLoading: boolean;
-  learningImitationSaving: boolean;
-  runtimeAvailable: boolean;
-}
-
-export interface LongBookAnalysisFeatureModule {
-  kind: "long-book-analysis";
-  controller: LongBookAnalysisController | null;
-  models: readonly ModelConfig[];
-  catalogSnapshot: CatalogSnapshot | null;
-}
-
-export interface MarketplaceFeatureModule {
-  kind: "marketplace";
-  catalogSnapshot: CatalogSnapshot | null;
-  session: MarketplaceSession | null;
-}
-
-export interface DeviceSyncFeatureModule {
-  kind: "device-sync";
-  prepareSync(): Promise<boolean>;
-  refreshSync(): Promise<void>;
-}
-
-export interface CloudBackupFeatureModule {
-  kind: "cloud-backup";
-}
-
-export interface ZhuqueDetectionFeatureModule {
-  kind: "zhuque-detection";
-}
-
 export type WorkspaceFeatureModule =
   | {
       kind: "revision-analysis";
@@ -134,26 +85,7 @@ export type WorkspaceFeatureModule =
       models: readonly ModelConfig[];
       catalogSnapshot: CatalogSnapshot | null;
     }
-  | {
-      kind: "short-book-analysis";
-      controller:
-        | import("../extras/short-book-analysis/useShortBookAnalysis").ShortBookAnalysisController
-        | null;
-      models: readonly ModelConfig[];
-      catalogSnapshot: CatalogSnapshot | null;
-    }
   | SettingsFeatureModule
   | AgentTeamFeatureModule
   | DirectoryFeatureModule
-  | ModelsFeatureModule
-  | ImitationFeatureModule
-  | {
-      kind: "style-comparison";
-      models: readonly ModelConfig[];
-      preferredModelId: string | null;
-    }
-  | LongBookAnalysisFeatureModule
-  | MarketplaceFeatureModule
-  | DeviceSyncFeatureModule
-  | CloudBackupFeatureModule
-  | ZhuqueDetectionFeatureModule;
+  | ModelsFeatureModule;

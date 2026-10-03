@@ -555,7 +555,7 @@ export function projectLongWorkspaceNavigation(
         breadcrumbs: [book.title, "剧情设计", "章卡"],
         files: [],
         preferredRole: "book-line",
-        description: "直接管理长篇章节卡；正文仍在“正文”中编辑。"
+        description: "直接管理小说章节卡；正文仍在“正文”中编辑。"
       },
       {
         icon: "file",

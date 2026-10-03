@@ -5,12 +5,9 @@ import type {
   AgentTeamProfileSaveInput,
   AgentTeamProfileSetEnabledInput,
   AgentTeamProfileTargetInput,
-  LearningImitationSettingsInput,
-  LearningImitationStageId,
   LibraryAgentDomain,
   LibraryAgentSettingsInput,
-  LongAgentSettingsInput,
-  WorkspaceAgentSettingsInput
+  LongAgentSettingsInput
 } from "@deepwrite/contracts";
 import { useSettingsStore } from "../stores/settingsStore";
 import {
@@ -38,21 +35,6 @@ export function useSettingsFeatureCoordinator(
 ) {
   const { settingsStore, notifications: uiMessage } = context;
   const modelSettingsCoordinator = useModelSettingsCoordinator(context);
-  async function loadShortAndScriptAgentSettings(): Promise<void> {
-    const api = context.api();
-    if (!api) return;
-    try {
-      await settingsStore.ensureWorkspaceAgentsLoaded(() =>
-        Promise.all([
-          api.workspaceAgents.list("short"),
-          api.workspaceAgents.list("script")
-        ])
-      );
-    } catch (error: unknown) {
-      uiMessage.error(errorMessage(error, "加载创作空间智能体设置失败。"));
-    }
-  }
-
   async function loadLongAgentSettings(): Promise<boolean> {
     const api = context.api();
     if (!api) return false;
@@ -60,44 +42,13 @@ export function useSettingsFeatureCoordinator(
       await settingsStore.ensureLongAgentsLoaded(() => api.longAgents.list());
       return true;
     } catch (error: unknown) {
-      uiMessage.error(errorMessage(error, "加载长篇智能体设置失败。"));
+      uiMessage.error(errorMessage(error, "加载主智能体设置失败。"));
       return false;
     }
   }
 
   async function ensureLongAgentSettingsLoaded(): Promise<boolean> {
     return settingsStore.longAgentLoaded || (await loadLongAgentSettings());
-  }
-
-  async function loadWorkspaceAgentSettings(): Promise<void> {
-    await Promise.all([
-      loadShortAndScriptAgentSettings(),
-      loadLongAgentSettings()
-    ]);
-  }
-
-  async function saveWorkspaceAgentSettings(
-    settings: WorkspaceAgentSettingsInput
-  ): Promise<void> {
-    const api = context.api();
-    if (!api || settingsStore.workspaceAgentSaving) return;
-    settingsStore.workspaceAgentSaving = true;
-    try {
-      const saved = await api.workspaceAgents.save(settings);
-      settingsStore.markLoaded("workspaceAgents", [
-        ...settingsStore.workspaceAgentSettings.filter(
-          (candidate) => candidate.workspaceType !== saved.workspaceType
-        ),
-        saved
-      ]);
-      uiMessage.success(
-        `${saved.workspaceType === "script" ? "剧本" : "短篇"}智能体提示词、欢迎快捷与读取范围已保存，下一轮对话立即生效。`
-      );
-    } catch (error: unknown) {
-      uiMessage.error(errorMessage(error, "保存创作空间智能体设置失败。"));
-    } finally {
-      settingsStore.workspaceAgentSaving = false;
-    }
   }
 
   async function saveLongAgentSettings(
@@ -110,10 +61,10 @@ export function useSettingsFeatureCoordinator(
       const saved = await api.longAgents.save(settings);
       settingsStore.markLoaded("longAgents", saved);
       uiMessage.success(
-        "长篇四个阶段智能体的提示词、欢迎快捷与素材/技能读取范围已保存，下一轮对话立即生效。"
+        "主智能体的提示词、欢迎快捷与素材/技能读取范围已保存，下一轮对话立即生效。"
       );
     } catch (error: unknown) {
-      uiMessage.error(errorMessage(error, "保存长篇智能体设置失败。"));
+      uiMessage.error(errorMessage(error, "保存主智能体设置失败。"));
     } finally {
       settingsStore.longAgentSaving = false;
     }
@@ -125,7 +76,7 @@ export function useSettingsFeatureCoordinator(
     try {
       await settingsStore.ensureAgentTeamsLoaded(() => api.agentTeams.list());
     } catch (error: unknown) {
-      uiMessage.error(errorMessage(error, "加载智能体团队设置失败。"));
+      uiMessage.error(errorMessage(error, "加载子智能体团队设置失败。"));
     }
   }
 
@@ -154,8 +105,8 @@ export function useSettingsFeatureCoordinator(
     if (!api) return;
     await mutateAgentTeamCatalog(
       () => api.agentTeams.create(input),
-      "智能体团队已创建。",
-      "创建智能体团队失败。"
+      "子智能体团队已创建。",
+      "创建子智能体团队失败。"
     );
   }
 
@@ -166,8 +117,8 @@ export function useSettingsFeatureCoordinator(
     if (!api) return;
     await mutateAgentTeamCatalog(
       () => api.agentTeams.rename(input),
-      "智能体团队已重命名。",
-      "重命名智能体团队失败。"
+      "子智能体团队已重命名。",
+      "重命名子智能体团队失败。"
     );
   }
 
@@ -178,8 +129,8 @@ export function useSettingsFeatureCoordinator(
     if (!api) return;
     await mutateAgentTeamCatalog(
       () => api.agentTeams.delete(input),
-      "智能体团队已删除。",
-      "删除智能体团队失败。"
+      "子智能体团队已删除。",
+      "删除子智能体团队失败。"
     );
   }
 
@@ -191,8 +142,8 @@ export function useSettingsFeatureCoordinator(
     await mutateAgentTeamCatalog(
       () => api.agentTeams.setEnabled(input),
       input.enabled
-        ? "团队已启用，下一轮对应类型的对话开始使用。"
-        : "团队已关闭，下一轮对应类型的对话不再使用团队配置。",
+        ? "团队已启用，下一轮小说对话开始使用。"
+        : "团队已关闭，下一轮小说对话不再使用团队配置。",
       "更新团队启用状态失败。"
     );
   }
@@ -204,8 +155,8 @@ export function useSettingsFeatureCoordinator(
     if (!api) return;
     await mutateAgentTeamCatalog(
       () => api.agentTeams.save(input),
-      "智能体团队已保存。",
-      "保存智能体团队设置失败。"
+      "子智能体团队已保存。",
+      "保存子智能体团队设置失败。"
     );
   }
 
@@ -218,10 +169,10 @@ export function useSettingsFeatureCoordinator(
     try {
       const result = await api.agentTeams.download(input);
       if (result.status === "saved") {
-        uiMessage.success("智能体团队压缩包已下载。");
+        uiMessage.success("子智能体团队压缩包已下载。");
       }
     } catch (error: unknown) {
-      uiMessage.error(errorMessage(error, "下载智能体团队失败。"));
+      uiMessage.error(errorMessage(error, "下载子智能体团队失败。"));
     } finally {
       settingsStore.agentTeamSaving = false;
     }
@@ -235,10 +186,10 @@ export function useSettingsFeatureCoordinator(
       const result = await api.agentTeams.install();
       if (result.status === "installed") {
         settingsStore.markLoaded("agentTeams", result.catalog);
-        uiMessage.success(`智能体团队“${result.teamName}”已安装。`);
+        uiMessage.success(`子智能体团队“${result.teamName}”已安装。`);
       }
     } catch (error: unknown) {
-      uiMessage.error(errorMessage(error, "安装智能体团队失败。"));
+      uiMessage.error(errorMessage(error, "安装子智能体团队失败。"));
     } finally {
       settingsStore.agentTeamSaving = false;
     }
@@ -292,59 +243,10 @@ export function useSettingsFeatureCoordinator(
     }
   }
 
-  async function loadLearningImitationSettings(): Promise<void> {
-    const api = context.api();
-    if (!api) return;
-    try {
-      await settingsStore.ensureLearningImitationLoaded(() =>
-        api.learningImitationSettings.list()
-      );
-    } catch (error: unknown) {
-      uiMessage.error(errorMessage(error, "加载学习仿写设置失败。"));
-    }
-  }
-
-  async function saveLearningImitationSettings(
-    settings: LearningImitationSettingsInput
-  ): Promise<void> {
-    const api = context.api();
-    if (!api || settingsStore.learningImitationSaving) return;
-    settingsStore.learningImitationSaving = true;
-    try {
-      const saved = await api.learningImitationSettings.save(settings);
-      settingsStore.markLoaded("learningImitation", saved);
-      uiMessage.success("学习仿写提示词已保存，下一次运行对应阶段时生效。");
-    } catch (error: unknown) {
-      uiMessage.error(errorMessage(error, "保存学习仿写设置失败。"));
-    } finally {
-      settingsStore.learningImitationSaving = false;
-    }
-  }
-
-  async function resetLearningImitationSettings(
-    stageId: LearningImitationStageId
-  ): Promise<void> {
-    const api = context.api();
-    if (!api || settingsStore.learningImitationSaving) return;
-    settingsStore.learningImitationSaving = true;
-    try {
-      const saved = await api.learningImitationSettings.reset(stageId);
-      settingsStore.markLoaded("learningImitation", saved);
-      uiMessage.success("当前阶段已恢复默认提示词。");
-    } catch (error: unknown) {
-      uiMessage.error(errorMessage(error, "恢复学习仿写默认设置失败。"));
-    } finally {
-      settingsStore.learningImitationSaving = false;
-    }
-  }
-
   return {
     ...modelSettingsCoordinator,
-    loadShortAndScriptAgentSettings,
     loadLongAgentSettings,
     ensureLongAgentSettingsLoaded,
-    loadWorkspaceAgentSettings,
-    saveWorkspaceAgentSettings,
     saveLongAgentSettings,
     loadAgentTeamSettings,
     createAgentTeam,
@@ -356,9 +258,6 @@ export function useSettingsFeatureCoordinator(
     installAgentTeam,
     loadLibraryAgentSettings,
     saveLibraryAgentSettings,
-    resetLibraryAgentSettings,
-    loadLearningImitationSettings,
-    saveLearningImitationSettings,
-    resetLearningImitationSettings
+    resetLibraryAgentSettings
   };
 }

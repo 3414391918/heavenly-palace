@@ -15,6 +15,8 @@ import {
   type LibraryAgentSkill
 } from "@deepwrite/contracts";
 
+import { LEGACY_LIBRARY_AGENT_SYSTEM_PROMPTS } from "./legacy-library-agent-default-prompts";
+
 interface DiskLibraryAgentSettings {
   version: 1;
   agents: LibraryAgentSettingsInput["agents"];
@@ -161,7 +163,10 @@ function normalizeDiskSettings(raw: unknown): LibraryAgentSettingsInput {
   return {
     agents: parsed.data.agents.map((agent) => ({
       domain: agent.domain,
-      systemPrompt: agent.systemPrompt,
+      systemPrompt:
+        agent.systemPrompt === LEGACY_LIBRARY_AGENT_SYSTEM_PROMPTS[agent.domain]
+          ? defaultProfile(agent.domain).systemPrompt
+          : agent.systemPrompt,
       readAccess: cloneReadAccess(agent.readAccess)
     }))
   };
@@ -176,8 +181,13 @@ export class LibraryAgentConfigStore {
   }
 
   async list(): Promise<LibraryAgentSettings> {
-    await this.writeChain;
-    return this.toPublicSettings(await this.readInput());
+    let settings: LibraryAgentSettings | undefined;
+    const operation = this.writeChain.then(async () => {
+      settings = this.toPublicSettings(await this.readInput());
+    });
+    this.trackWrite(operation);
+    await operation;
+    return settings!;
   }
 
   async save(
@@ -250,7 +260,27 @@ export class LibraryAgentConfigStore {
   }
 
   private async readInput(): Promise<LibraryAgentSettingsInput> {
-    return normalizeDiskSettings(await readJson(this.settingsPath));
+    const raw = await readJson(this.settingsPath);
+    const input = normalizeDiskSettings(raw);
+    if (
+      raw &&
+      typeof raw === "object" &&
+      "agents" in raw &&
+      Array.isArray(raw.agents) &&
+      raw.agents.some(
+        (agent) =>
+          agent &&
+          typeof agent === "object" &&
+          (agent.domain === "material" || agent.domain === "skill") &&
+          agent.systemPrompt ===
+            LEGACY_LIBRARY_AGENT_SYSTEM_PROMPTS[
+              agent.domain as LibraryAgentDomain
+            ]
+      )
+    ) {
+      await this.writeInput(input);
+    }
+    return input;
   }
 
   private async writeInput(input: LibraryAgentSettingsInput): Promise<void> {

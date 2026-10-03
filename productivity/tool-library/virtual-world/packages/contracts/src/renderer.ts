@@ -1,46 +1,17 @@
-/**
- * Renderer-focused contracts entry.
- *
- * The root barrel also exports Node command and utility schemas. Importing it
- * in the browser evaluates that whole Zod graph. Keep the complete public type
- * surface here, but expose only runtime values that Renderer code uses.
- */
-export type * from "./book-templates";
 export { DEFAULT_NEW_BOOK_ENABLED_PLOT_STAGE_IDS } from "./catalog";
-export { loadBookTemplateDraftSchema } from "./load-book-template-schema";
 export type * from "./appearance";
 export type * from "./app-alert";
 export type * from "./agent-team";
 export type * from "./agent-team-catalog";
 export type * from "./catalog";
 export type * from "./chat-assistant";
-export type * from "./cloud-backup";
 export type * from "./envelope";
 export type * from "./expert-draft";
 export type * from "./general-settings";
 export type * from "./body-text-format";
-export type * from "./learning-imitation";
 export type * from "./library-agent";
 export type * from "./long-agent-settings";
 export type * from "./long-agent-team";
-export type * from "./long-book-analysis";
-export type * from "./short-book-analysis";
-export type * from "./short-book-analysis-events";
-export {
-  ShortBookAnalysisPresetSchema,
-  ShortBookAnalysisSettingsInputSchema,
-  ShortBookAnalysisRuntimeContextSchema
-} from "./short-book-analysis";
-export * from "./short-book-analysis-budget";
-export type * from "./style-comparison";
-export {
-  STYLE_COMPARISON_TEXT_LIMIT,
-  STYLE_COMPARISON_METHOD_LIMIT,
-  StyleComparisonInputSchema,
-  StyleComparisonDimensionSchema,
-  StyleComparisonResultSchema
-} from "./style-comparison";
-export { loadDefaultStyleComparisonMethod } from "./load-style-comparison-method";
 export type * from "./long-ledger";
 export type * from "./long-manuscript-export";
 export type * from "./long-workspace";
@@ -49,7 +20,6 @@ export type * from "./long-workspace-commands";
 export type * from "./long-project-recovery";
 export type * from "./long-worldbuilding-markdown";
 export type * from "./long-workspace-operations";
-export type * from "./marketplace";
 export type * from "./material-markdown";
 export type * from "./material-query";
 export { MATERIAL_STAGE_KINDS } from "./material-stages";
@@ -61,7 +31,6 @@ export type * from "./session";
 export type * from "./skill-markdown";
 export type * from "./script-workspace";
 export type * from "./script-agent-settings";
-export type * from "./short-manuscript-export";
 export type * from "./subagent-authoring";
 export type * from "./system";
 export type * from "./utility";
@@ -69,7 +38,6 @@ export type * from "./update";
 export type * from "./workspace";
 export type * from "./workspace-directory";
 export type * from "./writing-context";
-
 export {
   ChatAssistantRoleplayConfigSchema,
   CHAT_ASSISTANT_ROLEPLAY_PROMPT_SUFFIX,
@@ -110,15 +78,11 @@ export {
   resolveAppearanceUiFontStack
 } from "./appearance";
 export {
-  DEFAULT_AGENT_TEAM_SETTINGS,
-  DEFAULT_SCRIPT_AGENT_TEAM_SETTINGS,
-  SCRIPT_AGENT_SUBAGENT_MAX_COUNT,
   LONG_AGENT_SUBAGENT_MAX_COUNT,
   SHORT_AGENT_SUBAGENT_DESCRIPTION_MAX_LENGTH,
   SHORT_AGENT_SUBAGENT_MAX_COUNT,
   SHORT_AGENT_SUBAGENT_NAME_MAX_LENGTH,
-  SHORT_AGENT_SUBAGENT_SYSTEM_PROMPT_MAX_LENGTH,
-  WorkspaceAgentTeamSettingsInputSchema
+  SHORT_AGENT_SUBAGENT_SYSTEM_PROMPT_MAX_LENGTH
 } from "./agent-team";
 export {
   AGENT_TEAM_PROFILE_NAME_MAX_LENGTH,
@@ -160,18 +124,6 @@ export {
 } from "./expert-draft";
 export { createDefaultGeneralSettings } from "./general-settings";
 export {
-  LEARNING_IMITATION_DOCUMENT_MAX_CHARACTERS,
-  LEARNING_IMITATION_MAX_DOCUMENTS,
-  LEARNING_IMITATION_STAGE_DESCRIPTIONS,
-  LEARNING_IMITATION_STAGE_IDS,
-  LEARNING_IMITATION_STAGE_LABELS,
-  LearningImitationDocumentsSchema,
-  LearningImitationResultSchema,
-  applyLearningImitationWrite,
-  cloneEmptyLearningImitationResult,
-  learningImitationStageHasResult
-} from "./learning-imitation";
-export {
   DEFAULT_LIBRARY_AGENT_PROFILES,
   DEFAULT_LIBRARY_AGENT_SETTINGS,
   DEFAULT_MATERIAL_LIBRARY_AGENT_SKILLS,
@@ -192,22 +144,6 @@ export {
   DEFAULT_LONG_AGENT_TEAM_SETTINGS,
   LongAgentTeamSettingsInputSchema
 } from "./long-agent-team";
-export {
-  LONG_BOOK_ANALYSIS_DEFAULT_CONTEXT_WINDOW,
-  LONG_BOOK_ANALYSIS_MAX_CHAPTER_CHARACTERS,
-  LONG_BOOK_ANALYSIS_MAX_NOTE_CHARACTERS,
-  LONG_BOOK_ANALYSIS_MAX_PRESETS,
-  LONG_BOOK_ANALYSIS_MAX_PROMPT_CHARACTERS,
-  LONG_BOOK_ANALYSIS_MAX_SELECTED_CHAPTERS,
-  LongBookAnalysisChapterSchema,
-  LongBookAnalysisPresetSchema,
-  LongBookAnalysisResultSchema,
-  LongBookAnalysisSavedSourceCatalogSchema,
-  LongBookAnalysisSavedSourceIdSchema,
-  LongBookAnalysisSavedSourceSummarySchema,
-  LongBookAnalysisSettingsInputSchema,
-  LongBookAnalysisSourceSchema
-} from "./long-book-analysis";
 export {
   LongCommitChapterInputSchema,
   longCommitInputChapterIds,
@@ -235,7 +171,6 @@ export {
   longWorkspaceOperationsRequireImpactConfirmation,
   previewLongWorkspaceOperations
 } from "./long-workspace-operations";
-export { MARKETPLACE_CONTENT_MAX_CHARACTERS } from "./marketplace";
 export {
   DEFAULT_LONG_AGENT_PROFILES,
   DEFAULT_LONG_CHARACTER_TYPES,
@@ -353,7 +288,6 @@ export {
   WRITING_CONTEXT_MAX_CHARACTERS,
   writingContextCharacterCount
 } from "./writing-context";
-
 export type * from "./builtin-subagents";
 export type * from "./library-management";
 export type * from "./library-management-scope";
@@ -362,17 +296,7 @@ export {
   BuiltinSubagentSettingsSchema,
   defaultBuiltinSubagentSettings
 } from "./builtin-subagents";
-
 export { LibraryManagementScopeSchema } from "./library-management-scope";
-
-export type * from "./device-sync";
-export { syncRequestSchema } from "./device-sync/api";
-export {
-  syncConfigSchema,
-  syncJoinCodeSchema
-} from "./device-sync/connection-schemas";
-export { syncVersionPreview, resolveSyncVersion } from "./device-sync/preview";
-
 export type * from "./conversation-history";
 export {
   CONVERSATION_HISTORY_PAGE_BYTES,
@@ -380,27 +304,13 @@ export {
   CONVERSATION_HISTORY_TEXT_CHUNK_SIZE
 } from "./conversation-history-limits";
 export { conversationHistoryJsonBytes } from "./conversation-history-json-size";
-
 export type * from "./conversation-export";
-
 export * from "./revision-analysis";
-
 export * from "./revision-analysis-defaults";
 export * from "./revision-analysis-budget";
-
 export type * from "./text-context-menu";
-
-export * from "./marketplace-email";
-
-export {
-  MarketplaceLoginInputSchema,
-  MarketplaceRegisterInputSchema
-} from "./marketplace";
-
 export { compareVersions } from "./update-version";
-
 export type { WindowFrameAction, WindowFrameState } from "./window-frame";
-
 export * from "./long-character-profile";
 export * from "./long-character-appearance";
 export * from "./long-character-profile-markdown";

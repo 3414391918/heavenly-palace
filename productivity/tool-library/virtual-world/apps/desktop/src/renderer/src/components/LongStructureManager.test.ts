@@ -1,20 +1,32 @@
 import { describe, expect, it } from "vitest";
 import deleteDialogSource from "./LongStructureDeleteDialog.vue?raw";
-import source from "./LongStructureManager.vue?raw";
+import componentSource from "./LongStructureManager.vue?raw";
+import featureSource from "./LongStructureFeatureSettings.vue?raw";
+import agentsSource from "./LongAgentsMdEditor.vue?raw";
+import formDialogSource from "./LongStructureFormDialog.vue?raw";
+import formSource from "../composables/useLongStructureForm.ts?raw";
+const source =
+  componentSource +
+  featureSource +
+  agentsSource +
+  formDialogSource +
+  formSource;
 import syncDialogSource from "./LongWorldbuildingSyncDialog.vue?raw";
 import deleteConfirmationSource from "../composables/useLongStructureDeleteConfirmation.ts?raw";
 
 describe("LongStructureManager", () => {
   it("manages worldbuilding categories and text-only character types", () => {
     expect(source).toContain("结构管理");
-    expect(source).toContain("管理世界观分类、人物类型、功能配置和长篇上下文");
-    expect(source).toContain("props.snapshot.worldbuilding");
+    expect(source).toContain(
+      "管理世界观分类、人物类型、功能配置和主智能体上下文"
+    );
+    expect(source).toContain("options.snapshot().worldbuilding");
     expect(source).toContain("builder.createWorldbuilding");
     expect(source).toContain("builder.updateWorldbuilding");
     expect(source).toContain("builder.reorderWorldbuilding");
     expect(deleteConfirmationSource).toContain("builder.deleteWorldbuilding");
     expect(source).toContain("新建世界观分类");
-    expect(source).toContain("加载其他书籍世界观");
+    expect(source).toContain("加载其他小说世界观");
     expect(syncDialogSource).toContain("加载其他书籍世界观");
     expect(syncDialogSource).toContain("个世界观分类及其全部内容");
     expect(source).toContain('"syncWorldbuilding"');
@@ -43,18 +55,12 @@ describe("LongStructureManager", () => {
     );
     expect(source).toContain('label: "基础结构"');
     expect(source).toContain('label: "功能配置"');
-    expect(source).toContain('label: "长篇上下文"');
-    expect(source.indexOf('label: "长篇上下文"')).toBeLessThan(
+    expect(source).toContain('label: "主智能体上下文"');
+    expect(source.indexOf('label: "主智能体上下文"')).toBeLessThan(
       source.indexOf('label: "基础结构"')
     );
     expect(source.indexOf('label: "基础结构"')).toBeLessThan(
       source.indexOf('label: "功能配置"')
-    );
-    expect(source).toContain(
-      "grid-template-columns: repeat(3, minmax(0, 1fr))"
-    );
-    expect(source).not.toContain(
-      "grid-template-columns: repeat(2, minmax(0, 1fr))"
     );
     expect(source).toContain("世界观条目样式");
     expect(source).toContain("人物与连续性条目样式");
@@ -64,13 +70,9 @@ describe("LongStructureManager", () => {
     expect(source).toContain('value: "left-tree"');
     expect(source).toContain('label: "左侧树形结构"');
     expect(source).toContain("builder.updateFeatureSettings");
-    expect(source).toContain(
-      "snapshot.featureSettings.worldbuildingItemLayout"
-    );
-    expect(source).toContain(
-      "snapshot.featureSettings.characterAndContinuityItemLayout"
-    );
-    expect(source).toContain("snapshot.featureSettings.plotItemLayout");
+    expect(source).toContain("settings.worldbuildingItemLayout");
+    expect(source).toContain("settings.characterAndContinuityItemLayout");
+    expect(source).toContain("settings.plotItemLayout");
     expect(source).toContain("<PopupSelect");
     expect(source).not.toContain('label: "剧情与叙事"');
     expect(source).not.toContain("<LongPlotStructureManager");
@@ -80,25 +82,9 @@ describe("LongStructureManager", () => {
     expect(source).not.toContain('label: "章卡"');
     expect(source).not.toContain("功能配置项暂时为空");
     expect(source).toContain('id="long-structure-panel-content-agents"');
-    expect(source).toContain('aria-label="长篇上下文"');
+    expect(source).toContain('aria-label="主智能体上下文"');
     expect(source).toContain('"saveAgentsMd"');
     expect(source).toContain("flushAgentsMdIfNeeded");
-  });
-
-  it("waits for durable completion and preserves form drafts on failure", () => {
-    expect(source).toContain("const pendingMutation = ref<");
-    expect(source).toContain(
-      "() => props.disabled || pendingMutation.value !== null"
-    );
-    expect(source).toContain(
-      'succeed: () => finishMutation(requestId, "succeeded")'
-    );
-    expect(source).toContain('fail: () => finishMutation(requestId, "failed")');
-    expect(source).toContain("appliedButRefreshFailed");
-    expect(source).toContain('if (outcome === "failed") return');
-    expect(source).toContain('}, "form")');
-    expect(source).toContain('"delete"');
-    expect(source).toContain(':disabled="mutationLocked"');
   });
 
   it("uses shared themed controls and compact teleported dialogs", () => {
@@ -107,26 +93,11 @@ describe("LongStructureManager", () => {
     expect(deleteDialogSource.match(/<Teleport to="body">/gu)).toHaveLength(1);
     expect(syncDialogSource.match(/<Teleport to="body">/gu)).toHaveLength(1);
     expect(source).toContain(':menu-z-index="2300"');
-    for (const themeToken of [
-      "--surface-main",
-      "--surface-raised",
-      "--surface-muted",
-      "--surface-hover",
-      "--theme-line",
-      "--theme-line-soft",
-      "--text-primary",
-      "--text-secondary",
-      "--text-tertiary",
-      "--accent",
-      "--accent-soft",
-      "--neutral-solid"
-    ]) {
-      expect(source).toContain(`var(${themeToken})`);
-    }
-    expect(source).toContain("font-size: 0.875rem");
-    expect(source).toContain("@media (max-width: 42rem)");
+    expect(componentSource).toContain(
+      '<style scoped src="./LongStructureManager.css">'
+    );
     expect(source).toContain("uiMessage.warning");
-    expect(source).toContain('@keydown.esc.stop="closeForm"');
+    expect(source).toContain("@keydown.esc.stop=\"emit('close')\"");
     expect(deleteDialogSource).toContain("@keydown.esc.stop=\"emit('close')\"");
     expect(syncDialogSource).toContain("@keydown.esc.stop=\"emit('close')\"");
     expect(deleteDialogSource).toContain("danger-button");

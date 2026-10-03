@@ -8,7 +8,7 @@ import {
 } from "@deepwrite/contracts";
 import { createId } from "@deepwrite/shared";
 import type { UtilitySupervisor } from "./supervisor";
-import { runBookTemplateSmoke } from "./smoke-book-templates";
+import { runUnifiedCreationSmoke } from "./smoke-unified-creation";
 import { runConversationSmoke } from "./smoke-conversation";
 import { runChapterImageSmoke } from "./smoke-chapter-images";
 import { runCharacterAppearanceSmoke } from "./smoke-character-appearances";
@@ -114,8 +114,8 @@ export async function runApplicationSmoke(
       throw new Error("Agent smoke event assertions failed.");
     }
 
+    const unifiedCreation = await runUnifiedCreationSmoke(window);
     const conversation = await runConversationSmoke(window);
-    const bookTemplates = await runBookTemplateSmoke(window);
     const chapterImages = await runChapterImageSmoke(supervisor, window);
     const characterAppearances = await runCharacterAppearanceSmoke(
       supervisor,
@@ -124,8 +124,8 @@ export async function runApplicationSmoke(
     console.log(
       `DEEPWRITE_SMOKE_OK ${JSON.stringify({
         health,
+        unifiedCreation,
         conversation,
-        bookTemplates,
         chapterImages,
         characterAppearances,
         agent: {

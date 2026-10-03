@@ -116,11 +116,7 @@ export function isOllamaProviderName(provider: string): boolean {
 export function resolvePortableToolSchemaProfile(
   workspaceContext?: WorkspaceRuntimeContext
 ): PortableToolSchemaProfile {
-  return workspaceContext?.shortWorkspace ||
-    workspaceContext?.scriptWorkspace ||
-    workspaceContext?.longWorkspace
-    ? "writing-workspace"
-    : "default";
+  return workspaceContext?.longWorkspace ? "writing-workspace" : "default";
 }
 
 export function resolveProviderToolSchemaMode(

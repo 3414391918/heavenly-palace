@@ -16,14 +16,7 @@ export interface QueuedAgentEditRun {
 }
 
 export interface WorkspaceSystemEventRouteDependencies {
-  learningImitation: {
-    handleEvent(event: SystemEventEnvelope): void;
-  };
   revisionAnalysis: { handleEvent(event: SystemEventEnvelope): void };
-  shortBookAnalysis: { handleEvent(event: SystemEventEnvelope): void };
-  longBookAnalysis: {
-    handleEvent(event: SystemEventEnvelope): void;
-  };
   subagentAuthoring: {
     handleEvent(event: SystemEventEnvelope): void;
   };
@@ -40,9 +33,7 @@ export interface WorkspaceSystemEventRouteDependencies {
     event: EventOf<"long.chapter_write_proposal">
   ): void;
   handleLongWorkspaceProposal(event: SystemEventEnvelope): Promise<unknown>;
-  stageAgentEditProposal(event: EventOf<"workspace.editor_mutation">): void;
   stageLibraryEditProposal(event: EventOf<"library.editor_mutation">): void;
-  navigateToWorkspaceStage(event: EventOf<"workspace.stage_selection">): void;
   allConversations(): readonly WorkspaceEventConversation[];
   scheduleQueuedAgentEdits(
     predicate: (queued: QueuedAgentEditRun) => boolean
@@ -63,11 +54,6 @@ export function registerWorkspaceSystemEventRoutes(
 ): () => void {
   const disposers = [
     center.subscribeAll((event) => {
-      dependencies.learningImitation.handleEvent(event);
-    }),
-    center.subscribeAll((event) => {
-      dependencies.longBookAnalysis.handleEvent(event);
-      dependencies.shortBookAnalysis.handleEvent(event);
       dependencies.revisionAnalysis.handleEvent(event);
     }),
     center.subscribeAll((event) => {
@@ -88,14 +74,8 @@ export function registerWorkspaceSystemEventRoutes(
         });
       }
     }),
-    center.subscribe("workspace.editor_mutation", (event) => {
-      dependencies.stageAgentEditProposal(event);
-    }),
     center.subscribe("library.editor_mutation", (event) => {
       dependencies.stageLibraryEditProposal(event);
-    }),
-    center.subscribe("workspace.stage_selection", (event) => {
-      dependencies.navigateToWorkspaceStage(event);
     }),
     center.subscribeAll((event) => {
       for (const conversation of dependencies.allConversations()) {

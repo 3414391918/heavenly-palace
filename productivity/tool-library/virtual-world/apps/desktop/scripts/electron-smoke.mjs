@@ -135,7 +135,7 @@ child.on("close", async (code) => {
   }
 
   if (
-    summary.bookTemplates?.status !== "ok" ||
+    summary.unifiedCreation?.status !== "ok" ||
     summary.characterAppearances?.status !== "ok" ||
     summary.characterAppearances?.created !== true ||
     summary.characterAppearances?.copied !== true ||
@@ -157,7 +157,9 @@ child.on("close", async (code) => {
     summary.chapterImages?.focusPreserved !== true ||
     summary.chapterImages?.reopenPreserved !== true ||
     !(summary.chapterImages?.imageBytes >= 8 * 1024 * 1024) ||
-    summary.bookTemplates?.created !== 4 ||
+    summary.unifiedCreation?.created !== true ||
+    summary.unifiedCreation?.team !== true ||
+    summary.unifiedCreation?.retiredApisAbsent !== true ||
     summary.agent?.status !== "ok" ||
     summary.agent?.runtime?.mode !== "local-faux" ||
     summary.agent?.deltaCount < 2 ||
@@ -178,6 +180,6 @@ child.on("close", async (code) => {
   }
 
   console.log(
-    `Electron smoke passed: utilities, Pi/Faux completion, conversation persistence, template CRUD, large chapter-image (${summary.chapterImages.imageBytes} bytes) clipboard/replace/reopen/render through real IPC with unchanged references, editor preview mode/scroll preservation, and character appearance create/copy/refresh/render/permanent-delete/cancel/lock/other-appearance retention.`
+    `Electron smoke passed: utilities, Pi/Faux completion, conversation persistence, unified novel/team creation, large chapter-image (${summary.chapterImages.imageBytes} bytes) clipboard/replace/reopen/render through real IPC with unchanged references, editor preview mode/scroll preservation, and character appearance create/copy/refresh/render/permanent-delete/cancel/lock/other-appearance retention.`
   );
 });

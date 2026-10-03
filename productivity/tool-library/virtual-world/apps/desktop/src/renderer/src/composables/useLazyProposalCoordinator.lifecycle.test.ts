@@ -34,7 +34,6 @@ function fakeCoordinator(
     reviewAgentEdit: vi.fn(async () => undefined),
     reviewLongAgentEdit: vi.fn(async () => undefined),
     scheduleQueuedAgentEdits: vi.fn(),
-    stageAgentEditProposal: vi.fn(),
     stageLibraryEditProposal: vi.fn(),
     stageLongCharacterEditProposal: vi.fn(),
     stageLongDraftEditProposal: vi.fn(),
@@ -62,10 +61,10 @@ describe("useLazyProposalCoordinator lifecycle", () => {
     const proposal = deferred();
     const commit = deferred();
     const reviewAgentEdit = vi.fn(() => proposal.promise);
-    const stageAgentEditProposal = vi.fn();
+    const stageLibraryEditProposal = vi.fn();
     const drain = vi.fn(() => commit.promise);
     coordinatorModule.create.mockReturnValue(
-      fakeCoordinator({ reviewAgentEdit, stageAgentEditProposal, drain })
+      fakeCoordinator({ reviewAgentEdit, stageLibraryEditProposal, drain })
     );
     const coordinator = useLazyProposalCoordinator(context());
 
@@ -74,17 +73,17 @@ describe("useLazyProposalCoordinator lifecycle", () => {
       proposalId: "proposal-test",
       decision: "accept"
     });
-    coordinator.stageAgentEditProposal({} as never);
+    coordinator.stageLibraryEditProposal({} as never);
     const draining = coordinator.drain();
 
     await vi.waitFor(() => expect(reviewAgentEdit).toHaveBeenCalledTimes(1));
-    expect(stageAgentEditProposal).not.toHaveBeenCalled();
+    expect(stageLibraryEditProposal).not.toHaveBeenCalled();
     expect(drain).not.toHaveBeenCalled();
 
     proposal.resolve();
     await review;
     await vi.waitFor(() =>
-      expect(stageAgentEditProposal).toHaveBeenCalledTimes(1)
+      expect(stageLibraryEditProposal).toHaveBeenCalledTimes(1)
     );
     await vi.waitFor(() => expect(drain).toHaveBeenCalledTimes(1));
 
@@ -102,28 +101,28 @@ describe("useLazyProposalCoordinator lifecycle", () => {
 
   it("makes disposal idempotent and ignores calls made after disposal starts", async () => {
     const disposal = deferred();
-    const stageAgentEditProposal = vi.fn();
+    const stageLibraryEditProposal = vi.fn();
     const reviewAgentEdit = vi.fn(async () => undefined);
     const dispose = vi.fn(() => disposal.promise);
     coordinatorModule.create.mockReturnValue(
-      fakeCoordinator({ dispose, reviewAgentEdit, stageAgentEditProposal })
+      fakeCoordinator({ dispose, reviewAgentEdit, stageLibraryEditProposal })
     );
     const coordinator = useLazyProposalCoordinator(context());
 
-    coordinator.stageAgentEditProposal({} as never);
+    coordinator.stageLibraryEditProposal({} as never);
     await coordinator.drain();
-    expect(stageAgentEditProposal).toHaveBeenCalledTimes(1);
+    expect(stageLibraryEditProposal).toHaveBeenCalledTimes(1);
 
     const disposing = coordinator.dispose();
     await vi.waitFor(() => expect(dispose).toHaveBeenCalledTimes(1));
-    coordinator.stageAgentEditProposal({} as never);
+    coordinator.stageLibraryEditProposal({} as never);
     await coordinator.reviewAgentEdit({
       runId: "run-after-dispose",
       proposalId: "proposal-after-dispose",
       decision: "accept"
     });
 
-    expect(stageAgentEditProposal).toHaveBeenCalledTimes(1);
+    expect(stageLibraryEditProposal).toHaveBeenCalledTimes(1);
     expect(reviewAgentEdit).not.toHaveBeenCalled();
     expect(coordinator.dispose()).toBe(disposing);
     expect(coordinator.drain()).toBe(disposing);
@@ -134,8 +133,8 @@ describe("useLazyProposalCoordinator lifecycle", () => {
 
   it("reports a factory failure, retries the next command, and disposes safely", async () => {
     const testContext = context();
-    const stageAgentEditProposal = vi.fn();
-    const loaded = fakeCoordinator({ stageAgentEditProposal });
+    const stageLibraryEditProposal = vi.fn();
+    const loaded = fakeCoordinator({ stageLibraryEditProposal });
     coordinatorModule.create
       .mockReset()
       .mockImplementationOnce(() => {
@@ -144,14 +143,14 @@ describe("useLazyProposalCoordinator lifecycle", () => {
       .mockReturnValue(loaded);
     const coordinator = useLazyProposalCoordinator(testContext);
 
-    coordinator.stageAgentEditProposal({} as never);
+    coordinator.stageLibraryEditProposal({} as never);
     await expect(coordinator.drain()).resolves.toBeUndefined();
     expect(testContext.notifications.error).toHaveBeenCalledOnce();
-    expect(stageAgentEditProposal).not.toHaveBeenCalled();
+    expect(stageLibraryEditProposal).not.toHaveBeenCalled();
 
-    coordinator.stageAgentEditProposal({} as never);
+    coordinator.stageLibraryEditProposal({} as never);
     await expect(coordinator.drain()).resolves.toBeUndefined();
-    expect(stageAgentEditProposal).toHaveBeenCalledOnce();
+    expect(stageLibraryEditProposal).toHaveBeenCalledOnce();
     await expect(coordinator.dispose()).resolves.toBeUndefined();
     expect(loaded.dispose).toHaveBeenCalledOnce();
   });

@@ -166,7 +166,7 @@ describe("library attachments", () => {
         ...source.materials,
         {
           id: "material-long-plot",
-          title: "长篇剧情素材",
+          title: "小说剧情素材",
           materialType: "long",
           materialKind: "plot",
           parentGenre: "科幻",
@@ -190,7 +190,7 @@ describe("library attachments", () => {
         ...source.skills,
         {
           id: "skill-long-style",
-          title: "长篇文风",
+          title: "小说文风",
           skillType: "long",
           skillKind: "style",
           overview: "",
@@ -232,7 +232,7 @@ describe("library attachments", () => {
     expect(snapshot.books).toHaveLength(1);
     expect(result.attachedMaterials).toEqual([
       expect.objectContaining({
-        title: "长篇剧情素材 · 潮汐主线",
+        title: "小说剧情素材 · 潮汐主线",
         kind: "plot",
         content: "十年一次逆潮。"
       }),
@@ -244,7 +244,7 @@ describe("library attachments", () => {
     ]);
     expect(result.attachedSkills).toEqual([
       expect.objectContaining({
-        title: "长篇文风 · 章节节奏",
+        title: "小说文风 · 章节节奏",
         kind: "style",
         content: "章节结尾保留推进钩子。"
       }),

@@ -131,15 +131,7 @@ button:disabled {
   border: 0;
   background: transparent;
 }
-.type-badge {
-  display: inline-flex;
-  width: fit-content;
-  padding: 3px 7px;
-  color: var(--text-secondary);
-  font-size: 12px;
-  border-radius: 999px;
-  background: var(--surface-muted);
-}
+
 .team-card-main:hover {
   background: transparent;
 }

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import LibraryEditorHeader from "./LibraryEditorHeader.vue";
 import {
   computed,
   defineAsyncComponent,
@@ -33,7 +34,6 @@ import {
   type TextHistoryRestoreResult,
   type TextSelectionRange
 } from "../utils/boundedTextHistory";
-import { handleHorizontalOverflowWheel } from "../utils/horizontalOverflow";
 import {
   resolveWorkspaceDocumentTitle,
   workspaceDocumentHasFixedTitle
@@ -72,14 +72,6 @@ const props = defineProps<{
   autoSaveEnabled?: boolean;
   defaultViewMode: TextViewMode;
   boundToCurrentBook?: boolean;
-  sectionTabs?: readonly { id: string; title: string }[];
-  activeSectionId?: string | undefined;
-  sectionTabsLabel?: string | undefined;
-  canCreateSection?: boolean;
-  createSectionLabel?: string | undefined;
-  showDeleteSection?: boolean;
-  canDeleteSection?: boolean;
-  deleteSectionLabel?: string | undefined;
   rightPane?: boolean;
   rightPaneCollapsed?: boolean;
   entrySearchItems: readonly EditorEntrySearchSource[];
@@ -91,10 +83,6 @@ const emit = defineEmits<{
   save: [payload: { id: string; title: string; content: string }];
   liveChange: [payload: { id: string; title: string; content: string }];
   insertSelection: [reference: EditorTextReference];
-  selectSection: [sectionId: string];
-  createSection: [];
-  deleteSection: [];
-  selectDraftFile: [fileKind: "body" | "character-state"];
   selectEntrySearchResult: [documentId: string];
   prepareEntrySearch: [];
 }>();
@@ -288,8 +276,6 @@ const characterCount = computed(() =>
     ? content.value.length
     : nonWhitespaceCharacterCount.value
 );
-const showSectionTabs = computed(() => Boolean(props.sectionTabs?.length));
-const showDraftFileTabs = computed(() => Boolean(props.document.draftFileKind));
 const editorReadOnly = computed(() => props.document.readOnly || props.locked);
 const canUndo = computed(() => {
   void historyVersion.value;
@@ -320,18 +306,6 @@ const searchResultLabel = computed(() => {
     currentMatchIndex.value >= 0 ? currentMatchIndex.value + 1 : 0;
   return `${current}/${searchMatches.value.length}`;
 });
-const draftUnitLabel = computed(() =>
-  props.document.workspaceType === "script" ? "剧集" : "小节"
-);
-const resolvedSectionTabsLabel = computed(
-  () => props.sectionTabsLabel ?? `正文${draftUnitLabel.value}`
-);
-const resolvedCreateSectionLabel = computed(
-  () => props.createSectionLabel ?? "在正文末尾新建小节"
-);
-const resolvedDeleteSectionLabel = computed(
-  () => props.deleteSectionLabel ?? "删除当前条目"
-);
 const persistedDocument = computed(() =>
   Boolean(
     props.document.catalogDocumentId ||
@@ -795,139 +769,24 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <aside
-    class="editor-pane"
-    :class="{
-      'has-section-tabs': showSectionTabs,
-      'is-script-workspace': document.workspaceType === 'script'
-    }"
-    :data-workspace-type="document.workspaceType"
-    aria-label="文本内容"
-  >
-    <header class="editor-header">
-      <div class="editor-breadcrumbs" :title="document.path.join(' / ')">
-        <span v-for="(part, index) in document.path" :key="`${part}-${index}`">
-          {{ part }}<i v-if="index < document.path.length - 1">/</i>
-        </span>
-      </div>
-      <div class="editor-header-actions">
-        <span class="save-state" :class="{ 'is-dirty': visibleDirtySaveState }">
-          <AppIcon
-            :name="visibleDirtySaveState ? 'save' : 'check'"
-            :size="13"
-          />
-          {{
-            document.readOnly
-              ? "只读"
-              : locked
-                ? resolvedLockedLabel
-                : manualSaving
-                  ? "正在保存到本机"
-                  : autoSaveEnabled
-                    ? "自动保存已开启"
-                    : dirty
-                      ? "有未应用修改"
-                      : persistedDocument
-                        ? "已保存到本机"
-                        : "本次运行已应用"
-          }}
-        </span>
-        <button
-          v-if="rightPane !== false"
-          class="icon-button"
-          type="button"
-          aria-label="收起文本内容栏"
-          @click="emit('collapse')"
-        >
-          <AppIcon name="panel-right" :size="18" />
-        </button>
-        <button
-          v-else-if="rightPaneCollapsed"
-          class="icon-button"
-          type="button"
-          aria-label="展开智能体栏"
-          @click="emit('toggleRight')"
-        >
-          <AppIcon name="panel-right" :size="18" />
-        </button>
-      </div>
-    </header>
-
-    <nav
-      v-if="showSectionTabs"
-      class="section-tabs-bar"
-      :aria-label="resolvedSectionTabsLabel"
-    >
-      <div
-        class="section-tabs-scroll"
-        role="tablist"
-        @wheel="handleHorizontalOverflowWheel"
-      >
-        <button
-          v-for="section in sectionTabs ?? []"
-          :key="section.id"
-          class="section-tab"
-          :class="{ 'is-active': section.id === activeSectionId }"
-          type="button"
-          role="tab"
-          :aria-selected="section.id === activeSectionId"
-          :title="section.title"
-          @click="emit('selectSection', section.id)"
-        >
-          {{ section.title }}
-        </button>
-      </div>
-      <button
-        v-if="canCreateSection"
-        class="section-tabs-add"
-        type="button"
-        :aria-label="resolvedCreateSectionLabel"
-        :title="resolvedCreateSectionLabel"
-        :disabled="locked"
-        @click="emit('createSection')"
-      >
-        <AppIcon name="plus" :size="16" />
-      </button>
-      <button
-        v-if="showDeleteSection"
-        class="section-tabs-remove"
-        type="button"
-        :aria-label="resolvedDeleteSectionLabel"
-        :title="resolvedDeleteSectionLabel"
-        :disabled="locked || !canDeleteSection"
-        @click="emit('deleteSection')"
-      >
-        <AppIcon name="minus" :size="16" />
-      </button>
-    </nav>
+  <aside class="editor-pane" aria-label="文本内容">
+    <LibraryEditorHeader
+      :path="document.path"
+      :read-only="document.readOnly"
+      :locked="locked"
+      :locked-label="resolvedLockedLabel"
+      :manual-saving="manualSaving"
+      :auto-save-enabled="autoSaveEnabled"
+      :dirty="dirty"
+      :persisted-document="persistedDocument"
+      :visible-dirty-save-state="visibleDirtySaveState"
+      :right-pane="rightPane"
+      :right-pane-collapsed="rightPaneCollapsed"
+      @collapse="emit('collapse')"
+      @toggle-right="emit('toggleRight')"
+    />
 
     <div class="editor-toolbar">
-      <div
-        v-if="showDraftFileTabs"
-        class="draft-file-tabs"
-        role="tablist"
-        :aria-label="`${draftUnitLabel}文件`"
-      >
-        <button
-          type="button"
-          role="tab"
-          :aria-selected="document.draftFileKind === 'body'"
-          :class="{ 'is-active': document.draftFileKind === 'body' }"
-          @click="emit('selectDraftFile', 'body')"
-        >
-          正文
-        </button>
-        <button
-          type="button"
-          role="tab"
-          :aria-selected="document.draftFileKind === 'character-state'"
-          :class="{ 'is-active': document.draftFileKind === 'character-state' }"
-          @click="emit('selectDraftFile', 'character-state')"
-        >
-          人物状态
-        </button>
-      </div>
-      <span v-if="showDraftFileTabs" class="toolbar-separator" />
       <div class="view-tabs" role="tablist" aria-label="文本视图">
         <button
           type="button"

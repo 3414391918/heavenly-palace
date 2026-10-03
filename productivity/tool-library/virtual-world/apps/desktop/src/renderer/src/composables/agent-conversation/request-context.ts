@@ -13,24 +13,25 @@ type Context = Pick<
 type RequestContext =
   { contextSnapshot: WorkspaceRuntimeContext | undefined } | undefined;
 export function preparePromptContext(
-  ctx: Context,
-  api: DeepWriteApi,
+  _ctx: Context,
+  _api: DeepWriteApi,
   activeDocument: WorkspaceDocument | null,
-  workspaceDocuments: WorkspaceDocument[],
+  _workspaceDocuments: WorkspaceDocument[],
   attachments: WorkspaceContextAttachments,
   contextOverride: WorkspaceRuntimeContext | undefined,
   mode: "workspace" | "chat-assistant",
-  sendEpoch: number,
-  sendSessionId: string
+  _sendEpoch: number,
+  _sendSessionId: string
 ): RequestContext | Promise<RequestContext> {
   const originalLength = activeDocument?.content.length ?? 0;
-  const snapshotContent =
-    activeDocument &&
-    (activeDocument.workspaceType === "short" ||
-      activeDocument.workspaceType === "script") &&
-    activeDocument.stageId === "draft"
-      ? activeDocument.content
-      : (activeDocument?.content.slice(0, 20000) ?? "");
+  if (
+    mode === "workspace" &&
+    activeDocument?.domain === "creation" &&
+    !contextOverride
+  ) {
+    throw new Error("请选择小说创作空间后再发送");
+  }
+  const snapshotContent = activeDocument?.content.slice(0, 20000) ?? "";
   const contextSnapshot: WorkspaceRuntimeContext | undefined =
     mode === "chat-assistant"
       ? undefined
@@ -71,43 +72,6 @@ export function preparePromptContext(
     if (!contextSnapshot) return;
     contextSnapshot.libraryWorkspace =
       LibraryAgentWorkspaceSnapshotSchema.parse(attachments.libraryWorkspace);
-  }
-  if (
-    !contextOverride &&
-    contextSnapshot &&
-    activeDocument &&
-    (activeDocument.workspaceType === "short" ||
-      activeDocument.workspaceType === "script") &&
-    activeDocument.workspaceId &&
-    activeDocument.workspaceTitle &&
-    activeDocument.stageId
-  ) {
-    return (async () => {
-      const { buildCreativeWorkspaceContext, loadWritingContextForPrompt } =
-        await import("./creative-workspace-context");
-      if (ctx.epoch !== sendEpoch || ctx.sessionId.value !== sendSessionId)
-        return;
-      const creativeContext = buildCreativeWorkspaceContext(
-        activeDocument,
-        workspaceDocuments
-      );
-      if (creativeContext) {
-        const agentsMd = await loadWritingContextForPrompt(
-          api.catalog,
-          activeDocument.workspaceId!,
-          activeDocument.workspaceType!,
-          ctx.options.onContextWarning
-        );
-        if (ctx.epoch !== sendEpoch || ctx.sessionId.value !== sendSessionId)
-          return;
-        const creativeWorkspace =
-          creativeContext.scriptWorkspace ?? creativeContext.shortWorkspace;
-        if (creativeWorkspace && agentsMd !== undefined)
-          creativeWorkspace.agentsMd = agentsMd;
-        Object.assign(contextSnapshot, creativeContext);
-      }
-      return { contextSnapshot };
-    })();
   }
 
   return { contextSnapshot };

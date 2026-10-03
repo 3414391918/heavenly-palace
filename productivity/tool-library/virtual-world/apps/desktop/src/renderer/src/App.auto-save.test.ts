@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import source from "./WorkspaceShell.vue?raw";
+import source from "./test-support/workspaceShellSource";
 import featureModulesSource from "./components/WorkspaceFeatureModules.vue?raw";
 import autoSaveSource from "./composables/useEditorAutoSaveCoordinator.ts?raw";
 import featureHostCoordinatorSource from "./composables/useWorkspaceFeatureHostCoordinator.ts?raw";

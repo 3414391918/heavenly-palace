@@ -8,11 +8,11 @@ import volumeDialogSource from "./CreateLongVolumeDialog.vue?raw";
 import removalDialogSource from "./LongBookRemovalDialog.vue?raw";
 import migrationDialogSource from "./LongMigrationReportDialog.vue?raw";
 import structureDialogSource from "./LongStructureDialog.vue?raw";
-import structureManagerSource from "./LongStructureManager.vue?raw";
+import structureManagerSource from "./LongStructureFormDialog.vue?raw";
 import workspaceEditorSource from "./LongEditorDeleteDialogs.vue?raw";
 
 describe("long-form dialog backdrops", () => {
-  it("reuse the same backdrop treatment as short-form dialogs", () => {
+  it("reuse the shared backdrop treatment", () => {
     for (const source of [
       chapterCardDialogSource,
       deleteDraftSectionDialogSource,

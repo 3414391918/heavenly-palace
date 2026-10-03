@@ -193,7 +193,7 @@ export function createLongStructureTree(
   } | null> {
     const bookId = node.longBookId;
     if (!bookId || node.workspaceType !== "long") {
-      uiMessage.warning(`当前长篇尚未准备好${actionLabel}。`);
+      uiMessage.warning(`当前小说尚未准备好${actionLabel}。`);
       return null;
     }
     if (activeLongBookId.value !== bookId) {
@@ -205,7 +205,7 @@ export function createLongStructureTree(
     const summary = activeLongBookSummary.value;
     const index = activeLongWorkspaceIndex.value;
     if (!summary || !index || summary.id !== bookId) {
-      uiMessage.warning(`当前长篇尚未准备好${actionLabel}。`);
+      uiMessage.warning(`当前小说尚未准备好${actionLabel}。`);
       return null;
     }
     return { bookId, summary, index };
@@ -236,7 +236,7 @@ export function createLongStructureTree(
       if (target.kind === "volume") {
         const bookId = node.longBookId;
         if (!bookId || node.workspaceType !== "long") {
-          uiMessage.warning("当前长篇尚未准备好新建分卷。");
+          uiMessage.warning("当前小说尚未准备好新建分卷。");
           return;
         }
         await openLongVolumeCreateInternal(requestId, {

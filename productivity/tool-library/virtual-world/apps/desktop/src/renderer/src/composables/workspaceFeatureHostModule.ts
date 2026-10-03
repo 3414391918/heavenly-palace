@@ -1,4 +1,3 @@
-import type { MarketplaceSession } from "@deepwrite/contracts";
 import type { WorkspaceFeatureModule } from "../components/WorkspaceFeatureModules.types";
 import type {
   ActiveFeature,
@@ -11,7 +10,6 @@ export function buildWorkspaceFeatureModule(
   feature: ActiveFeature,
   options: WorkspaceFeatureHostCoordinatorOptions,
   agentTeamNavigationEpoch: number,
-  marketplaceSession: MarketplaceSession | null,
   buildSettingsModule?: typeof buildSettingsFeatureModule
 ): WorkspaceFeatureModule | null {
   const { settingsStore } = options;
@@ -52,18 +50,6 @@ export function buildWorkspaceFeatureModule(
         testingModelId: settingsStore.testingModelId,
         alertMessages: settingsStore.modelAlertMessages
       };
-    case "imitation":
-      return {
-        kind: "imitation",
-        controller: options.features.learningImitation.controller.value,
-        models: settingsStore.modelSettings?.models ?? [],
-        catalogSnapshot: options.catalogSnapshot.value,
-        approvalMode: settingsStore.generalSettings.permissionMode,
-        learningImitationSettings: settingsStore.learningImitationSettings,
-        learningImitationLoading: settingsStore.learningImitationLoading,
-        learningImitationSaving: settingsStore.learningImitationSaving,
-        runtimeAvailable: Boolean(options.api())
-      };
     case "revision-analysis":
       return {
         kind: "revision-analysis",
@@ -71,54 +57,8 @@ export function buildWorkspaceFeatureModule(
         models: modelSelectionSettings?.models ?? [],
         catalogSnapshot: options.catalogSnapshot.value
       };
-    case "short-book-analysis":
-      return {
-        kind: "short-book-analysis",
-        controller: options.features.shortBookAnalysis.controller.value,
-        models: settingsStore.modelSettings?.models ?? [],
-        catalogSnapshot: options.catalogSnapshot.value
-      };
-    case "long-book-analysis":
-      return {
-        kind: "long-book-analysis",
-        controller: options.features.longBookAnalysis.controller.value,
-        models: settingsStore.modelSettings?.models ?? [],
-        catalogSnapshot: options.catalogSnapshot.value
-      };
-    case "style-comparison":
-      return {
-        kind: "style-comparison",
-        models: modelSelectionSettings?.models ?? [],
-        preferredModelId: modelSelectionSettings?.defaultModelId ?? null
-      };
-    case "marketplace":
-      return {
-        kind: "marketplace",
-        catalogSnapshot: options.catalogSnapshot.value,
-        session: marketplaceSession
-      };
-    case "device-sync":
-      return {
-        kind: "device-sync",
-        prepareSync: () =>
-          options.actions.prepareDeviceSync?.() ?? Promise.resolve(false),
-        refreshSync: () => refreshDeviceSyncFeature(options)
-      };
-    case "cloud-backup":
-      return { kind: "cloud-backup" };
-    case "zhuque-detection":
-      return { kind: "zhuque-detection" };
     case "conversation":
     case "long-workspace":
       return null;
   }
-}
-
-async function refreshDeviceSyncFeature(
-  options: WorkspaceFeatureHostCoordinatorOptions
-): Promise<void> {
-  await options.loaders.loadCatalogSnapshot();
-  await options.loaders.loadSyncLongBooks?.();
-  const id = options.view.activeLongBookId.value;
-  if (id) await options.loaders.refreshSyncLongBook?.(id);
 }

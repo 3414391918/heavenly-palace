@@ -109,7 +109,7 @@ const actionItems = computed<
           },
           {
             id: "refresh-long-books",
-            label: "刷新长篇列表",
+            label: "刷新小说列表",
             icon: "history"
           }
         ] as const)

@@ -162,7 +162,7 @@ onBeforeUnmount(() => document.removeEventListener("keydown", handleKeydown));
       >
         <header class="long-structure-dialog-header">
           <div>
-            <span>长篇设置</span>
+            <span>小说设置</span>
             <strong id="long-structure-dialog-title">
               {{ bookTitle }} · 结构管理
             </strong>

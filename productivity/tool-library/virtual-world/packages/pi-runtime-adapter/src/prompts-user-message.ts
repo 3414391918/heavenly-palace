@@ -18,7 +18,7 @@ export function buildRawUserText(input: AgentRunInput): string {
         `--- ${attachment.name} (${attachment.mediaType}) ---`,
         attachment.content,
         attachment.truncated
-          ? `[DeepWrite：附件文本已截断；原文 ${attachment.originalLength?.toLocaleString("zh-CN") ?? "超过限制"} 个字符。]`
+          ? `[虚拟世界：附件文本已截断；原文 ${attachment.originalLength?.toLocaleString("zh-CN") ?? "超过限制"} 个字符。]`
           : ""
       );
     }

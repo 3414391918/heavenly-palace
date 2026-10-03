@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import source from "./WorkspaceShell.vue?raw";
+import source from "./test-support/workspaceShellSource";
 import longWorkspaceSource from "./components/LongWorkspaceModule.vue?raw";
 import writingWorkspaceSource from "./components/WritingWorkspaceModule.vue?raw";
 // @ts-expect-error Loaded as source text by the Vitest-only virtual module.
@@ -8,7 +8,7 @@ import coordinatorSource from "./composables/useGeneralSettingsCoordinator.ts?ra
 import lifecycleSource from "./composables/useWorkspaceLifecycleCoordinator.ts?raw";
 import registryPreferencesSource from "./composables/conversationRegistryPreferences.ts?raw";
 import runtimeRegistrySource from "./composables/useConversationRuntimeRegistryCoordinator.ts?raw";
-import shortConversationSource from "./composables/useShortConversationCoordinator.ts?raw";
+import shortConversationSource from "./composables/useLibraryConversationCoordinator.ts?raw";
 import longConversationSource from "./composables/useLongConversationCoordinator.ts?raw";
 
 describe("App general settings integration", () => {

@@ -505,7 +505,7 @@ describe("useLongWorkspacePresentationCoordinator", () => {
 
     proposalApprovalPending.value = true;
     expect(coordinator.longEditorLockedReason.value).toBe(
-      "正在应用长篇提案，编辑暂时锁定"
+      "正在应用小说提案，编辑暂时锁定"
     );
     sendPreflightPending.value = true;
     expect(coordinator.longEditorLockedReason.value).toBe(
@@ -518,7 +518,7 @@ describe("useLongWorkspacePresentationCoordinator", () => {
       error: null
     };
     expect(coordinator.longEditorLockedReason.value).toBe(
-      "正在同步长篇工作区，编辑暂时锁定"
+      "正在同步小说工作区，编辑暂时锁定"
     );
   });
 

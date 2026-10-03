@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { AgentTeamConfigStore } from "./agent-team-config-store";
 import {
   AgentTeamPackageManifestSchema,
-  DEFAULT_AGENT_TEAM_SETTINGS,
+  DEFAULT_LONG_AGENT_TEAM_SETTINGS,
   BuiltinSubagentSettingsSchema,
   defaultBuiltinSubagentSettings
 } from "@deepwrite/contracts";
@@ -25,8 +25,8 @@ describe("independent built-in subagent settings", () => {
             {
               id: "original",
               name: "原有团队",
-              workspaceType: "short",
-              settings: DEFAULT_AGENT_TEAM_SETTINGS
+              workspaceType: "long",
+              settings: DEFAULT_LONG_AGENT_TEAM_SETTINGS
             }
           ]
         })
@@ -42,8 +42,7 @@ describe("independent built-in subagent settings", () => {
       settings.material.description = "用户要求记录素材时调用";
       await store.saveBuiltins(settings);
       const added = await store.create({
-        name: "另一个团队",
-        workspaceType: "script"
+        name: "另一个团队"
       });
       const addedTeam = added.teams.find((team) => team.name === "另一个团队")!;
       await store.setEnabled({ teamId: addedTeam.id, enabled: true });

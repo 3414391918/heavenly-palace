@@ -8,14 +8,11 @@ import {
   type CommandResult,
   type LongAgentProfile,
   type MaterialReadScope,
-  type ShortWorkspaceAgentProfile,
-  type ScriptWorkspaceAgentProfile,
   type WorkspaceRuntimeContext
 } from "@deepwrite/contracts";
 
 interface MaterialRunInput {
   workspaceContext?: WorkspaceRuntimeContext | undefined;
-  agentProfile?: ShortWorkspaceAgentProfile | ScriptWorkspaceAgentProfile;
   longAgentProfile?: LongAgentProfile;
   snapshotMode?: boolean;
 }
@@ -32,14 +29,7 @@ export function resolveMaterialReadScope(
       kinds: input.longAgentProfile.readAccess.materialKinds
     });
   }
-  const writing = workspace?.scriptWorkspace ?? workspace?.shortWorkspace;
-  if (!writing || !input.agentProfile) return undefined;
-  return MaterialReadScopeSchema.parse({
-    bookId: writing.id,
-    bookType: workspace?.scriptWorkspace ? "script" : "short",
-    stageId: writing.activeStageId,
-    kinds: input.agentProfile.readAccess.material
-  });
+  return undefined;
 }
 
 /** Replaces any Renderer-supplied catalog with a Core projection under Main's scope. */
@@ -83,7 +73,7 @@ export async function prepareMaterialRunContext(
   for (const entry of listed.entries) {
     const result = await query("read", entry.id);
     if (result.status !== "ok" || result.content === undefined) continue;
-    const marker = "\n\n[DeepWrite：素材超过附件容量，内容已截断。]";
+    const marker = "\n\n[虚拟世界：素材超过附件容量，内容已截断。]";
     const content =
       result.content.length > 100_000
         ? result.content.slice(0, 100_000 - marker.length) + marker

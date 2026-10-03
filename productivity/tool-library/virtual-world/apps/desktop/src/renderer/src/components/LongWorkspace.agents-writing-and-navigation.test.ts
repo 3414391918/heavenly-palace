@@ -51,9 +51,9 @@ describe("long-form renderer vertical slice: agents-writing-and-navigation", () 
       longWorkspaceResourceTreeSource.indexOf("...(worldRevealSelection")
     );
     expect(resourceTreeCoordinatorSource).toContain("selectableBranch: true");
-    expect(resourceTreeCoordinatorSource).toContain('badge: "长篇"');
+    expect(resourceTreeCoordinatorSource).not.toContain('badge: "小说"');
     expect(resourceTreeCoordinatorSource).not.toContain(
-      "badge: `长篇 · ${book.genre}`"
+      "badge: `小说 · ${book.genre}`"
     );
     expect(longStructureTransactionsSource).toContain(
       "node.longWorkspaceSelection"
@@ -236,7 +236,7 @@ describe("long-form renderer vertical slice: agents-writing-and-navigation", () 
       "state.refreshStatus.value = {"
     );
     expect(appSource).toContain("retryActiveLongWorkspaceRefresh");
-    expect(longWorkspaceModuleSource).toContain("长篇智能体已暂停发送");
+    expect(longWorkspaceModuleSource).toContain("小说智能体已暂停发送");
     expect(longWorkspaceModuleSource).toContain('v-if="refreshStatus?.error"');
     expect(appSource).not.toContain(
       'activeLongWorkspaceRefreshStatus.pending\n                    ? "正在同步保存后的最新工作区索引…"'
@@ -312,9 +312,7 @@ describe("long-form renderer vertical slice: agents-writing-and-navigation", () 
     expect(presentationCoordinatorSource).toContain(
       "options.long.selection.value?.chapterCardId"
     );
-    expect(agentRunPreferencesSource).toContain(
-      "shortBookConversationKey(document.workspaceId)"
-    );
+    expect(agentRunPreferencesSource).not.toContain("shortBookConversationKey");
   });
 
   it("does not expose the removed long-form rollback surface", () => {

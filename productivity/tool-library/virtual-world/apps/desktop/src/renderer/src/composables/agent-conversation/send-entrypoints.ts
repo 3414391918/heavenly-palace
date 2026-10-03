@@ -58,7 +58,7 @@ export async function sendLongMessage(
       id: longWorkspace.bookId,
       domain: "creation",
       title: longWorkspace.title,
-      eyebrow: "长篇创作",
+      eyebrow: "小说创作",
       path: [longWorkspace.title],
       content: "",
       readOnly: true
@@ -85,7 +85,7 @@ export async function resendLongMessage(
       id: longWorkspace.bookId,
       domain: "creation",
       title: longWorkspace.title,
-      eyebrow: "长篇创作",
+      eyebrow: "小说创作",
       path: [longWorkspace.title],
       content: "",
       readOnly: true

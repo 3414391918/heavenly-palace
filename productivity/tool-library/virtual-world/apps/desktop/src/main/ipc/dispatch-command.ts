@@ -1,4 +1,3 @@
-import { handleBookTemplateCommands } from "./book-template-commands";
 import { handleChatAssistantConfigCommands } from "./chat-assistant-config-commands";
 import { handleConversationExportCommands } from "./conversation-export-commands";
 import {
@@ -6,6 +5,7 @@ import {
   type CommandEnvelope,
   type CommandResult
 } from "@deepwrite/contracts";
+import { handleAgentTeamCommands } from "./agent-team-commands";
 import { handleCatalogCommands } from "./catalog-commands";
 import type { IpcCommandContext } from "./command-types";
 import { isForbiddenRendererCommand } from "./forbidden-commands";
@@ -43,9 +43,13 @@ export async function dispatchCommand(
   }
 
   const result =
+    ctx.rendererStateFlush.handleCommand(ctx.senderWebContentsId, command) ??
     (await handleChapterImageCommands(ctx, command)) ??
     (await handleCharacterAssetCommands(ctx, command)) ??
-    (await handleBookTemplateCommands(ctx, command)) ??
+    (command.type.startsWith("revisionAnalysisSettings.")
+      ? await ctx.requireRevisionAnalysisConfigStore().handle(command)
+      : undefined) ??
+    (await handleAgentTeamCommands(ctx, command)) ??
     (await handleManuscriptCommands(ctx, command)) ??
     (await handleSettingsCommands(ctx, command)) ??
     (await handleChatAssistantConfigCommands(ctx, command)) ??
@@ -58,5 +62,7 @@ export async function dispatchCommand(
   if (result) {
     return result;
   }
-  throw new Error("Unreachable command variant after schema validation.");
+  throw new Error(
+    `Unreachable command variant after schema validation: ${command.type}.`
+  );
 }

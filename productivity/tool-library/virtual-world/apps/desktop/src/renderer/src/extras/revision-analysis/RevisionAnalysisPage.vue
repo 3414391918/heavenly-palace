@@ -8,8 +8,8 @@ import {
   type CatalogSnapshot
 } from "@deepwrite/contracts/renderer";
 import PopupSelect from "../../components/PopupSelect.vue";
-import AnalysisProcessPanel from "../long-book-analysis/AnalysisProcessPanel.vue";
-import { analysisThinkingOptions } from "../long-book-analysis/task-options";
+import AnalysisProcessPanel from "./AnalysisProcessPanel.vue";
+import { analysisThinkingOptions } from "./thinkingOptions";
 import { uiMessage } from "../../ui-feedback";
 import RevisionDiffList from "./RevisionDiffList.vue";
 import RevisionResultPanel from "./RevisionResultPanel.vue";

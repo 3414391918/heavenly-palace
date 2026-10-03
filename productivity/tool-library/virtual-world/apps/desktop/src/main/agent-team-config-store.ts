@@ -13,8 +13,6 @@ import {
   AgentTeamProfileSetEnabledInputSchema,
   AgentTeamProfileTargetInputSchema,
   LongAgentIdSchema,
-  ScriptWorkspaceAgentIdSchema,
-  ShortWorkspaceAgentIdSchema,
   type AgentTeamCatalogSnapshot,
   type AgentTeamProfile,
   type AgentTeamProfileCreateInput,
@@ -24,7 +22,7 @@ import {
   type AgentTeamProfileTargetInput,
   type AgentTeamWorkspaceType,
   type ShortAgentSubagentDefinition,
-  type WorkspaceAgentId
+  type LongAgentId
 } from "@deepwrite/contracts";
 import {
   AGENT_TEAM_CATALOG_DISK_VERSION,
@@ -46,23 +44,17 @@ function cloneSnapshot(
 
 export class AgentTeamConfigStore {
   private readonly settingsPath: string;
-  private readonly legacyShortPath: string;
-  private readonly legacyScriptPath: string;
   private readonly legacyLongPath: string;
   private writeChain: Promise<void> = Promise.resolve();
 
   constructor(userDataPath: string) {
     const configRoot = join(userDataPath, "config");
     this.settingsPath = join(configRoot, "agent-team-profiles.json");
-    this.legacyShortPath = join(configRoot, "agent-teams.json");
-    this.legacyScriptPath = join(configRoot, "agent-teams-script.json");
     this.legacyLongPath = join(configRoot, "long-agent-teams.json");
   }
 
   private async readLegacyFiles(): Promise<AgentTeamCatalogSnapshot> {
     return createCatalogFromLegacyFiles({
-      short: this.legacyShortPath,
-      script: this.legacyScriptPath,
       long: this.legacyLongPath
     });
   }
@@ -139,9 +131,7 @@ export class AgentTeamConfigStore {
     const input = AgentTeamProfileCreateInputSchema.parse(rawInput);
     return this.mutate((snapshot) => {
       this.assertUniqueName(snapshot, input.name);
-      snapshot.teams.push(
-        createAgentTeamProfile(input.workspaceType, input.name)
-      );
+      snapshot.teams.push(createAgentTeamProfile(input.name));
     });
   }
 
@@ -165,7 +155,7 @@ export class AgentTeamConfigStore {
         throw new Error("已启用的团队不能删除，请先关闭该团队。");
       }
       if (snapshot.teams.length === 1)
-        throw new Error("至少需要保留一个智能体团队。");
+        throw new Error("至少需要保留一个子智能体团队。");
       snapshot.teams = snapshot.teams.filter(
         (candidate) => candidate.id !== team.id
       );
@@ -191,10 +181,7 @@ export class AgentTeamConfigStore {
     const input = AgentTeamProfileSaveInputSchema.parse(rawInput);
     return this.mutate((snapshot) => {
       const team = this.requireTeam(snapshot, input.teamId);
-      if (team.workspaceType !== input.settings.workspaceType) {
-        throw new Error("团队类型与保存的配置类型不一致。");
-      }
-      team.settings = input.settings as never;
+      team.settings = input.settings;
     });
   }
 
@@ -222,7 +209,6 @@ export class AgentTeamConfigStore {
     let installedId = "";
     const catalog = await this.mutate((snapshot) => {
       const installed = createAgentTeamProfile(
-        profile.workspaceType,
         this.availableImportedName(snapshot, profile.name),
         profile.settings
       );
@@ -237,18 +223,13 @@ export class AgentTeamConfigStore {
 
   async resolve(
     workspaceType: AgentTeamWorkspaceType,
-    rawParentAgentId: WorkspaceAgentId | "long"
+    rawParentAgentId: LongAgentId
   ): Promise<ShortAgentSubagentDefinition[]> {
     const snapshot = await this.list();
     const enabledId = snapshot.enabledTeamIds[workspaceType];
     if (!enabledId) return [];
     const team = this.requireTeam(snapshot, enabledId);
-    const parentAgentId =
-      workspaceType === "long"
-        ? LongAgentIdSchema.parse(rawParentAgentId)
-        : workspaceType === "script"
-          ? ScriptWorkspaceAgentIdSchema.parse(rawParentAgentId)
-          : ShortWorkspaceAgentIdSchema.parse(rawParentAgentId);
+    const parentAgentId = LongAgentIdSchema.parse(rawParentAgentId);
     return (
       team.settings.teams
         .find((candidate) => candidate.parentAgentId === parentAgentId)
@@ -262,7 +243,7 @@ export class AgentTeamConfigStore {
     teamId: string
   ): AgentTeamProfile {
     const team = snapshot.teams.find((candidate) => candidate.id === teamId);
-    if (!team) throw new Error("智能体团队不存在或已被删除。");
+    if (!team) throw new Error("子智能体团队不存在或已被删除。");
     return team;
   }
 
@@ -278,7 +259,7 @@ export class AgentTeamConfigStore {
           team.id !== excludedId && team.name.toLocaleLowerCase() === normalized
       )
     ) {
-      throw new Error(`智能体团队名称“${name}”已存在。`);
+      throw new Error(`子智能体团队名称“${name}”已存在。`);
     }
   }
 

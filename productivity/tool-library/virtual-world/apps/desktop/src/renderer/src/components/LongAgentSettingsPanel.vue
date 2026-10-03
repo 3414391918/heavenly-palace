@@ -166,7 +166,7 @@ function resetActiveAgent(): void {
       skillKinds: [...builtin.readAccess.skillKinds]
     }
   };
-  uiMessage.info("长篇智能体已恢复内置值；点击保存后生效。");
+  uiMessage.info("主智能体已恢复内置值；点击保存后生效。");
 }
 
 function saveSettings(): void {
@@ -176,7 +176,7 @@ function saveSettings(): void {
     if (!agent) return null;
     const shortcuts = agent.welcomeShortcuts.map((value) => value.trim());
     if (shortcuts.length !== 3 || shortcuts.some((value) => !value)) {
-      uiMessage.warning("长篇智能体的三个欢迎快捷按钮都不能为空");
+      uiMessage.warning("主智能体的三个欢迎快捷按钮都不能为空");
       return null;
     }
     return {
@@ -202,9 +202,7 @@ function saveSettings(): void {
     agents
   });
   if (!parsed.success) {
-    uiMessage.warning(
-      parsed.error.issues[0]?.message ?? "长篇智能体设置不完整"
-    );
+    uiMessage.warning(parsed.error.issues[0]?.message ?? "主智能体设置不完整");
     return;
   }
   emit("save", parsed.data);
@@ -213,10 +211,10 @@ function saveSettings(): void {
 
 <template>
   <div v-if="loading" class="panel-state" aria-live="polite">
-    正在加载长篇智能体设置…
+    正在加载主智能体设置…
   </div>
   <div v-else-if="loadError" class="panel-state" role="alert">
-    <strong>长篇智能体设置未加载</strong>
+    <strong>主智能体设置未加载</strong>
     <p>{{ loadError }}</p>
     <button
       type="button"
@@ -228,13 +226,13 @@ function saveSettings(): void {
     </button>
   </div>
   <div v-else-if="!settings || !activeAgent" class="panel-state">
-    暂无可用的长篇智能体设置。
+    暂无可用的主智能体设置。
   </div>
   <div v-else class="long-agent-settings-layout">
     <div class="agent-editor">
       <header class="agent-header">
-        <span>长篇</span>
-        <h3>{{ activeProfile?.label ?? "长篇智能体" }}</h3>
+        <span>小说</span>
+        <h3>{{ activeProfile?.label ?? "主智能体" }}</h3>
         <p>{{ activeProfile?.description }}</p>
       </header>
 
@@ -242,7 +240,7 @@ function saveSettings(): void {
         <div class="section-heading">
           <div>
             <h4>系统提示词</h4>
-            <p>作品、当前位置和已授权长篇工具会在运行时自动补充。</p>
+            <p>作品、当前位置和已授权小说工具会在运行时自动补充。</p>
           </div>
           <span>{{ activeAgent.systemPrompt.length }} 字符</span>
         </div>
@@ -250,8 +248,8 @@ function saveSettings(): void {
           v-model="activeAgent.systemPrompt"
           :disabled="formDisabled"
           spellcheck="false"
-          aria-label="长篇智能体系统提示词"
-          placeholder="输入当前长篇智能体的系统提示词…"
+          aria-label="主智能体系统提示词"
+          placeholder="输入当前主智能体的系统提示词…"
         />
       </section>
 
@@ -274,7 +272,7 @@ function saveSettings(): void {
               type="text"
               maxlength="200"
               :disabled="formDisabled"
-              :aria-label="`长篇欢迎快捷按钮 ${index + 1}`"
+              :aria-label="`小说欢迎快捷按钮 ${index + 1}`"
             />
           </label>
         </div>
@@ -386,220 +384,11 @@ function saveSettings(): void {
           :disabled="formDisabled || !hasCompleteDraft"
           @click="saveSettings"
         >
-          {{ saving ? "保存中…" : "保存长篇智能体设置" }}
+          {{ saving ? "保存中…" : "保存主智能体设置" }}
         </button>
       </footer>
     </div>
   </div>
 </template>
 
-<style scoped>
-.panel-state {
-  padding: 28px;
-  border: 1px solid var(--theme-line-soft);
-  border-radius: 12px;
-  background: var(--surface-raised);
-  color: var(--text-secondary);
-}
-
-.long-agent-settings-layout {
-  display: grid;
-  gap: 18px;
-  align-items: start;
-}
-
-.agent-editor {
-  display: grid;
-  gap: 14px;
-  min-width: 0;
-}
-
-.agent-header span,
-.section-heading span {
-  color: var(--text-tertiary);
-  font-size: 12px;
-}
-
-.agent-header h3 {
-  margin: 4px 0;
-  color: var(--text-primary);
-  font-size: 20px;
-}
-
-.agent-header p,
-.section-heading p {
-  margin: 0;
-  color: var(--text-secondary);
-  line-height: 1.55;
-}
-
-.settings-card {
-  padding: 16px;
-  border: 1px solid var(--theme-line-soft);
-  border-radius: 12px;
-  background: var(--surface-raised);
-}
-
-.section-heading {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 12px;
-}
-
-.section-heading h4 {
-  margin: 0 0 4px;
-  color: var(--text-primary);
-  font-size: 15px;
-}
-
-textarea,
-input[type="text"] {
-  box-sizing: border-box;
-  width: 100%;
-  border: 1px solid var(--theme-line);
-  border-radius: 9px;
-  outline: none;
-  background: var(--surface-main);
-  color: var(--text-primary);
-  font: inherit;
-}
-
-textarea {
-  min-height: 230px;
-  padding: 12px;
-  resize: vertical;
-  line-height: 1.55;
-}
-
-input[type="text"] {
-  min-height: 38px;
-  padding: 8px 10px;
-}
-
-textarea:focus,
-input[type="text"]:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
-}
-
-.welcome-shortcut-list {
-  display: grid;
-  gap: 10px;
-}
-
-.welcome-shortcut-field {
-  display: grid;
-  grid-template-columns: 70px minmax(0, 1fr);
-  gap: 10px;
-  align-items: center;
-  color: var(--text-secondary);
-}
-
-fieldset {
-  margin: 14px 0 0;
-  padding: 0;
-  border: 0;
-}
-
-legend {
-  margin-bottom: 8px;
-  color: var(--text-primary);
-  font-weight: 600;
-}
-
-.option-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.read-option {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 9px;
-  align-items: start;
-  padding: 10px;
-  border: 1px solid var(--theme-line-soft);
-  border-radius: 9px;
-  background: var(--surface-main);
-}
-
-.read-option span,
-.read-option strong,
-.read-option small {
-  display: block;
-}
-
-.read-option strong {
-  color: var(--text-primary);
-}
-
-.read-option small {
-  margin-top: 3px;
-  color: var(--text-tertiary);
-  line-height: 1.4;
-}
-
-.immutable-label {
-  margin: 10px 0 8px;
-  color: var(--text-tertiary);
-  font-size: 12px;
-  line-height: 1.5;
-}
-
-.immutable-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-}
-
-.immutable-list span {
-  padding: 5px 9px;
-  border: 1px solid var(--theme-line-soft);
-  border-radius: 999px;
-  background: var(--surface-muted);
-  color: var(--text-secondary);
-  font-size: 12px;
-}
-
-.panel-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-.secondary-button,
-.primary-button {
-  min-height: 38px;
-  padding: 8px 14px;
-  border-radius: 9px;
-  font: inherit;
-  cursor: pointer;
-}
-
-.secondary-button {
-  border: 1px solid var(--theme-line);
-  background: var(--surface-raised);
-  color: var(--text-primary);
-}
-
-.primary-button {
-  border: 1px solid var(--text-primary);
-  background: var(--text-primary);
-  color: var(--surface-main);
-}
-
-button:disabled,
-textarea:disabled,
-input:disabled {
-  cursor: not-allowed;
-  opacity: 0.58;
-}
-
-@media (max-width: 760px) {
-  .option-grid {
-    grid-template-columns: 1fr;
-  }
-}
-</style>
+<style scoped src="./LongAgentSettingsPanel.css"></style>

@@ -5,8 +5,10 @@ export function validateSmokeSummary(summary, reopened) {
   if (
     summary.health?.status !== "ok" ||
     summary.health?.workers?.length !== 3 ||
-    summary.bookTemplates?.status !== "ok" ||
-    summary.bookTemplates?.created !== 4 ||
+    summary.unifiedCreation?.status !== "ok" ||
+    summary.unifiedCreation?.created !== true ||
+    summary.unifiedCreation?.team !== true ||
+    summary.unifiedCreation?.retiredApisAbsent !== true ||
     summary.agent?.status !== "ok" ||
     summary.agent?.runtime?.mode !== "local-faux" ||
     summary.agent?.completed !== true ||

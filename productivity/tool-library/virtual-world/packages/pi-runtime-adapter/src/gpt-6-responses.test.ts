@@ -1,13 +1,13 @@
 import type { AgentProviderRuntimeConfig } from "@deepwrite/contracts";
 import { describe, expect, it } from "vitest";
 import { buildProviderRuntime } from "./provider-runtime";
-import { buildShortWorkspaceTools } from "./short-agent-tools";
 import {
   resultText,
-  shortProfile,
-  shortWorkspace,
+  fixtureIndex,
+  documentExecutor,
+  longTools,
   toolByName
-} from "./short-agent-tools.test-support";
+} from "./long-agent-tools.test-support";
 
 function modelConfig(
   provider = "openai",
@@ -40,10 +40,7 @@ describe("GPT-6 Responses compatibility", () => {
     ["custom", "gateway-gpt-6-luna"]
   ])("keeps read arguments optional for %s/%s", async (provider, modelId) => {
     const read = toolByName(
-      buildShortWorkspaceTools({
-        workspace: shortWorkspace(),
-        profile: shortProfile()
-      }),
+      longTools({ executor: documentExecutor(fixtureIndex()) }),
       "read"
     );
     const originalParameters = structuredClone(read.parameters);
@@ -79,7 +76,7 @@ describe("GPT-6 Responses compatibility", () => {
         {
           name: "read",
           strict: false,
-          parameters: { required: ["kind", "id"] }
+          parameters: { required: ["id"] }
         }
       ],
       reasoning: { effort: "high" }
@@ -88,18 +85,10 @@ describe("GPT-6 Responses compatibility", () => {
     expect(
       resultText(
         await read.execute("read-overview", {
-          kind: "character_overview",
-          id: "character_design"
+          id: "character_overview"
         })
       )
-    ).toContain("kind: character_overview");
-    await expect(
-      read.execute("invalid-overview", {
-        kind: "character_overview",
-        id: "character_design",
-        include_all_sections: true
-      })
-    ).rejects.toThrow("include_all_sections 仅用于 kind=draft、id=draft。");
+    ).toContain("character_overview");
   });
 
   it.each(["gpt-6-astra", "gpt-6-sol", "gpt-6-luna"])(

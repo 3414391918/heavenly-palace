@@ -15,11 +15,8 @@ import {
   type LongAgentSettingsInputAgent
 } from "@deepwrite/contracts";
 
-/**
- * Version 3 installs the unified English long-agent prompt for every upgraded
- * user. Older payloads are intentionally replaced with the builtin defaults;
- * settings saved after the upgrade continue to be honoured normally.
- */
+import { LEGACY_LONG_AGENT_SYSTEM_PROMPT } from "./legacy-long-agent-default-prompt";
+
 export const LONG_AGENT_SETTINGS_DISK_VERSION = 3 as const;
 
 interface DiskLongAgentSettings extends LongAgentSettingsInput {
@@ -137,10 +134,7 @@ function normalizeReadAccess(
 function parseDiskSettings(raw: unknown): LongAgentSettingsInput {
   if (raw === undefined) return defaultsAsInput();
   if (!isRecord(raw)) {
-    throw new Error("长篇智能体配置内容无效，已停止加载以避免覆盖原文件。");
-  }
-  if (raw.version !== LONG_AGENT_SETTINGS_DISK_VERSION) {
-    return defaultsAsInput();
+    throw new Error("主智能体配置内容无效，已停止加载以避免覆盖原文件。");
   }
   const { version: _version, ...rawSettings } = raw;
   const parsed = LongAgentSettingsInputSchema.safeParse(
@@ -149,14 +143,20 @@ function parseDiskSettings(raw: unknown): LongAgentSettingsInput {
   if (!parsed.success) {
     const issue = parsed.error.issues[0];
     throw new Error(
-      `长篇智能体配置内容无效，已停止加载以避免覆盖原文件${
+      `主智能体配置内容无效，已停止加载以避免覆盖原文件${
         issue ? `：${issue.path.join(".") || "root"} ${issue.message}` : "。"
       }`
     );
   }
   return {
     workspaceType: "long",
-    agents: parsed.data.agents.map(cloneInputAgent)
+    agents: parsed.data.agents.map((agent) => ({
+      ...cloneInputAgent(agent),
+      systemPrompt:
+        agent.systemPrompt === LEGACY_LONG_AGENT_SYSTEM_PROMPT
+          ? getDefaultLongAgentProfile(agent.id).systemPrompt
+          : agent.systemPrompt
+    }))
   };
 }
 
@@ -173,8 +173,13 @@ export class LongAgentConfigStore {
   }
 
   async list(): Promise<LongAgentSettings> {
-    await this.writeChain;
-    return this.toPublicSettings(await this.readInput());
+    let settings: LongAgentSettings | undefined;
+    const operation = this.writeChain.then(async () => {
+      settings = this.toPublicSettings(await this.readInput());
+    });
+    this.trackWrite(operation);
+    await operation;
+    return settings!;
   }
 
   async save(rawInput: LongAgentSettingsInput): Promise<LongAgentSettings> {
@@ -214,7 +219,7 @@ export class LongAgentConfigStore {
         };
         const index = next.agents.findIndex((agent) => agent.id === agentId);
         if (index < 0) {
-          throw new Error(`长篇智能体配置缺少角色：${agentId}`);
+          throw new Error(`主智能体配置缺少角色：${agentId}`);
         }
         next.agents[index] = replacement;
       }
@@ -244,7 +249,20 @@ export class LongAgentConfigStore {
   }
 
   private async readInput(): Promise<LongAgentSettingsInput> {
-    return parseDiskSettings(await readJson(this.settingsPath));
+    const raw = await readJson(this.settingsPath);
+    const input = parseDiskSettings(raw);
+    if (
+      isRecord(raw) &&
+      Array.isArray(raw.agents) &&
+      raw.agents.some(
+        (agent) =>
+          isRecord(agent) &&
+          agent.systemPrompt === LEGACY_LONG_AGENT_SYSTEM_PROMPT
+      )
+    ) {
+      await this.writeInput(input);
+    }
+    return input;
   }
 
   private async writeInput(input: LongAgentSettingsInput): Promise<void> {

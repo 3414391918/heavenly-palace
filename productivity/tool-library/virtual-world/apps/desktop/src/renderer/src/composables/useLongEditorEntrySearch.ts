@@ -38,7 +38,7 @@ export function useLongEditorEntrySearch(options: {
   const search = useEditorEntrySearch({
     async search(query) {
       const api = options.api();
-      if (!api) throw new Error("当前环境无法搜索长篇条目。");
+      if (!api) throw new Error("当前环境无法搜索小说条目。");
       const result = await api.search({
         bookId: options.bookId(),
         query,

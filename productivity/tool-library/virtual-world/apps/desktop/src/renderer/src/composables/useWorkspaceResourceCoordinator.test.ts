@@ -34,14 +34,13 @@ function deferred<Value>(): Deferred<Value> {
 function workspaceDocument(id: string): WorkspaceDocument {
   return {
     id,
-    domain: "creation",
+    domain: "material",
     title: id,
-    eyebrow: "短篇 · 正文",
+    eyebrow: "素材 · 条目",
     path: ["测试作品", id],
     content: `${id} content`,
-    workspaceId: "book-1",
-    workspaceType: "short",
-    stageId: "draft",
+    libraryId: "library-one",
+    catalogEntryId: id,
     catalogContentLoaded: true
   };
 }
@@ -97,7 +96,7 @@ function createHarness(
   ];
   const longNode: ResourceTreeNode = {
     id: "long-detail",
-    label: "长篇正文",
+    label: "小说正文",
     longBookId: "long-book",
     workspaceType: "long"
   };
@@ -179,9 +178,6 @@ function createHarness(
   const options: WorkspaceResourceCoordinatorOptions = {
     state: {
       selectedResourceId,
-      activeCreationResourceId,
-      selectedExpertSectionIds: ref({}),
-      selectedDraftFileKinds: ref({}),
       pendingEditorReferences: ref([]),
       editorReferenceNavigation: ref(),
       documents,
@@ -193,8 +189,7 @@ function createHarness(
       ...(useCatalogReconciliationGate
         ? { reconciledProjection: reconciledCatalogProjection }
         : {}),
-      loader,
-      findBook: () => undefined
+      loader
     },
     tree: {
       sections,
@@ -235,6 +230,7 @@ function createHarness(
   const coordinator = useWorkspaceResourceCoordinator(options);
   return {
     activeCreationResourceId,
+    options,
     catalogProjection,
     coordinator,
     documents,
@@ -249,13 +245,104 @@ function createHarness(
 }
 
 describe("useWorkspaceResourceCoordinator", () => {
-  it("keeps a short-form selection current when leaving long-form contracts the tree", async () => {
+  it("uses current unsaved library title and content in the active agent document", () => {
+    const harness = createHarness();
+    harness.selectedResourceId.value = "resource-a";
+    harness.options.state.editorDrafts.value = {
+      "document-a": { title: "未保存标题", content: "未保存正文", dirty: true }
+    };
+    expect(harness.coordinator.activeAgentDocument.value).toMatchObject({
+      id: "document-a",
+      title: "未保存标题",
+      content: "未保存正文"
+    });
+    expect(harness.documents.value[0]).toMatchObject({
+      title: "document-a",
+      content: "document-a content"
+    });
+    harness.options.state.editorDrafts.value["document-a"]!.content =
+      "继续编辑";
+    expect(harness.coordinator.activeAgentDocument.value.content).toBe(
+      "继续编辑"
+    );
+    harness.coordinator.dispose();
+  });
+
+  it.each(["reader-unavailable", "read-failed", "invalid-result"] as const)(
+    "shows an actionable toast for returned %s failures",
+    async (code) => {
+      const document = workspaceDocument("document-a");
+      const result = {
+        ...loadResult(document, [document]),
+        ok: false,
+        failures: [
+          {
+            documentId: document.id,
+            code,
+            attempts: 1 as const,
+            error: new Error("读取失败，请重试")
+          }
+        ]
+      };
+      const harness = createHarness(async () => result);
+      harness.options.catalog.loader.ensureLoaded = async () => result;
+      await harness.coordinator.ensureCatalogDocumentLoaded(document);
+      expect(harness.notifications.error).toHaveBeenCalledWith(
+        "读取失败，请重试"
+      );
+      harness.notifications.error.mockClear();
+      await expect(
+        harness.coordinator.ensureCatalogDocumentsLoaded([document])
+      ).resolves.toBe(false);
+      expect(harness.notifications.error).toHaveBeenCalledWith(
+        "读取失败，请重试"
+      );
+      harness.coordinator.dispose();
+    }
+  );
+
+  it("silently rejects stale reads and ignores late failures after disposal", async () => {
+    const document = workspaceDocument("document-a");
+    const pending =
+      deferred<
+        Awaited<ReturnType<WorkspaceResourceCatalogPort["loader"]["ensureOne"]>>
+      >();
+    const harness = createHarness(async () => pending.promise);
+    harness.options.catalog.loader.ensureLoaded = async () => ({
+      ...loadResult(document, [document]),
+      ok: false,
+      failures: [
+        { documentId: document.id, code: "stale-descriptor", attempts: 2 }
+      ]
+    });
+    await expect(
+      harness.coordinator.ensureCatalogDocumentsLoaded([document])
+    ).resolves.toBe(false);
+    expect(harness.notifications.error).not.toHaveBeenCalled();
+    const operation = harness.coordinator.ensureCatalogDocumentLoaded(document);
+    harness.coordinator.dispose();
+    pending.resolve({
+      ...loadResult(document, [document]),
+      ok: false,
+      failures: [
+        {
+          documentId: document.id,
+          code: "read-failed",
+          attempts: 1,
+          error: new Error("迟到的失败")
+        }
+      ]
+    });
+    await operation;
+    expect(harness.notifications.error).not.toHaveBeenCalled();
+  });
+
+  it("keeps a library selection current when leaving long-form contracts the tree", async () => {
     const harness = createHarness(undefined, false, true);
 
     await harness.coordinator.selectResource(harness.nodes[1]!);
 
     expect(harness.selectedResourceId.value).toBe("resource-b");
-    expect(harness.activeCreationResourceId.value).toBe("resource-b");
     expect(harness.showConversation).toHaveBeenCalledTimes(1);
   });
 
@@ -293,7 +380,6 @@ describe("useWorkspaceResourceCoordinator", () => {
     await selectingA;
 
     expect(harness.selectedResourceId.value).toBe("resource-b");
-    expect(harness.activeCreationResourceId.value).toBe("resource-b");
     expect(harness.rightCollapsed.value).toBe(false);
     expect(harness.showConversation).toHaveBeenCalledTimes(1);
   });
@@ -367,6 +453,5 @@ describe("useWorkspaceResourceCoordinator", () => {
     harness.activeCreationResourceId.value = "resource-b";
     harness.reconciledCatalogProjection.value = nextProjection;
     expect(harness.selectedResourceId.value).toBe("resource-b");
-    expect(harness.activeCreationResourceId.value).toBe("resource-b");
   });
 });

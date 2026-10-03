@@ -1,29 +1,18 @@
 import { z } from "zod";
 import { AgentUsageSchema } from "../agent-usage";
-import {
-  LearningImitationStageIdSchema,
-  LearningImitationWritePayloadSchema
-} from "../learning-imitation";
-import {
-  LongBookAnalysisNoteWriteSchema,
-  LongBookAnalysisResultSchema
-} from "../long-book-analysis";
 import { SubagentAuthoringDraftSchema } from "../subagent-authoring";
 import { AgentRuntimeRefSchema } from "./runtime";
-
 export const AgentEventIdentitySchema = z.object({
   sessionId: z.string().min(1),
   runId: z.string().min(1),
   messageId: z.string().min(1),
   runtime: AgentRuntimeRefSchema
 });
-
 export const AgentTurnStartedFieldsSchema = z.object({
   turnId: z.string().min(1),
   attempt: z.number().int().positive(),
   maxAttempts: z.number().int().positive()
 });
-
 export const AgentRetryScheduledFieldsSchema = z.object({
   turnId: z.string().min(1),
   failedAttempt: z.number().int().positive(),
@@ -31,11 +20,13 @@ export const AgentRetryScheduledFieldsSchema = z.object({
   maxAttempts: z.number().int().positive(),
   delayMs: z.number().int().nonnegative(),
   retryAt: z.string().datetime(),
-  reason: z.string().trim().min(1).max(4_000)
+  reason: z.string().trim().min(1).max(4000)
 });
-
 export function validateTurnAttempt(
-  value: { attempt: number; maxAttempts: number },
+  value: {
+    attempt: number;
+    maxAttempts: number;
+  },
   context: z.core.$RefinementCtx<unknown>
 ): void {
   if (value.attempt > value.maxAttempts) {
@@ -46,9 +37,12 @@ export function validateTurnAttempt(
     });
   }
 }
-
 export function validateRetryAttempt(
-  value: { failedAttempt: number; nextAttempt: number; maxAttempts: number },
+  value: {
+    failedAttempt: number;
+    nextAttempt: number;
+    maxAttempts: number;
+  },
   context: z.core.$RefinementCtx<unknown>
 ): void {
   if (value.nextAttempt !== value.failedAttempt + 1) {
@@ -66,35 +60,30 @@ export function validateRetryAttempt(
     });
   }
 }
-
 export const AgentTurnStartedPayloadSchema = AgentEventIdentitySchema.extend(
   AgentTurnStartedFieldsSchema.shape
 ).superRefine(validateTurnAttempt);
 export type AgentTurnStartedPayload = z.infer<
   typeof AgentTurnStartedPayloadSchema
 >;
-
 export const AgentRetryScheduledPayloadSchema = AgentEventIdentitySchema.extend(
   AgentRetryScheduledFieldsSchema.shape
 ).superRefine(validateRetryAttempt);
 export type AgentRetryScheduledPayload = z.infer<
   typeof AgentRetryScheduledPayloadSchema
 >;
-
 export const AgentMessageDeltaPayloadSchema = AgentEventIdentitySchema.extend({
   delta: z.string()
 });
 export type AgentMessageDeltaPayload = z.infer<
   typeof AgentMessageDeltaPayloadSchema
 >;
-
 export const AgentThinkingDeltaPayloadSchema = AgentEventIdentitySchema.extend({
   delta: z.string()
 });
 export type AgentThinkingDeltaPayload = z.infer<
   typeof AgentThinkingDeltaPayloadSchema
 >;
-
 export const AgentUsageObservationStatusSchema = z.enum([
   "completed",
   "error",
@@ -103,7 +92,6 @@ export const AgentUsageObservationStatusSchema = z.enum([
 export type AgentUsageObservationStatus = z.infer<
   typeof AgentUsageObservationStatusSchema
 >;
-
 /**
  * One provider-returned assistant message, including intermediate tool-call
  * turns and retry attempts. This is an internal accounting event: consumers
@@ -129,7 +117,6 @@ export const AgentUsageObservedPayloadSchema = AgentEventIdentitySchema.extend({
 export type AgentUsageObservedPayload = z.infer<
   typeof AgentUsageObservedPayloadSchema
 >;
-
 export const AgentMessageCompletedPayloadSchema =
   AgentEventIdentitySchema.extend({
     role: z.literal("assistant"),
@@ -141,7 +128,6 @@ export const AgentMessageCompletedPayloadSchema =
 export type AgentMessageCompletedPayload = z.infer<
   typeof AgentMessageCompletedPayloadSchema
 >;
-
 export const AgentToolRequestedPayloadSchema = z.object({
   sessionId: z.string().min(1),
   runId: z.string().min(1),
@@ -153,7 +139,6 @@ export const AgentToolRequestedPayloadSchema = z.object({
 export type AgentToolRequestedPayload = z.infer<
   typeof AgentToolRequestedPayloadSchema
 >;
-
 export const AgentToolCallStreamPayloadSchema = z.object({
   sessionId: z.string().min(1),
   runId: z.string().min(1),
@@ -168,57 +153,18 @@ export const AgentToolCallStreamPayloadSchema = z.object({
 export type AgentToolCallStreamPayload = z.infer<
   typeof AgentToolCallStreamPayloadSchema
 >;
-
 export const AgentToolCompletedPayloadSchema = z.object({
   sessionId: z.string().min(1),
   runId: z.string().min(1),
   toolCallId: z.string().min(1),
   toolName: z.string().min(1),
-  resultSummary: z.string().max(4_000),
+  resultSummary: z.string().max(4000),
   isError: z.boolean(),
   runtime: AgentRuntimeRefSchema
 });
 export type AgentToolCompletedPayload = z.infer<
   typeof AgentToolCompletedPayloadSchema
 >;
-
-export const LearningImitationResultUpdatedPayloadSchema = z.object({
-  sessionId: z.string().min(1),
-  runId: z.string().min(1),
-  toolCallId: z.string().min(1),
-  stageId: LearningImitationStageIdSchema,
-  update: LearningImitationWritePayloadSchema,
-  runtime: AgentRuntimeRefSchema
-});
-export type LearningImitationResultUpdatedPayload = z.infer<
-  typeof LearningImitationResultUpdatedPayloadSchema
->;
-
-const LongBookAnalysisUpdateIdentitySchema = z.object({
-  sessionId: z.string().min(1),
-  runId: z.string().min(1),
-  toolCallId: z.string().min(1),
-  jobId: z.string().trim().min(1).max(120),
-  unitId: z.string().trim().min(1).max(120),
-  runtime: AgentRuntimeRefSchema
-});
-
-export const LongBookAnalysisNoteUpdatedPayloadSchema =
-  LongBookAnalysisUpdateIdentitySchema.extend({
-    note: LongBookAnalysisNoteWriteSchema
-  });
-export type LongBookAnalysisNoteUpdatedPayload = z.infer<
-  typeof LongBookAnalysisNoteUpdatedPayloadSchema
->;
-
-export const LongBookAnalysisResultUpdatedPayloadSchema =
-  LongBookAnalysisUpdateIdentitySchema.extend({
-    result: LongBookAnalysisResultSchema
-  });
-export type LongBookAnalysisResultUpdatedPayload = z.infer<
-  typeof LongBookAnalysisResultUpdatedPayloadSchema
->;
-
 export const SubagentAuthoringDraftUpdatedPayloadSchema = z.object({
   sessionId: z.string().min(1),
   runId: z.string().min(1),
@@ -229,7 +175,6 @@ export const SubagentAuthoringDraftUpdatedPayloadSchema = z.object({
 export type SubagentAuthoringDraftUpdatedPayload = z.infer<
   typeof SubagentAuthoringDraftUpdatedPayloadSchema
 >;
-
 export const AgentErrorPayloadSchema = z.object({
   sessionId: z.string().min(1),
   runId: z.string().min(1),

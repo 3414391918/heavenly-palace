@@ -13,7 +13,7 @@ describe("update install lifecycle", () => {
     const helper = source.slice(
       helperStart,
       helperEnd === -1
-        ? source.indexOf("type AgentEventEnvelope", helperStart)
+        ? source.indexOf("function beginGracefulShutdown", helperStart)
         : helperEnd
     );
 
@@ -21,7 +21,9 @@ describe("update install lifecycle", () => {
     expect(helper).toContain(
       "shutdownUtilities: () => supervisor.shutdownAll()"
     );
-    expect(helper).toContain("flushUsage: () => modelUsageStore?.flush()");
+    expect(helper).toContain(
+      "flushUsage: () => desktopServices?.modelUsageStore.flush()"
+    );
     const shutdownCompleteIndex = helper.indexOf("shutdownComplete = true");
     expect(shutdownCompleteIndex).toBeLessThan(
       helper.indexOf("updateService.quitAndInstall()", shutdownCompleteIndex)
@@ -48,7 +50,7 @@ describe("update install lifecycle", () => {
 
   it("retries the native installer directly after graceful shutdown is complete", () => {
     const helperStart = source.indexOf("function beginGracefulShutdown(");
-    const helperEnd = source.indexOf("type AgentEventEnvelope", helperStart);
+    const helperEnd = source.indexOf("const {", helperStart);
     const helper = source.slice(helperStart, helperEnd);
 
     expect(helper).toContain(

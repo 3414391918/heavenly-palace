@@ -9,7 +9,7 @@ import {
 import * as provider from "./provider-runtime";
 import { PiAgentRuntimeAdapter } from "./adapter";
 import type { AgentRuntimeEvent } from "./runtime-types";
-import { shortProfile, shortWorkspace } from "./short-agent-tools.test-support";
+import { profile, workspace } from "./long-agent-tools.test-support";
 
 const model: Model<"openai-completions"> = {
   id: "test-model",
@@ -105,8 +105,8 @@ async function harness(hangParent = false) {
       prompt: "委派测试",
       runtimeConfig: config,
       signal: controller.signal,
-      agentProfile: shortProfile(),
-      workspaceContext: { shortWorkspace: shortWorkspace() },
+      longAgentProfile: profile("long"),
+      workspaceContext: { longWorkspace: workspace("long", "plot_design") },
       subagentDefinitions: [
         {
           id: "writer",

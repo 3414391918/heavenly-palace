@@ -89,14 +89,12 @@ describe("long-form renderer vertical slice: navigation-and-characters", () => {
     expect(leftSidebarSource).toContain('label: "新建书籍"');
     expect(leftSidebarSource).toContain('emit("createBook")');
     expect(appSource).toContain('@create-book="openCreateBookDialog"');
-    expect(creationSource).toContain(
-      "function openCreateBookDialog(fromTemplate = false)"
-    );
+    expect(creationSource).toContain("function openCreateBookDialog()");
     expect(creationSource).toContain("options.open.value = true");
     expect(sectionSource).toContain('"新建作品"');
     expect(sectionSource).not.toContain('id: "create-long-book"');
-    expect(dialogSource).toContain('role="tablist"');
-    expect(dialogSource).toContain('label: "长篇"');
+    expect(dialogSource).not.toContain('role="tablist"');
+    expect(dialogSource).toContain("新建书籍");
     expect(dialogSource).toContain("<BookLibraryBindings");
     expect(bindingSource).toContain("<PopupSelect");
     expect(dialogSource).not.toContain("<select");
@@ -104,7 +102,7 @@ describe("long-form renderer vertical slice: navigation-and-characters", () => {
     expect(dialogSource).toContain('<Teleport to="body">');
     expect(dialogSource).toContain("linkedMaterialIdsByKind");
     expect(dialogSource).toContain("linkedSkillIdsByKind");
-    expect(dialogSource).toContain('workspaceType.value === "long"');
+    expect(dialogSource).toContain('workspace-type="long"');
   });
 
   it("renders all five long-workspace roots from the navigation summary", () => {

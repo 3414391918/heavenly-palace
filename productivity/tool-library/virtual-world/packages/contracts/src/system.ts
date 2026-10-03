@@ -1,21 +1,14 @@
-import { BookTemplateCommandSchemas } from "./book-templates";
 import { ChatAssistantRoleplayCommandSchemas } from "./chat-assistant-config-api";
 import { ConversationExportCommandEnvelopeSchemas } from "./conversation-export";
 import { SiteOfficialModelCommandSchemas } from "./site-official-models";
-import { DeviceSyncWorkspaceCommandEnvelopeSchema } from "./device-sync-commands";
 import { AgentTeamsSaveBuiltinsCommandEnvelopeSchema } from "./builtin-subagents";
 import { CatalogQueryLibraryManagementCommandEnvelopeSchema } from "./library-management";
 import { z } from "zod";
-import {
-  ShortBookAnalysisResultEventSchema,
-  type ShortBookAnalysisResultEvent
-} from "./short-book-analysis-events";
 import { RevisionAnalysisCommandSchemas } from "./revision-analysis-commands";
 import {
   RevisionAnalysisResultEventSchema,
   type RevisionAnalysisResultEvent
 } from "./revision-analysis-events";
-import { ShortBookAnalysisCommandSchemas } from "./short-book-analysis-commands";
 import { CatalogQueryMaterialsCommandEnvelopeSchema } from "./material-query";
 import {
   ChatAssistantProjectConfigGetCommandEnvelopeSchema,
@@ -43,9 +36,6 @@ import {
   AgentUserInputRequestedEventEnvelopeSchema,
   AgentToolCallStreamEventEnvelopeSchema,
   AgentToolRequestedEventEnvelopeSchema,
-  LearningImitationResultUpdatedEventEnvelopeSchema,
-  LongBookAnalysisNoteUpdatedEventEnvelopeSchema,
-  LongBookAnalysisResultUpdatedEventEnvelopeSchema,
   LongChapterWriteProposalEventEnvelopeSchema,
   LongCharacterFileProposalEventEnvelopeSchema,
   LongContinuityFileProposalEventEnvelopeSchema,
@@ -74,9 +64,6 @@ import {
   type SubagentActivityEventEnvelope,
   type SubagentCompletedEventEnvelope,
   type SubagentStartedEventEnvelope,
-  type LearningImitationResultUpdatedEventEnvelope,
-  type LongBookAnalysisNoteUpdatedEventEnvelope,
-  type LongBookAnalysisResultUpdatedEventEnvelope,
   type LongChapterWriteProposalEventEnvelope,
   type LongCharacterFileProposalEventEnvelope,
   type LongContinuityFileProposalEventEnvelope,
@@ -99,19 +86,6 @@ import {
   AgentTeamsSaveCommandEnvelopeSchema
 } from "./agent-team-catalog";
 import {
-  LearningImitationSettingsListCommandEnvelopeSchema,
-  LearningImitationSettingsResetCommandEnvelopeSchema,
-  LearningImitationSettingsSaveCommandEnvelopeSchema
-} from "./learning-imitation";
-import {
-  LongBookAnalysisChooseSourceCommandEnvelopeSchema,
-  LongBookAnalysisListSourcesCommandEnvelopeSchema,
-  LongBookAnalysisLoadSourceCommandEnvelopeSchema,
-  LongBookAnalysisSettingsListCommandEnvelopeSchema,
-  LongBookAnalysisSettingsResetCommandEnvelopeSchema,
-  LongBookAnalysisSettingsSaveCommandEnvelopeSchema
-} from "./long-book-analysis";
-import {
   AgentModelCapacityCommandEnvelopeSchema,
   AgentModelTestCommandEnvelopeSchema,
   ModelsClearOfficialTokenCommandEnvelopeSchema,
@@ -128,11 +102,7 @@ import {
   ModelsListRemoteCommandEnvelopeSchema
 } from "./models";
 import { ModelUsageQueryCommandEnvelopeSchema } from "./model-usage";
-import {
-  WorkspaceAgentsListCommandEnvelopeSchema,
-  WorkspaceAgentsResetCommandEnvelopeSchema,
-  WorkspaceAgentsSaveCommandEnvelopeSchema
-} from "./workspace";
+import {} from "./workspace";
 import {
   LibraryAgentsListCommandEnvelopeSchema,
   LibraryAgentsResetCommandEnvelopeSchema,
@@ -152,15 +122,7 @@ import {
   CatalogCreateLibraryEntryCommandEnvelopeSchema,
   CatalogChooseExternalLibraryEntriesCommandEnvelopeSchema,
   CatalogImportLibraryEntriesCommandEnvelopeSchema,
-  CatalogCreateDraftSectionCommandEnvelopeSchema,
-  CatalogCreateDraftSectionsCommandEnvelopeSchema,
-  CatalogCreateScriptBookAtPathCommandEnvelopeSchema,
-  CatalogCreateScriptBookCommandEnvelopeSchema,
-  CatalogCreateShortBookAtPathCommandEnvelopeSchema,
-  CatalogCreateShortBookCommandEnvelopeSchema,
   CatalogDeleteBookCommandEnvelopeSchema,
-  CatalogDeleteDraftSectionCommandEnvelopeSchema,
-  CatalogMoveDraftSectionCommandEnvelopeSchema,
   CatalogDeleteProjectCommandEnvelopeSchema,
   CatalogDuplicateProjectCommandEnvelopeSchema,
   CatalogImportLegacyLibraryAtPathCommandEnvelopeSchema,
@@ -177,8 +139,6 @@ import {
   CatalogReadDocumentCommandEnvelopeSchema,
   CatalogSnapshotCommandEnvelopeSchema,
   CatalogUpdateBookCommandEnvelopeSchema,
-  CatalogMutateCharacterStructureCommandEnvelopeSchema,
-  CatalogMutatePlotStructureCommandEnvelopeSchema,
   CatalogUpdateLibraryGroupCommandEnvelopeSchema,
   CatalogUnregisterProjectCommandEnvelopeSchema
 } from "./catalog";
@@ -197,9 +157,7 @@ import {
   GeneralSettingsListCommandEnvelopeSchema,
   GeneralSettingsSaveCommandEnvelopeSchema
 } from "./general-settings";
-import { ExportShortManuscriptCommandEnvelopeSchema } from "./short-manuscript-export";
 import { ExportLongManuscriptCommandEnvelopeSchema } from "./long-manuscript-export";
-import { CatalogInstallMarketplaceSkillContentCommandEnvelopeSchema } from "./marketplace";
 import {
   CatalogReadWritingContextCommandEnvelopeSchema,
   CatalogWriteWritingContextCommandEnvelopeSchema
@@ -209,13 +167,10 @@ import {
   RendererStateFlushRequestedEventEnvelopeSchema
 } from "./renderer-state";
 import { LongWorkspaceCommandSchemas } from "./long-workspace-commands";
-
 export const IPC_COMMAND_CHANNEL = "deepwrite:command";
 export const IPC_EVENT_CHANNEL = "deepwrite:event";
-
 export const UtilityWorkerNameSchema = z.enum(["core", "agent", "tool"]);
 export type UtilityWorkerName = z.infer<typeof UtilityWorkerNameSchema>;
-
 export const UtilityHealthPayloadSchema = z.object({
   name: UtilityWorkerNameSchema,
   status: z.enum(["starting", "ok", "degraded", "stopped"]),
@@ -225,22 +180,17 @@ export const UtilityHealthPayloadSchema = z.object({
   details: z.record(z.string(), z.unknown())
 });
 export type UtilityHealthPayload = z.infer<typeof UtilityHealthPayloadSchema>;
-
 export const SystemHealthPayloadSchema = z.object({
   status: z.enum(["starting", "ok", "degraded"]),
   checkedAt: z.string().datetime(),
   workers: z.array(UtilityHealthPayloadSchema)
 });
 export type SystemHealthPayload = z.infer<typeof SystemHealthPayloadSchema>;
-
 export const SystemHealthCommandEnvelopeSchema = EnvelopeBaseSchema.extend({
   type: z.literal("system.health"),
   payload: z.object({})
 });
-
 export const CommandEnvelopeSchema = z.discriminatedUnion("type", [
-  ...BookTemplateCommandSchemas,
-  DeviceSyncWorkspaceCommandEnvelopeSchema,
   CatalogQueryMaterialsCommandEnvelopeSchema,
   SystemHealthCommandEnvelopeSchema,
   ...RendererStateCommandEnvelopeSchemas,
@@ -251,28 +201,18 @@ export const CommandEnvelopeSchema = z.discriminatedUnion("type", [
   CatalogSnapshotCommandEnvelopeSchema,
   CatalogLoadDraftRecoveryCommandEnvelopeSchema,
   CatalogSaveDraftRecoveryCommandEnvelopeSchema,
-  CatalogCreateShortBookCommandEnvelopeSchema,
-  CatalogCreateScriptBookCommandEnvelopeSchema,
   CatalogCreateLibraryCommandEnvelopeSchema,
   CatalogUpdateLibraryCommandEnvelopeSchema,
   CatalogCreateLibraryGroupCommandEnvelopeSchema,
   CatalogOpenProjectCommandEnvelopeSchema,
   CatalogImportLegacyLibraryCommandEnvelopeSchema,
-  CatalogCreateShortBookAtPathCommandEnvelopeSchema,
-  CatalogCreateScriptBookAtPathCommandEnvelopeSchema,
   CatalogCreateLibraryAtPathCommandEnvelopeSchema,
   CatalogCreateLibraryGroupAtPathCommandEnvelopeSchema,
   CatalogOpenProjectAtPathCommandEnvelopeSchema,
   CatalogImportLegacyLibraryAtPathCommandEnvelopeSchema,
   CatalogUpdateBookCommandEnvelopeSchema,
-  CatalogMutateCharacterStructureCommandEnvelopeSchema,
-  CatalogMutatePlotStructureCommandEnvelopeSchema,
   CatalogUpdateLibraryGroupCommandEnvelopeSchema,
   CatalogDeleteBookCommandEnvelopeSchema,
-  CatalogCreateDraftSectionCommandEnvelopeSchema,
-  CatalogCreateDraftSectionsCommandEnvelopeSchema,
-  CatalogDeleteDraftSectionCommandEnvelopeSchema,
-  CatalogMoveDraftSectionCommandEnvelopeSchema,
   CatalogSaveDocumentCommandEnvelopeSchema,
   CatalogSaveLibraryEntryCommandEnvelopeSchema,
   CatalogCreateLibraryEntryCommandEnvelopeSchema,
@@ -283,7 +223,6 @@ export const CommandEnvelopeSchema = z.discriminatedUnion("type", [
   CatalogUnregisterProjectCommandEnvelopeSchema,
   CatalogDeleteProjectCommandEnvelopeSchema,
   CatalogDuplicateProjectCommandEnvelopeSchema,
-  CatalogInstallMarketplaceSkillContentCommandEnvelopeSchema,
   CatalogWriteWritingContextCommandEnvelopeSchema,
   ...LongWorkspaceCommandSchemas,
   SessionPromptCommandEnvelopeSchema,
@@ -303,26 +242,13 @@ export const CommandEnvelopeSchema = z.discriminatedUnion("type", [
   ModelsResolveCapacityCommandEnvelopeSchema,
   ModelsListRemoteCommandEnvelopeSchema,
   ModelUsageQueryCommandEnvelopeSchema,
-  WorkspaceAgentsListCommandEnvelopeSchema,
-  WorkspaceAgentsSaveCommandEnvelopeSchema,
-  WorkspaceAgentsResetCommandEnvelopeSchema,
   LongAgentsListCommandEnvelopeSchema,
   LongAgentsSaveCommandEnvelopeSchema,
   LongAgentsResetCommandEnvelopeSchema,
   LibraryAgentsListCommandEnvelopeSchema,
   LibraryAgentsSaveCommandEnvelopeSchema,
   LibraryAgentsResetCommandEnvelopeSchema,
-  LearningImitationSettingsListCommandEnvelopeSchema,
-  LearningImitationSettingsSaveCommandEnvelopeSchema,
-  LearningImitationSettingsResetCommandEnvelopeSchema,
   ...RevisionAnalysisCommandSchemas,
-  ...ShortBookAnalysisCommandSchemas,
-  LongBookAnalysisChooseSourceCommandEnvelopeSchema,
-  LongBookAnalysisListSourcesCommandEnvelopeSchema,
-  LongBookAnalysisLoadSourceCommandEnvelopeSchema,
-  LongBookAnalysisSettingsListCommandEnvelopeSchema,
-  LongBookAnalysisSettingsSaveCommandEnvelopeSchema,
-  LongBookAnalysisSettingsResetCommandEnvelopeSchema,
   AgentTeamsSaveBuiltinsCommandEnvelopeSchema,
   CatalogQueryLibraryManagementCommandEnvelopeSchema,
   AgentTeamsListCommandEnvelopeSchema,
@@ -348,7 +274,6 @@ export const CommandEnvelopeSchema = z.discriminatedUnion("type", [
   ChatAssistantProjectConfigSaveCommandEnvelopeSchema,
   ChatAssistantProjectConfigResetCommandEnvelopeSchema,
   ExportLongManuscriptCommandEnvelopeSchema,
-  ExportShortManuscriptCommandEnvelopeSchema,
   AgentPromptCommandEnvelopeSchema,
   AgentAbortCommandEnvelopeSchema,
   AgentUserInputResponseCommandEnvelopeSchema,
@@ -357,14 +282,12 @@ export const CommandEnvelopeSchema = z.discriminatedUnion("type", [
 ]);
 export type CommandEnvelope = z.infer<typeof CommandEnvelopeSchema>;
 export type CommandType = CommandEnvelope["type"];
-
 export const ErrorPayloadSchema = z.object({
   code: z.string().min(1),
   message: z.string().min(1),
   details: z.record(z.string(), z.unknown()).optional()
 });
 export type ErrorPayload = z.infer<typeof ErrorPayloadSchema>;
-
 export const CommandResultSchema = z.discriminatedUnion("status", [
   z.object({
     status: z.literal("accepted"),
@@ -378,14 +301,20 @@ export const CommandResultSchema = z.discriminatedUnion("status", [
   })
 ]);
 export type CommandResult<TPayload = unknown> =
-  | { status: "accepted"; requestId: string; payload: TPayload }
-  | { status: "rejected"; requestId: string; error: ErrorPayload };
-
+  | {
+      status: "accepted";
+      requestId: string;
+      payload: TPayload;
+    }
+  | {
+      status: "rejected";
+      requestId: string;
+      error: ErrorPayload;
+    };
 export const SystemReadyEventEnvelopeSchema = EnvelopeBaseSchema.extend({
   type: z.literal("system.ready"),
   payload: SystemHealthPayloadSchema
 });
-
 export const SystemWorkerRestartedEventEnvelopeSchema =
   EnvelopeBaseSchema.extend({
     type: z.literal("system.worker_restarted"),
@@ -395,7 +324,6 @@ export const SystemWorkerRestartedEventEnvelopeSchema =
       restartedAt: z.string().datetime()
     })
   });
-
 export const SystemWorkerRestartingEventEnvelopeSchema =
   EnvelopeBaseSchema.extend({
     type: z.literal("system.worker_restarting"),
@@ -405,7 +333,6 @@ export const SystemWorkerRestartingEventEnvelopeSchema =
       detectedAt: z.string().datetime()
     })
   });
-
 export const SystemEventEnvelopeSchema = z.discriminatedUnion("type", [
   RendererStateFlushRequestedEventEnvelopeSchema,
   SystemReadyEventEnvelopeSchema,
@@ -425,11 +352,7 @@ export const SystemEventEnvelopeSchema = z.discriminatedUnion("type", [
   SubagentStartedEventEnvelopeSchema,
   SubagentActivityEventEnvelopeSchema,
   SubagentCompletedEventEnvelopeSchema,
-  LearningImitationResultUpdatedEventEnvelopeSchema,
   RevisionAnalysisResultEventSchema,
-  ShortBookAnalysisResultEventSchema,
-  LongBookAnalysisNoteUpdatedEventEnvelopeSchema,
-  LongBookAnalysisResultUpdatedEventEnvelopeSchema,
   SubagentAuthoringDraftUpdatedEventEnvelopeSchema,
   LongMutationProposalEventEnvelopeSchema,
   LongWorldbuildingFileProposalEventEnvelopeSchema,
@@ -442,22 +365,28 @@ export const SystemEventEnvelopeSchema = z.discriminatedUnion("type", [
   WorkspaceStageSelectionEventEnvelopeSchema,
   AgentErrorEventEnvelopeSchema
 ]);
-
 export type SystemReadyEventEnvelope = Envelope<
   SystemHealthPayload,
   "system.ready"
 >;
 export type SystemWorkerRestartedEventEnvelope = Envelope<
-  { worker: UtilityWorkerName; reason: string; restartedAt: string },
+  {
+    worker: UtilityWorkerName;
+    reason: string;
+    restartedAt: string;
+  },
   "system.worker_restarted"
 >;
 export type SystemWorkerRestartingEventEnvelope = Envelope<
-  { worker: UtilityWorkerName; reason: string; detectedAt: string },
+  {
+    worker: UtilityWorkerName;
+    reason: string;
+    detectedAt: string;
+  },
   "system.worker_restarting"
 >;
 export type SystemEventEnvelope =
   | RevisionAnalysisResultEvent
-  | ShortBookAnalysisResultEvent
   | z.infer<typeof RendererStateFlushRequestedEventEnvelopeSchema>
   | SystemReadyEventEnvelope
   | SystemWorkerRestartingEventEnvelope
@@ -476,9 +405,6 @@ export type SystemEventEnvelope =
   | SubagentStartedEventEnvelope
   | SubagentActivityEventEnvelope
   | SubagentCompletedEventEnvelope
-  | LearningImitationResultUpdatedEventEnvelope
-  | LongBookAnalysisNoteUpdatedEventEnvelope
-  | LongBookAnalysisResultUpdatedEventEnvelope
   | SubagentAuthoringDraftUpdatedEventEnvelope
   | LongMutationProposalEventEnvelope
   | LongWorldbuildingFileProposalEventEnvelope

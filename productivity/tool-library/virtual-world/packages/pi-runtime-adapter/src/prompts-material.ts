@@ -8,20 +8,13 @@ export function buildWorkspaceMaterialContext(input: AgentRunInput): string {
   const materials = context?.materialCatalog
     ? materialCatalogEntries(context.materialCatalog)
     : (context?.attachedMaterials ?? []);
-  const profile = input.scriptAgentProfile ?? input.agentProfile;
-  const readable = profile
+  const readable = input.longAgentProfile
     ? materials.filter(
         (item) =>
           item.kind !== undefined &&
-          profile.readAccess.material.includes(item.kind)
+          input.longAgentProfile!.readAccess.materialKinds.includes(item.kind)
       )
-    : input.longAgentProfile
-      ? materials.filter(
-          (item) =>
-            item.kind !== undefined &&
-            input.longAgentProfile!.readAccess.materialKinds.includes(item.kind)
-        )
-      : materials;
+    : materials;
   return buildMaterialCatalogPrompt(readable);
 }
 

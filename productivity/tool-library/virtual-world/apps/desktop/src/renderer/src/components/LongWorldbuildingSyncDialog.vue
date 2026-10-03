@@ -83,14 +83,14 @@ function selectBook(value: PopupSelectValue): void {
         </header>
         <fieldset :disabled="locked">
           <p id="long-structure-sync-description">
-            同步会用来源长篇的全部可编辑世界观覆盖当前书籍；迁移证据只读分类会保留。请先核对精确影响，再决定是否覆盖。
+            同步会用来源小说的全部可编辑世界观覆盖当前书籍；迁移证据只读分类会保留。请先核对精确影响，再决定是否覆盖。
           </p>
           <label>
-            <span>选择来源长篇</span>
+            <span>选择来源小说</span>
             <PopupSelect
               :model-value="selectedBookId"
               :options="selectOptions"
-              accessible-label="选择要同步世界观的长篇书籍"
+              accessible-label="选择要同步世界观的小说书籍"
               :menu-z-index="2300"
               @update:model-value="selectBook"
             />
@@ -107,7 +107,7 @@ function selectBook(value: PopupSelectValue): void {
             </p>
             <LongImpactConfirmationDetails
               :confirmation="prepared.confirmation"
-              fallback="同步不会改变当前长篇中的关联关系。"
+              fallback="同步不会改变当前小说中的关联关系。"
             />
           </template>
         </fieldset>

@@ -17,7 +17,7 @@ withDefaults(
       'is-center': kind === 'editor' && !rightPane
     }"
     :aria-busy="loading"
-    :aria-label="kind === 'editor' ? '长篇文件编辑器' : '长篇智能体'"
+    :aria-label="kind === 'editor' ? '小说文件编辑器' : '小说智能体'"
   >
     <div class="placeholder-header" aria-hidden="true">
       <span class="placeholder-line" />
@@ -33,8 +33,8 @@ withDefaults(
       <span v-if="kind === 'editor'">
         {{
           loading
-            ? "正在打开长篇工作区…"
-            : "长篇工作区尚未载入，请重新选择书籍。"
+            ? "正在打开小说工作区…"
+            : "小说工作区尚未载入，请重新选择书籍。"
         }}
       </span>
     </div>

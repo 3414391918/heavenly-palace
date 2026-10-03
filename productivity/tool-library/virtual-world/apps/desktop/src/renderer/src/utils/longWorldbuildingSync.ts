@@ -152,7 +152,7 @@ async function cloneCategoryForSync(
       mode: "create",
       updatedAt,
       content,
-      reason: "从其他长篇同步世界观正文"
+      reason: "从其他小说同步世界观正文"
     });
   };
 
@@ -233,7 +233,7 @@ export async function buildLongWorldbuildingSyncBatch(
     input.source.worldbuilding
   );
   if (sourceCategories.length === 0) {
-    throw new Error("所选长篇没有可同步的世界观分类。");
+    throw new Error("所选小说没有可同步的世界观分类。");
   }
 
   const deletable = filterSyncableWorldbuildingCategories(

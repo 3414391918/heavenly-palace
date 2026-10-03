@@ -6,10 +6,10 @@ import { LONG_WORKSPACE_ROOT_LABELS } from "../utils/longWorkspaceResourceTree";
 
 interface CurrentAgentActivityViewOptions {
   activeFeature: Readonly<Ref<string>>;
-  shortResourceId: Readonly<Ref<string>>;
+  libraryResourceId: Readonly<Ref<string>>;
   longResourceId: Readonly<Ref<string>>;
-  shortConversation: Readonly<Ref<AgentConversationController>>;
-  shortContext: Readonly<
+  libraryConversation: Readonly<Ref<AgentConversationController>>;
+  libraryContext: Readonly<
     Ref<{
       agentLabel: string;
       bookTitle: string;
@@ -52,12 +52,12 @@ export function useCurrentAgentActivityView(
       };
     }
     if (options.activeFeature.value !== "conversation") return null;
-    const context = options.shortContext.value;
+    const context = options.libraryContext.value;
     return {
-      controller: options.shortConversation.value,
+      controller: options.libraryConversation.value,
       agentLabel: context.agentLabel,
       contextLabel: joinedContext(context.bookTitle, context.contextTitle),
-      targetResourceId: options.shortResourceId.value
+      targetResourceId: options.libraryResourceId.value
     };
   });
 }

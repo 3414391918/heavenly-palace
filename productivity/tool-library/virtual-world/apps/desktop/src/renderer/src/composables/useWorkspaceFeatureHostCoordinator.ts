@@ -1,5 +1,4 @@
 import { watchFeatureErrors } from "./workspaceFeatureErrors";
-import type { MarketplaceSession } from "@deepwrite/contracts";
 import { computed, ref } from "vue";
 import type { DialogMode } from "../types/workspace";
 import type {
@@ -8,7 +7,6 @@ import type {
   WorkspaceFeatureHostCoordinatorOptions
 } from "./workspaceFeatureHostTypes";
 import { buildWorkspaceFeatureModule } from "./workspaceFeatureHostModule";
-import { useMarketplaceDisplayName } from "./useMarketplaceDisplayName";
 import type { buildSettingsFeatureModule } from "./settingsFeatureModule";
 export type {
   ActiveFeature,
@@ -31,14 +29,9 @@ export function useWorkspaceFeatureHostCoordinator(
   options: WorkspaceFeatureHostCoordinatorOptions
 ): WorkspaceFeatureHostCoordinator {
   const { settingsStore } = options;
-  const { marketplaceDisplayName, applyDisplayName } =
-    useMarketplaceDisplayName();
   const agentTeamNavigationEpoch = ref(0);
-  const knownMarketplaceSession = ref<MarketplaceSession | null>(null);
   let active = true;
   let navigationGeneration = 0;
-  let marketplaceRevision = 0;
-  let marketplaceRequestGeneration = 0;
   let directoryChooseGeneration = 0;
   let directoryChoosePending = false;
   let buildSettingsModule: typeof buildSettingsFeatureModule | undefined;
@@ -61,7 +54,6 @@ export function useWorkspaceFeatureHostCoordinator(
       activeFeature.value,
       options,
       agentTeamNavigationEpoch.value,
-      knownMarketplaceSession.value,
       buildSettingsModule
     )
   );
@@ -97,7 +89,7 @@ export function useWorkspaceFeatureHostCoordinator(
       options.actions.newLongConversation();
       return;
     }
-    options.actions.newShortConversation();
+    options.actions.newLibraryConversation();
   }
 
   function showConversation(): void {
@@ -108,53 +100,24 @@ export function useWorkspaceFeatureHostCoordinator(
   async function openWorkspaceDialog(mode: DialogMode): Promise<void> {
     const generation = beginNavigation();
     if (!(await canApplyNavigation(generation))) return;
-    if (
-      mode === "imitation" ||
-      mode === "long-book-analysis" ||
-      mode === "revision-analysis" ||
-      mode === "short-book-analysis"
-    ) {
+    if (mode === "revision-analysis") {
       try {
-        await (mode === "revision-analysis"
-          ? options.features.revisionAnalysis.ensureLoaded()
-          : mode === "imitation"
-            ? options.features.learningImitation.ensureLoaded()
-            : mode === "short-book-analysis"
-              ? options.features.shortBookAnalysis.ensureLoaded()
-              : options.features.longBookAnalysis.ensureLoaded());
+        await options.features.revisionAnalysis.ensureLoaded();
       } catch (error: unknown) {
-        if (navigationIsCurrent(generation)) {
+        if (navigationIsCurrent(generation))
           options.notifications.error(
-            errorMessage(
-              error,
-              mode === "revision-analysis"
-                ? "加载修改分析模块失败。"
-                : mode === "imitation"
-                  ? "加载学习仿写模块失败。"
-                  : mode === "short-book-analysis"
-                    ? "加载短篇拆书模块失败。"
-                    : "加载长篇拆书模块失败。"
-            )
+            errorMessage(error, "加载修改分析模块失败。")
           );
-        }
         return;
       }
       if (!navigationIsCurrent(generation)) return;
     }
     options.view.workspaceMain.value = mode;
-    if (mode === "imitation") {
-      issueBackground(options.loaders.loadLearningImitationSettings);
-    }
     if (mode === "directory" && options.api()) {
       issueBackground(loadWorkspaceDirectory);
     }
     if (
-      (mode === "models" ||
-        mode === "imitation" ||
-        mode === "long-book-analysis" ||
-        mode === "revision-analysis" ||
-        mode === "short-book-analysis" ||
-        mode === "style-comparison") &&
+      (mode === "models" || mode === "revision-analysis") &&
       !settingsStore.modelSettings &&
       options.api()
     ) {
@@ -185,7 +148,7 @@ export function useWorkspaceFeatureHostCoordinator(
     if (!settingsStore.modelSettings) {
       issueBackground(options.loaders.loadModelSettings);
     }
-    issueBackground(options.loaders.loadWorkspaceAgentSettings);
+    issueBackground(options.loaders.ensureLongAgentSettingsLoaded);
     issueBackground(options.loaders.loadLibraryAgentSettings);
   }
 
@@ -201,7 +164,7 @@ export function useWorkspaceFeatureHostCoordinator(
     } catch (error: unknown) {
       if (navigationIsCurrent(generation)) {
         options.notifications.error(
-          errorMessage(error, "加载智能体团队模块失败。")
+          errorMessage(error, "加载子智能体团队模块失败。")
         );
       }
       return;
@@ -218,33 +181,6 @@ export function useWorkspaceFeatureHostCoordinator(
     if (options.api() && !options.catalogSnapshot.value) {
       issueBackground(options.loaders.loadCatalogSnapshot);
     }
-  }
-
-  async function openMarketplace(): Promise<void> {
-    const generation = beginNavigation();
-    if (!(await canApplyNavigation(generation))) return;
-    options.view.workspaceMain.value = "marketplace";
-    if (options.api() && !options.catalogSnapshot.value) {
-      issueBackground(options.loaders.loadCatalogSnapshot);
-    }
-  }
-
-  async function openDeviceSync(): Promise<void> {
-    const generation = beginNavigation();
-    if (!(await canApplyNavigation(generation))) return;
-    options.view.workspaceMain.value = "device-sync";
-  }
-
-  async function openCloudBackup(): Promise<void> {
-    const generation = beginNavigation();
-    if (!(await canApplyNavigation(generation))) return;
-    options.view.workspaceMain.value = "cloud-backup";
-  }
-
-  async function openZhuqueDetection(): Promise<void> {
-    const generation = beginNavigation();
-    if (!(await canApplyNavigation(generation))) return;
-    options.view.workspaceMain.value = "zhuque-detection";
   }
 
   async function loadWorkspaceDirectory(): Promise<void> {
@@ -298,34 +234,6 @@ export function useWorkspaceFeatureHostCoordinator(
     if (active) options.view.current.value = "workspace";
   }
 
-  function applyMarketplaceSession(session: MarketplaceSession): void {
-    if (!active) return;
-    marketplaceRevision += 1;
-    knownMarketplaceSession.value = session;
-    applyDisplayName(session);
-  }
-
-  async function loadMarketplaceSession(): Promise<void> {
-    const api = options.api()?.marketplace;
-    if (!active || !api) return;
-    const requestRevision = marketplaceRevision;
-    const requestGeneration = ++marketplaceRequestGeneration;
-    try {
-      const session = await api.session();
-      if (
-        !active ||
-        requestRevision !== marketplaceRevision ||
-        requestGeneration !== marketplaceRequestGeneration
-      ) {
-        return;
-      }
-      applyMarketplaceSession(session);
-    } catch {
-      // Startup session discovery is best-effort. The marketplace page owns
-      // visible feedback when the user explicitly opens it.
-    }
-  }
-
   async function ensureActiveFeatureDependencies(
     feature: ActiveFeature
   ): Promise<void> {
@@ -333,7 +241,7 @@ export function useWorkspaceFeatureHostCoordinator(
     if (feature === "conversation") {
       await Promise.all([
         options.loaders.loadModelSettings(),
-        options.loaders.loadShortAndScriptAgentSettings(),
+        options.loaders.loadLibraryAgentSettings(),
         options.loaders.loadAgentTeamSettings()
       ]);
       return;
@@ -356,8 +264,6 @@ export function useWorkspaceFeatureHostCoordinator(
     active = false;
     stopFeatureErrors();
     navigationGeneration += 1;
-    marketplaceRevision += 1;
-    marketplaceRequestGeneration += 1;
     directoryChooseGeneration += 1;
     if (directoryChoosePending) {
       directoryChoosePending = false;
@@ -369,22 +275,15 @@ export function useWorkspaceFeatureHostCoordinator(
     isLongWorkspaceActive,
     activeFeature,
     workspaceFeatureModule,
-    marketplaceDisplayName,
     showConversation,
     newConversation,
     openWorkspaceDialog,
     openSettings,
     openOfficialModelsSettings,
     openAgentTeams,
-    openMarketplace,
-    openDeviceSync,
-    openCloudBackup,
-    openZhuqueDetection,
     loadWorkspaceDirectory,
     chooseWorkspaceDirectory,
     closeSettings,
-    applyMarketplaceSession,
-    loadMarketplaceSession,
     ensureActiveFeatureDependencies,
     dispose
   };

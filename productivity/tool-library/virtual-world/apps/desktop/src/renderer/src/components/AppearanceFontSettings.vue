@@ -180,7 +180,7 @@ async function confirmDelete(): Promise<void> {
       <div class="font-setting-row">
         <span class="font-setting-copy">
           <strong>正文字体</strong>
-          <small>短篇和长篇文稿标题、正文与预览</small>
+          <small>文稿标题、正文与预览</small>
         </span>
         <PopupSelect
           class="font-select-control"

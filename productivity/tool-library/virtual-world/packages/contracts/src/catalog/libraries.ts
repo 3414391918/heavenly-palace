@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { MarketplaceSourceSchema } from "../marketplace";
+import { MarketplaceSourceSchema } from "../catalog-provenance";
 import {
   CatalogIdSchema,
   CatalogTitleSchema,

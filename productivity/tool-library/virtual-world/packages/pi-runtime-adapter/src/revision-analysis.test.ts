@@ -123,8 +123,8 @@ describe("revision analysis runtime", () => {
     ).toHaveLength(1);
     expect(events.some((e) => e.type === "agent.completed")).toBe(true);
     expect(events.some((e) => e.type === "agent.error")).toBe(false);
-    expect(events.some((e) => e.type === "workspace.editor_mutation")).toBe(
-      false
-    );
+    expect(
+      events.some((e) => String(e.type) === "workspace.editor_mutation")
+    ).toBe(false);
   });
 });

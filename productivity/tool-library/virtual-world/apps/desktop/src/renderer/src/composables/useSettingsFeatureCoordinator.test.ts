@@ -7,13 +7,7 @@ import type {
   ModelSettingsInput,
   ModelUsageDashboard
 } from "@deepwrite/contracts";
-import {
-  DEFAULT_AGENT_TEAM_SETTINGS,
-  DEFAULT_LONG_AGENT_TEAM_SETTINGS,
-  DEFAULT_SCRIPT_AGENT_TEAM_SETTINGS,
-  DEFAULT_SCRIPT_WORKSPACE_AGENT_SETTINGS,
-  DEFAULT_SHORT_WORKSPACE_AGENT_SETTINGS
-} from "@deepwrite/contracts";
+import { DEFAULT_LONG_AGENT_TEAM_SETTINGS } from "@deepwrite/contracts";
 import { useSettingsStore } from "../stores/settingsStore";
 import {
   useSettingsFeatureCoordinator,
@@ -372,50 +366,13 @@ describe("settings feature coordinator", () => {
     expect(notifications.success).not.toHaveBeenCalled();
   });
 
-  it("single-flights short/script agent settings across concurrent feature loads", async () => {
-    const list = vi.fn(async (workspaceType: "short" | "script") =>
-      workspaceType === "short"
-        ? structuredClone(DEFAULT_SHORT_WORKSPACE_AGENT_SETTINGS)
-        : structuredClone(DEFAULT_SCRIPT_WORKSPACE_AGENT_SETTINGS)
-    );
-    const api = createApi({ workspaceAgents: { list } });
-    const { coordinator, notifications, settingsStore } = createHarness(api);
-
-    await Promise.all([
-      coordinator.loadShortAndScriptAgentSettings(),
-      coordinator.loadShortAndScriptAgentSettings()
-    ]);
-
-    expect(list).toHaveBeenCalledTimes(2);
-    expect(list).toHaveBeenCalledWith("short");
-    expect(list).toHaveBeenCalledWith("script");
-    expect(settingsStore.workspaceAgentsLoaded).toBe(true);
-    expect(settingsStore.workspaceAgentSettings).toHaveLength(2);
-
-    await coordinator.loadShortAndScriptAgentSettings();
-    expect(list).toHaveBeenCalledTimes(2);
-    expect(notifications.error).not.toHaveBeenCalled();
-  });
-
   it("single-flights the unified agent-team catalog", async () => {
     const list = vi.fn(async () => ({
       enabledTeamIds: {},
       teams: [
         {
-          id: "team_short_default",
-          name: "默认短篇团队",
-          workspaceType: "short" as const,
-          settings: structuredClone(DEFAULT_AGENT_TEAM_SETTINGS)
-        },
-        {
-          id: "team_script_default",
-          name: "默认剧本团队",
-          workspaceType: "script" as const,
-          settings: structuredClone(DEFAULT_SCRIPT_AGENT_TEAM_SETTINGS)
-        },
-        {
           id: "team_long_default",
-          name: "默认长篇团队",
+          name: "默认小说团队",
           workspaceType: "long" as const,
           settings: structuredClone(DEFAULT_LONG_AGENT_TEAM_SETTINGS)
         }
@@ -446,8 +403,8 @@ describe("settings feature coordinator", () => {
         {
           id: "team_installed",
           name: "安装的团队",
-          workspaceType: "short" as const,
-          settings: structuredClone(DEFAULT_AGENT_TEAM_SETTINGS)
+          workspaceType: "long" as const,
+          settings: structuredClone(DEFAULT_LONG_AGENT_TEAM_SETTINGS)
         }
       ]
     };
@@ -474,11 +431,11 @@ describe("settings feature coordinator", () => {
 
     expect(download).toHaveBeenCalledWith({ teamId: "team_source" });
     expect(notifications.success).toHaveBeenCalledWith(
-      "智能体团队压缩包已下载。"
+      "子智能体团队压缩包已下载。"
     );
     expect(settingsStore.agentTeamCatalog).toEqual(installedCatalog);
     expect(notifications.success).toHaveBeenCalledWith(
-      "智能体团队“安装的团队”已安装。"
+      "子智能体团队“安装的团队”已安装。"
     );
   });
 });

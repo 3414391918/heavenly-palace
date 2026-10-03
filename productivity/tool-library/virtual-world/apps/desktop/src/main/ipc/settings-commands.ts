@@ -1,18 +1,15 @@
-import { handleAgentTeamCommands } from "./agent-team-commands";
 import {
   GeneralSettingsSnapshotSchema,
-  LearningImitationSettingsSchema,
   LibraryAgentSettingsSchema,
   LongAgentSettingsSchema,
-  WorkspaceAgentSettingsSchema,
   WorkspaceDirectorySettingsSchema,
   type CommandEnvelope,
   type CommandResult
 } from "@deepwrite/contracts";
-import { safeErrorDetails } from "./errors";
-import type { IpcCommandContext } from "./command-types";
+import { handleAgentTeamCommands } from "./agent-team-commands";
 import { handleAppearanceCommands } from "./appearance-commands";
-
+import type { IpcCommandContext } from "./command-types";
+import { safeErrorDetails } from "./errors";
 export async function handleSettingsCommands(
   ctx: IpcCommandContext,
   command: CommandEnvelope
@@ -39,7 +36,6 @@ export async function handleSettingsCommands(
       };
     }
   }
-
   if (command.type === "workspaceDirectory.choose") {
     try {
       return {
@@ -60,12 +56,10 @@ export async function handleSettingsCommands(
       };
     }
   }
-
   const appearanceResult = await handleAppearanceCommands(ctx, command);
   if (appearanceResult) {
     return appearanceResult;
   }
-
   if (command.type === "generalSettings.list") {
     try {
       const snapshot = GeneralSettingsSnapshotSchema.parse(
@@ -90,7 +84,6 @@ export async function handleSettingsCommands(
       };
     }
   }
-
   if (command.type === "generalSettings.save") {
     try {
       const snapshot = GeneralSettingsSnapshotSchema.parse(
@@ -115,88 +108,8 @@ export async function handleSettingsCommands(
       };
     }
   }
-
-  if (command.type === "workspaceAgents.list") {
-    try {
-      return {
-        status: "accepted",
-        requestId: command.id,
-        payload: WorkspaceAgentSettingsSchema.parse(
-          await ctx
-            .requireWorkspaceAgentConfigStore()
-            .list(command.payload.workspaceType)
-        )
-      };
-    } catch (error: unknown) {
-      return {
-        status: "rejected",
-        requestId: command.id,
-        error: {
-          code: "workspace_agents.list_failed",
-          message:
-            error instanceof Error
-              ? error.message
-              : "加载创作空间智能体设置失败。",
-          details: safeErrorDetails(error)
-        }
-      };
-    }
-  }
-
   const teamResult = await handleAgentTeamCommands(ctx, command);
   if (teamResult) return teamResult;
-  if (command.type === "workspaceAgents.save") {
-    try {
-      return {
-        status: "accepted",
-        requestId: command.id,
-        payload: WorkspaceAgentSettingsSchema.parse(
-          await ctx.requireWorkspaceAgentConfigStore().save(command.payload)
-        )
-      };
-    } catch (error: unknown) {
-      return {
-        status: "rejected",
-        requestId: command.id,
-        error: {
-          code: "workspace_agents.save_failed",
-          message:
-            error instanceof Error
-              ? error.message
-              : "保存创作空间智能体设置失败。",
-          details: safeErrorDetails(error)
-        }
-      };
-    }
-  }
-
-  if (command.type === "workspaceAgents.reset") {
-    try {
-      return {
-        status: "accepted",
-        requestId: command.id,
-        payload: WorkspaceAgentSettingsSchema.parse(
-          await ctx
-            .requireWorkspaceAgentConfigStore()
-            .reset(command.payload.workspaceType, command.payload.agentId)
-        )
-      };
-    } catch (error: unknown) {
-      return {
-        status: "rejected",
-        requestId: command.id,
-        error: {
-          code: "workspace_agents.reset_failed",
-          message:
-            error instanceof Error
-              ? error.message
-              : "恢复创作空间默认设置失败。",
-          details: safeErrorDetails(error)
-        }
-      };
-    }
-  }
-
   if (command.type === "longAgents.list") {
     try {
       return {
@@ -219,7 +132,6 @@ export async function handleSettingsCommands(
       };
     }
   }
-
   if (command.type === "longAgents.save") {
     try {
       return {
@@ -242,7 +154,6 @@ export async function handleSettingsCommands(
       };
     }
   }
-
   if (command.type === "longAgents.reset") {
     try {
       return {
@@ -267,7 +178,6 @@ export async function handleSettingsCommands(
       };
     }
   }
-
   if (command.type === "libraryAgents.list") {
     try {
       return {
@@ -292,7 +202,6 @@ export async function handleSettingsCommands(
       };
     }
   }
-
   if (command.type === "libraryAgents.save") {
     try {
       return {
@@ -317,7 +226,6 @@ export async function handleSettingsCommands(
       };
     }
   }
-
   if (command.type === "libraryAgents.reset") {
     try {
       return {
@@ -344,79 +252,5 @@ export async function handleSettingsCommands(
       };
     }
   }
-
-  if (command.type === "learningImitationSettings.list") {
-    try {
-      return {
-        status: "accepted",
-        requestId: command.id,
-        payload: LearningImitationSettingsSchema.parse(
-          await ctx.requireLearningImitationConfigStore().list()
-        )
-      };
-    } catch (error: unknown) {
-      return {
-        status: "rejected",
-        requestId: command.id,
-        error: {
-          code: "learning_imitation_settings.list_failed",
-          message:
-            error instanceof Error ? error.message : "加载学习仿写设置失败。",
-          details: safeErrorDetails(error)
-        }
-      };
-    }
-  }
-
-  if (command.type === "learningImitationSettings.save") {
-    try {
-      return {
-        status: "accepted",
-        requestId: command.id,
-        payload: LearningImitationSettingsSchema.parse(
-          await ctx.requireLearningImitationConfigStore().save(command.payload)
-        )
-      };
-    } catch (error: unknown) {
-      return {
-        status: "rejected",
-        requestId: command.id,
-        error: {
-          code: "learning_imitation_settings.save_failed",
-          message:
-            error instanceof Error ? error.message : "保存学习仿写设置失败。",
-          details: safeErrorDetails(error)
-        }
-      };
-    }
-  }
-
-  if (command.type === "learningImitationSettings.reset") {
-    try {
-      return {
-        status: "accepted",
-        requestId: command.id,
-        payload: LearningImitationSettingsSchema.parse(
-          await ctx
-            .requireLearningImitationConfigStore()
-            .reset(command.payload.stageId)
-        )
-      };
-    } catch (error: unknown) {
-      return {
-        status: "rejected",
-        requestId: command.id,
-        error: {
-          code: "learning_imitation_settings.reset_failed",
-          message:
-            error instanceof Error
-              ? error.message
-              : "恢复学习仿写默认设置失败。",
-          details: safeErrorDetails(error)
-        }
-      };
-    }
-  }
-
   return undefined;
 }

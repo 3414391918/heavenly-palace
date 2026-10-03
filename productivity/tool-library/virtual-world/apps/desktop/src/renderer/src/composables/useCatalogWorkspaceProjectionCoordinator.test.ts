@@ -11,10 +11,8 @@ import type {
   ResourceTreeSection,
   WorkspaceDocument
 } from "../types/workspace";
-import { legacyBookDraftRecoveryKey } from "../utils/legacyDraftRecoveryDetection";
 import {
   useCatalogWorkspaceProjectionCoordinator,
-  type CatalogLegacyRecoveryMigratorModule,
   type CatalogWorkspaceProjectionCoordinatorOptions
 } from "./useCatalogWorkspaceProjectionCoordinator";
 
@@ -44,14 +42,6 @@ function catalogSnapshot(
   } as unknown as CatalogIndexSnapshot;
 }
 
-function fullCatalogSnapshot(revision: number): CatalogSnapshot {
-  return {
-    schemaVersion: 1,
-    revision,
-    books: []
-  } as unknown as CatalogSnapshot;
-}
-
 function workspaceDocument(
   id: string,
   workspaceId: string,
@@ -59,13 +49,12 @@ function workspaceDocument(
 ): WorkspaceDocument {
   return {
     id,
-    domain: "creation",
+    domain: "material",
     title: id,
-    eyebrow: "短篇 · 正文",
+    eyebrow: "素材 · 条目",
     path: [workspaceId, id],
     content,
     workspaceId,
-    workspaceType: "short",
     stageId: "draft",
     catalogContentLoaded: true
   };
@@ -92,8 +81,7 @@ function projection(
               {
                 id: resourceId,
                 label: document.title,
-                targetDocumentId: document.id,
-                workspaceType: "short"
+                targetDocumentId: document.id
               }
             ]
           : []
@@ -155,7 +143,6 @@ function createHarness(
     activeCreationResourceId?: string;
     conversations?: readonly AgentConversationController[];
     aggregateSnapshots?: readonly CatalogSnapshot[];
-    loadMigrator?: () => Promise<CatalogLegacyRecoveryMigratorModule>;
     indexLoader?: CatalogWorkspaceProjectionCoordinatorOptions["index"]["ensureSnapshot"];
     api?: CatalogWorkspaceProjectionCoordinatorOptions["api"];
   } = {}
@@ -223,8 +210,7 @@ function createHarness(
     },
     state: {
       drafts,
-      selectedResourceId,
-      activeCreationResourceId
+      selectedResourceId
     },
     proposals: {
       all: () => options.conversations ?? [],
@@ -235,10 +221,7 @@ function createHarness(
         microtasks.push(task);
       }
     },
-    notifications,
-    ...(options.loadMigrator
-      ? { loadLegacyRecoveryMigrator: options.loadMigrator }
-      : {})
+    notifications
   });
   return {
     activeCreationResourceId,
@@ -262,15 +245,12 @@ function createHarness(
 
 describe("useCatalogWorkspaceProjectionCoordinator", () => {
   it("keeps the normal metadata path aggregate-free and preserves an empty selection", async () => {
-    const loadMigrator =
-      vi.fn<() => Promise<CatalogLegacyRecoveryMigratorModule>>();
-    const harness = createHarness({ loadMigrator });
+    const harness = createHarness();
 
     await expect(harness.coordinator.loadSnapshot()).resolves.toBe(true);
 
     expect(harness.index).toHaveBeenCalledTimes(1);
     expect(harness.aggregate).not.toHaveBeenCalled();
-    expect(loadMigrator).not.toHaveBeenCalled();
     expect(harness.reconcileProjection).toHaveBeenCalledTimes(1);
     expect(harness.selectedResourceId.value).toBe("");
     expect(harness.activeCreationResourceId.value).toBe("");
@@ -309,110 +289,14 @@ describe("useCatalogWorkspaceProjectionCoordinator", () => {
 
     await harness.coordinator.loadSnapshot();
     await harness.coordinator.loadSnapshot();
-    expect(harness.selectedResourceId.value).toBe("resource-next");
-    expect(harness.activeCreationResourceId.value).toBe("resource-next");
+    expect(harness.selectedResourceId.value).toBe("document-next");
+    expect(harness.activeCreationResourceId.value).toBe("resource-old");
 
     harness.selectedResourceId.value = "long-book:novel-1:draft:chapter-1";
     await harness.coordinator.loadSnapshot();
     expect(harness.selectedResourceId.value).toBe(
       "long-book:novel-1:draft:chapter-1"
     );
-  });
-
-  it("loads and applies the legacy migrator only after a matching aggregate snapshot", async () => {
-    const legacyKey = legacyBookDraftRecoveryKey("book-1");
-    const document = workspaceDocument("document-1", "book-1", "disk");
-    const conversation = pendingConversation();
-    const migrateLegacyDraftRecoveries = vi.fn(() => ({
-      drafts: {
-        "document-1": {
-          title: "恢复标题",
-          content: "恢复正文",
-          dirty: true
-        }
-      },
-      migratedLegacyKeys: [legacyKey],
-      unmappedLegacyKeys: []
-    }));
-    const loadMigrator = vi.fn(async () => ({
-      migrateLegacyDraftRecoveries
-    }));
-    const harness = createHarness({
-      snapshots: [catalogSnapshot(4, ["book-1"])],
-      projections: new Map([
-        [
-          4,
-          projection({
-            resourceId: "resource-1",
-            document,
-            workspaceId: "book-1"
-          })
-        ]
-      ]),
-      aggregateSnapshots: [fullCatalogSnapshot(4)],
-      drafts: {
-        [legacyKey]: {
-          title: "旧版恢复稿",
-          content: "恢复正文",
-          dirty: true
-        }
-      },
-      conversations: [conversation],
-      loadMigrator
-    });
-
-    await harness.coordinator.loadSnapshot();
-
-    expect(harness.aggregate).toHaveBeenCalledTimes(1);
-    expect(loadMigrator).toHaveBeenCalledTimes(1);
-    expect(migrateLegacyDraftRecoveries).toHaveBeenCalledTimes(1);
-    expect(harness.drafts.value[legacyKey]).toBeUndefined();
-    expect(harness.drafts.value["document-1"]?.content).toBe("恢复正文");
-    expect(harness.resume).not.toHaveBeenCalled();
-
-    harness.flushMicrotasks();
-    expect(harness.resume).toHaveBeenCalledWith([conversation]);
-    expect(harness.documents.value).toEqual([document]);
-  });
-
-  it("repairs a recovered character overview title without losing unsaved body text", async () => {
-    const document = workspaceDocument(
-      "character-overview",
-      "book-1",
-      "磁盘人物正文"
-    );
-    document.title = "概览";
-    document.stageId = "character_design";
-    document.characterFileKind = "overview";
-    const recovered: EditorDraftState = {
-      title: "",
-      content: "未保存的人物正文",
-      dirty: true,
-      recoveryUpdatedAt: "2026-08-18T10:00:00.000Z",
-      baseRevision: "base-revision",
-      baseProjectRevision: 7
-    };
-    const harness = createHarness({
-      snapshots: [catalogSnapshot(5, ["book-1"])],
-      projections: new Map([
-        [
-          5,
-          projection({
-            resourceId: "character-overview-resource",
-            document,
-            workspaceId: "book-1"
-          })
-        ]
-      ]),
-      drafts: { "character-overview": recovered }
-    });
-
-    await harness.coordinator.loadSnapshot();
-
-    expect(harness.drafts.value["character-overview"]).toEqual({
-      ...recovered,
-      title: "概览"
-    });
   });
 
   it("coalesces a burst into one load and at most one trailing refresh", async () => {
@@ -447,81 +331,6 @@ describe("useCatalogWorkspaceProjectionCoordinator", () => {
 
     expect(index).toHaveBeenCalledTimes(2);
     expect(harness.reconcileProjection).toHaveBeenCalledTimes(2);
-  });
-
-  it("rejects a stale aggregate pair before loading or publishing the migrator", async () => {
-    const legacyKey = legacyBookDraftRecoveryKey("book-1");
-    const aggregate = deferred<CatalogSnapshot>();
-    const pairOneProjection = projection();
-    const pairTwoProjection = projection({
-      resourceId: "resource-2",
-      document: workspaceDocument("document-2", "book-2")
-    });
-    const loadMigrator = vi.fn(async () => ({
-      migrateLegacyDraftRecoveries: vi.fn()
-    }));
-    const harness = createHarness({
-      snapshots: [catalogSnapshot(1, ["book-1"])],
-      projections: new Map([[1, pairOneProjection]]),
-      drafts: {
-        [legacyKey]: { title: "旧稿", content: "正文", dirty: true }
-      },
-      api: () => ({
-        index: async () => catalogSnapshot(1, ["book-1"]),
-        snapshot: () => aggregate.promise
-      }),
-      loadMigrator
-    });
-
-    const loading = harness.coordinator.loadSnapshot();
-    await vi.waitFor(() =>
-      expect(harness.projected.value).toBe(pairOneProjection)
-    );
-    harness.snapshot.value = catalogSnapshot(2);
-    harness.projected.value = pairTwoProjection;
-    aggregate.resolve(fullCatalogSnapshot(1));
-
-    await expect(loading).resolves.toBe(false);
-    expect(loadMigrator).not.toHaveBeenCalled();
-    expect(harness.reconcileProjection).not.toHaveBeenCalled();
-    expect(harness.notifications.warning).not.toHaveBeenCalled();
-    expect(harness.resume).not.toHaveBeenCalled();
-  });
-
-  it("preserves legacy recovery across a revision mismatch and performs one bounded trailing retry", async () => {
-    const legacyKey = legacyBookDraftRecoveryKey("book-1");
-    const migrateLegacyDraftRecoveries = vi.fn((drafts) => ({
-      drafts: { ...drafts },
-      migratedLegacyKeys: [],
-      unmappedLegacyKeys: []
-    }));
-    const loadMigrator = vi.fn(async () => ({
-      migrateLegacyDraftRecoveries
-    }));
-    const harness = createHarness({
-      snapshots: [
-        catalogSnapshot(1, ["book-1"]),
-        catalogSnapshot(2, ["book-1"])
-      ],
-      projections: new Map([
-        [1, projection()],
-        [2, projection()]
-      ]),
-      aggregateSnapshots: [fullCatalogSnapshot(2), fullCatalogSnapshot(2)],
-      drafts: {
-        [legacyKey]: { title: "旧稿", content: "正文", dirty: true }
-      },
-      loadMigrator
-    });
-
-    await expect(harness.coordinator.loadSnapshot()).resolves.toBe(true);
-
-    expect(harness.index).toHaveBeenCalledTimes(2);
-    expect(harness.aggregate).toHaveBeenCalledTimes(2);
-    expect(loadMigrator).toHaveBeenCalledTimes(1);
-    expect(migrateLegacyDraftRecoveries).toHaveBeenCalledTimes(1);
-    expect(harness.drafts.value[legacyKey]).toBeDefined();
-    expect(harness.notifications.warning).toHaveBeenCalledTimes(1);
   });
 
   it("silently invalidates late work and queued proposal resume after disposal", async () => {

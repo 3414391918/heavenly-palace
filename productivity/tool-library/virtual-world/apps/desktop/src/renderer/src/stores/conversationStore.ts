@@ -26,6 +26,8 @@ import type { AgentConversationController } from "../composables/useAgentConvers
 export interface DisposeConversationStoreOptions {
   flush?: boolean;
   clearControllerPersistence?: boolean;
+  /** Prevent a retiring workspace shell from disconnecting its replacement. */
+  isCurrent?: () => boolean;
 }
 
 export const useConversationStore = defineStore("conversation", () => {
@@ -35,6 +37,11 @@ export const useConversationStore = defineStore("conversation", () => {
   const scopesByKey = shallowRef<Map<string, string>>(new Map());
   const checkpointWatchers = new Map<string, () => void>();
   const controllerRegistryRevision = ref(0);
+  let lifecycleOwner = 0;
+  function claimLifecycle(): () => boolean {
+    const owner = ++lifecycleOwner;
+    return () => owner === lifecycleOwner;
+  }
 
   const persistence = createConversationPersistenceState(async (flush) => {
     // Closing must still save when the development server or lazy assets are gone.
@@ -206,9 +213,11 @@ export const useConversationStore = defineStore("conversation", () => {
   async function dispose(
     options: DisposeConversationStoreOptions = {}
   ): Promise<void> {
+    if (options.isCurrent?.() === false) return;
     // A failed flush leaves the live controllers and recovery queue available.
     if (options.flush !== false) await flushPersistence();
     else persistence.discardPendingPersistence();
+    if (options.isCurrent?.() === false) return;
     persistence.stopScheduling();
     disposeAllControllers(
       options.clearControllerPersistence === undefined
@@ -256,6 +265,7 @@ export const useConversationStore = defineStore("conversation", () => {
     invalidatePersistenceCache,
     removePersistence,
     hydratePreferences,
+    claimLifecycle,
     dispose
   };
 });

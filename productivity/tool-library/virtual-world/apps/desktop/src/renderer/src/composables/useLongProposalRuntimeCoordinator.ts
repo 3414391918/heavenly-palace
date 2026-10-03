@@ -139,7 +139,7 @@ export function useLongProposalRuntimeCoordinator(
     await nextTick();
     if (!(await context.workspace.saveActiveEditorChanges())) {
       throw new Error(
-        "当前长篇编辑内容尚未保存，智能体提案未自动覆盖；请处理编辑器保存状态后重试。"
+        "当前小说编辑内容尚未保存，智能体提案未自动覆盖；请处理编辑器保存状态后重试。"
       );
     }
   }
@@ -166,7 +166,7 @@ export function useLongProposalRuntimeCoordinator(
       const stopAccepted = await conversation.stopGeneration();
       if (!stopAccepted) {
         throw new Error(
-          "长篇智能体正在启动，暂时无法安全移除项目；请稍后重试。"
+          "小说智能体正在启动，暂时无法安全移除项目；请稍后重试。"
         );
       }
     }
@@ -200,13 +200,13 @@ export function useLongProposalRuntimeCoordinator(
     if (!conversation) return;
     try {
       if (await conversation.stopGeneration()) {
-        notifications.info("已停止长篇生成。");
+        notifications.info("已停止小说生成。");
       }
     } catch (error: unknown) {
       notifications.error(
         error instanceof Error
           ? error.message
-          : "停止长篇生成失败，请稍后重试。"
+          : "停止小说生成失败，请稍后重试。"
       );
     }
   }
@@ -223,7 +223,7 @@ export function useLongProposalRuntimeCoordinator(
       await nextTick();
       if (!(await context.workspace.saveActiveEditorChanges())) return;
       if (state.activeBookId.value !== bookId) {
-        notifications.info("活动长篇已切换，本次审批已取消。");
+        notifications.info("活动小说已切换，本次审批已取消。");
         return;
       }
       if (
@@ -243,7 +243,7 @@ export function useLongProposalRuntimeCoordinator(
     const bookId = state.activeBookId.value;
     if (!bookId) return;
     if (workspaceProposals.reject(bookId, eventId)) {
-      notifications.info("已拒绝该长篇提案，未写入任何文件。");
+      notifications.info("已拒绝该小说提案，未写入任何文件。");
     }
   }
 

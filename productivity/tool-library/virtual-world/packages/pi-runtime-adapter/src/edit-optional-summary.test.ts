@@ -1,21 +1,12 @@
 import { Check } from "typebox/value";
 import { validateToolArguments } from "@earendil-works/pi-ai";
 import { describe, expect, it } from "vitest";
-import { screenplayWorkspace, scriptAgentProfile } from "./index.test-support";
-import {
-  buildScriptWorkspaceTools,
-  buildShortWorkspaceTools
-} from "./short-agent-tools";
-import {
-  shortProfile,
-  shortWorkspace,
-  toolByName,
-  resultText
-} from "./short-agent-tools.test-support";
 import {
   documentExecutor,
   fixtureIndex,
-  longTools
+  longTools,
+  resultText,
+  toolByName
 } from "./long-agent-tools.test-support";
 import { resolveWritingEditSummary } from "./writing-edit-summary";
 import type { AgentTool } from "@earendil-works/pi-agent-core";
@@ -28,88 +19,6 @@ function validate(tool: AgentTool, args: Record<string, unknown>) {
     arguments: args
   });
 }
-function bookTools(type: "short" | "script") {
-  const workspace = shortWorkspace("draft");
-  return type === "short"
-    ? buildShortWorkspaceTools({ workspace, profile: shortProfile() })
-    : buildScriptWorkspaceTools({
-        workspace: {
-          ...screenplayWorkspace(),
-          expertDraft: workspace.expertDraft,
-          activeSectionId: "section-1"
-        },
-        profile: scriptAgentProfile()
-      });
-}
-
-describe.each(["short", "script"] as const)(
-  "%s optional edit summary",
-  (type) => {
-    it.each([undefined, "", "   "])(
-      "generates a proposal summary for %j",
-      async (summary) => {
-        const edit = toolByName(bookTools(type), "edit");
-        const result = await edit.execute(
-          "write",
-          validate(edit, {
-            id: "section-2",
-            document: "character_state",
-            content: "发现新的线索。",
-            ...(summary === undefined ? {} : { summary })
-          })
-        );
-        expect(result.details).toMatchObject({
-          summary: expect.stringMatching(/^更新《.+人物状态》的内容$/u),
-          text: "发现新的线索。"
-        });
-        expect(resultText(result)).not.toContain("undefined");
-      }
-    );
-    it("supports replacements, metadata, and clearing without bypassing guards", async () => {
-      const tools = bookTools(type);
-      const edit = toolByName(tools, "edit");
-      const target = { id: "section-2", document: "body" };
-      const args = validate(edit, { ...target, content: "" });
-      expect(resultText(await edit.execute("unread", args))).toContain(
-        "请先用 read 完整读取"
-      );
-      await toolByName(tools, "read").execute("read", target);
-      expect(resultText(await edit.execute("unguarded", args))).toContain(
-        "allow_overwrite_existing=true"
-      );
-      const replaced = await edit.execute(
-        "replace",
-        validate(edit, {
-          ...target,
-          replacements: [{ original_text: "暗房", new_text: "房间" }]
-        })
-      );
-      expect(replaced.details).toMatchObject({
-        summary: expect.stringMatching(/^局部修改/u)
-      });
-      const cleared = await edit.execute(
-        "clear",
-        validate(edit, { ...args, allow_overwrite_existing: true })
-      );
-      expect(cleared.details).toMatchObject({
-        text: "",
-        summary: expect.stringMatching(/^清空/u)
-      });
-      const renamed = await edit.execute(
-        "rename",
-        validate(edit, {
-          kind: "draft_section",
-          id: target.id,
-          meta: { title: "新的章节" }
-        })
-      );
-      expect(renamed.details).toMatchObject({
-        summary: expect.stringMatching(/的属性$/u)
-      });
-    });
-  }
-);
-
 describe("long optional edit summary", () => {
   it.each([undefined, "", "   ", "  调整叙述节奏  "])(
     "keeps proposals valid for %j",

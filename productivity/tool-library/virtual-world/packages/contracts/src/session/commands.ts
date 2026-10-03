@@ -2,15 +2,11 @@ import {
   ChatAssistantRuntimeContextTransportSchema,
   validateChatAssistantRuntimeContext
 } from "./chat-assistant-context";
-import { validateBookAnalysisProfiles } from "./analysis-profile-validation";
 import { LibraryManagementRuntimeContextSchema } from "../library-management";
 import { z } from "zod";
 import { ShortAgentSubagentDefinitionsSchema } from "../agent-team";
 import { ChatAssistantRequestContextSchema } from "../chat-assistant-base";
 import { EnvelopeBaseSchema } from "../envelope";
-import { LearningImitationAgentProfileSchema } from "../learning-imitation";
-import { ShortBookAnalysisProfileSchema } from "../short-book-analysis";
-import { LongBookAnalysisAgentProfileSchema } from "../long-book-analysis";
 import { LibraryAgentProfileSchema } from "../library-agent";
 import {
   LongAgentProfileSchema,
@@ -21,12 +17,6 @@ import {
   TemperatureSchema,
   ThinkingLevelSchema
 } from "../models";
-import { ScriptWorkspaceAgentProfileSchema } from "../script-agent-settings";
-import { resolveScriptWorkspaceAgentIdForStage } from "../script-workspace";
-import {
-  ShortWorkspaceAgentProfileSchema,
-  resolveShortWorkspaceAgentIdForStage
-} from "../workspace";
 import { UserPromptAttachmentsSchema } from "./attachments";
 import {
   SessionUserInputResponsePayloadSchema,
@@ -38,14 +28,11 @@ import {
   AgentWriteApprovalModeSchema,
   WorkspaceRuntimeContextSchema
 } from "./runtime";
-
 export const SessionModeSchema = z.enum(["workspace", "chat-assistant"]);
 export type SessionMode = z.infer<typeof SessionModeSchema>;
-
 export const SESSION_CONVERSATION_HISTORY_MAX_MESSAGES = 80;
-export const SESSION_CONVERSATION_HISTORY_MAX_MESSAGE_LENGTH = 20_000;
-export const SESSION_CONVERSATION_HISTORY_MAX_CONTENT_LENGTH = 120_000;
-
+export const SESSION_CONVERSATION_HISTORY_MAX_MESSAGE_LENGTH = 20000;
+export const SESSION_CONVERSATION_HISTORY_MAX_CONTENT_LENGTH = 120000;
 export const SessionConversationHistoryMessageSchema = z.object({
   role: z.enum(["user", "assistant"]),
   content: z
@@ -60,7 +47,6 @@ export const SessionConversationHistoryMessageSchema = z.object({
 export type SessionConversationHistoryMessage = z.infer<
   typeof SessionConversationHistoryMessageSchema
 >;
-
 export const SessionConversationHistorySchema = z
   .array(SessionConversationHistoryMessageSchema)
   .max(SESSION_CONVERSATION_HISTORY_MAX_MESSAGES)
@@ -76,11 +62,10 @@ export const SessionConversationHistorySchema = z
       });
     }
   });
-
 export const SessionPromptCommandPayloadSchema = z
   .object({
     sessionId: z.string().min(1),
-    message: z.string().trim().min(1).max(20_000),
+    message: z.string().trim().min(1).max(20000),
     conversationHistory: SessionConversationHistorySchema.optional(),
     conversationHistoryMode: z.literal("replace").optional(),
     mode: SessionModeSchema.optional(),
@@ -95,6 +80,7 @@ export const SessionPromptCommandPayloadSchema = z
     chatAssistant: ChatAssistantRequestContextSchema.optional(),
     workspaceContext: WorkspaceRuntimeContextSchema.optional()
   })
+  .strict()
   .superRefine((value, context) => {
     if (value.mode !== "chat-assistant") {
       if (value.chatAssistant !== undefined) {
@@ -106,14 +92,12 @@ export const SessionPromptCommandPayloadSchema = z
       }
       if (
         value.agentTeamMode !== undefined &&
-        !value.workspaceContext?.shortWorkspace &&
-        !value.workspaceContext?.scriptWorkspace &&
         !value.workspaceContext?.longWorkspace
       ) {
         context.addIssue({
           code: "custom",
           path: ["agentTeamMode"],
-          message: "Agent team mode requires a short, script or long workspace."
+          message: "Agent team mode requires a novel workspace."
         });
       }
       return;
@@ -159,7 +143,6 @@ export const SessionPromptCommandPayloadSchema = z
 export type SessionPromptCommandPayload = z.infer<
   typeof SessionPromptCommandPayloadSchema
 >;
-
 export const SessionPromptAcceptedPayloadSchema = z.object({
   sessionId: z.string().min(1),
   runId: z.string().min(1),
@@ -169,7 +152,6 @@ export const SessionPromptAcceptedPayloadSchema = z.object({
 export type SessionPromptAcceptedPayload = z.infer<
   typeof SessionPromptAcceptedPayloadSchema
 >;
-
 export const SessionPromptCommandEnvelopeSchema = EnvelopeBaseSchema.extend({
   type: z.literal("session.prompt"),
   payload: SessionPromptCommandPayloadSchema
@@ -190,7 +172,6 @@ export const SessionPromptCommandEnvelopeSchema = EnvelopeBaseSchema.extend({
     });
   }
 });
-
 export const SessionAbortCommandPayloadSchema = z.object({
   sessionId: z.string().min(1),
   runId: z.string().min(1)
@@ -198,7 +179,6 @@ export const SessionAbortCommandPayloadSchema = z.object({
 export type SessionAbortCommandPayload = z.infer<
   typeof SessionAbortCommandPayloadSchema
 >;
-
 export const SessionAbortAcceptedPayloadSchema =
   SessionAbortCommandPayloadSchema.extend({
     abortedAt: z.string().datetime()
@@ -206,10 +186,12 @@ export const SessionAbortAcceptedPayloadSchema =
 export type SessionAbortAcceptedPayload = z.infer<
   typeof SessionAbortAcceptedPayloadSchema
 >;
-
 function validateAbortCommandContext(
   value: {
-    context: { sessionId?: string | undefined; runId?: string | undefined };
+    context: {
+      sessionId?: string | undefined;
+      runId?: string | undefined;
+    };
     payload: SessionAbortCommandPayload;
   },
   context: z.core.$RefinementCtx<unknown>
@@ -229,15 +211,16 @@ function validateAbortCommandContext(
     });
   }
 }
-
 export const SessionAbortCommandEnvelopeSchema = EnvelopeBaseSchema.extend({
   type: z.literal("session.abort"),
   payload: SessionAbortCommandPayloadSchema
 }).superRefine(validateAbortCommandContext);
-
 function validateUserInputResponseCommandContext(
   value: {
-    context: { sessionId?: string | undefined; runId?: string | undefined };
+    context: {
+      sessionId?: string | undefined;
+      runId?: string | undefined;
+    };
     payload: SessionUserInputResponsePayload;
   },
   context: z.core.$RefinementCtx<unknown>
@@ -257,20 +240,16 @@ function validateUserInputResponseCommandContext(
     });
   }
 }
-
 export const SessionUserInputResponseCommandEnvelopeSchema =
   EnvelopeBaseSchema.extend({
     type: z.literal("session.user_input_response"),
     payload: SessionUserInputResponsePayloadSchema
   }).superRefine(validateUserInputResponseCommandContext);
-
 export const AgentPromptCommandPayloadSchema =
   SessionPromptCommandPayloadSchema.extend({
     chatAssistantRuntimeContext:
       ChatAssistantRuntimeContextTransportSchema.optional(),
     runtimeConfig: AgentProviderRuntimeConfigSchema.optional(),
-    agentProfile: ShortWorkspaceAgentProfileSchema.optional(),
-    scriptAgentProfile: ScriptWorkspaceAgentProfileSchema.optional(),
     longAgentProfile: LongAgentProfileSchema.optional(),
     libraryManagement: LibraryManagementRuntimeContextSchema.optional(),
     subagentDefinitions: ShortAgentSubagentDefinitionsSchema.optional(),
@@ -281,39 +260,26 @@ export const AgentPromptCommandPayloadSchema =
     subagentRuntimeConfigs: z
       .record(z.string().min(1).max(120), AgentProviderRuntimeConfigSchema)
       .optional(),
-    libraryAgentProfile: LibraryAgentProfileSchema.optional(),
-    learningImitationProfile: LearningImitationAgentProfileSchema.optional(),
-    shortBookAnalysisProfile: ShortBookAnalysisProfileSchema.optional(),
-    longBookAnalysisProfile: LongBookAnalysisAgentProfileSchema.optional()
+    libraryAgentProfile: LibraryAgentProfileSchema.optional()
   }).superRefine((value, context) => {
     validateChatAssistantRuntimeContext(value, context);
-    const shortWorkspace = value.workspaceContext?.shortWorkspace;
-    const scriptWorkspace = value.workspaceContext?.scriptWorkspace;
     const longWorkspace = value.workspaceContext?.longWorkspace;
     if (
       (value.subagentDefinitions !== undefined ||
         value.libraryManagement !== undefined) &&
-      !(
-        (shortWorkspace && value.agentProfile) ||
-        (scriptWorkspace && value.scriptAgentProfile) ||
-        (longWorkspace && value.longAgentProfile)
-      )
+      !(longWorkspace && value.longAgentProfile)
     ) {
       context.addIssue({
         code: "custom",
         path: ["subagentDefinitions"],
         message:
-          "Subagent definitions require a short, script or long workspace and its agent profile."
+          "Subagent definitions require a novel workspace and its agent profile."
       });
     }
     if (value.libraryManagement) {
       const scope = value.libraryManagement.scope;
       const expectedBookId =
-        scope.bookType === "long"
-          ? longWorkspace?.bookId
-          : scope.bookType === "script"
-            ? scriptWorkspace?.id
-            : shortWorkspace?.id;
+        scope.bookType === "long" ? longWorkspace?.bookId : undefined;
       if (expectedBookId !== scope.bookId)
         context.addIssue({
           code: "custom",
@@ -344,54 +310,12 @@ export const AgentPromptCommandPayloadSchema =
         }
       }
     }
-    if (Boolean(shortWorkspace) !== Boolean(value.agentProfile)) {
-      context.addIssue({
-        code: "custom",
-        path: ["agentProfile"],
-        message:
-          "Short workspace context and agent profile must be provided together."
-      });
-    }
-    if (shortWorkspace && value.agentProfile) {
-      const activeAgentId =
-        shortWorkspace.activeAgentId ??
-        resolveShortWorkspaceAgentIdForStage(shortWorkspace.activeStageId);
-      if (value.agentProfile.id !== activeAgentId) {
-        context.addIssue({
-          code: "custom",
-          path: ["agentProfile", "id"],
-          message:
-            "Short workspace agent profile must match the active parent agent."
-        });
-      }
-    }
-    if (Boolean(scriptWorkspace) !== Boolean(value.scriptAgentProfile)) {
-      context.addIssue({
-        code: "custom",
-        path: ["scriptAgentProfile"],
-        message:
-          "Script workspace context and agent profile must be provided together."
-      });
-    }
-    if (scriptWorkspace && value.scriptAgentProfile) {
-      const activeAgentId =
-        scriptWorkspace.activeAgentId ??
-        resolveScriptWorkspaceAgentIdForStage(scriptWorkspace.activeStageId);
-      if (value.scriptAgentProfile.id !== activeAgentId) {
-        context.addIssue({
-          code: "custom",
-          path: ["scriptAgentProfile", "id"],
-          message:
-            "Script workspace agent profile must match the active parent agent."
-        });
-      }
-    }
     if (Boolean(longWorkspace) !== Boolean(value.longAgentProfile)) {
       context.addIssue({
         code: "custom",
         path: ["longAgentProfile"],
         message:
-          "Long workspace context and agent profile must be provided together."
+          "Novel workspace context and agent profile must be provided together."
       });
     }
     if (longWorkspace && value.longAgentProfile) {
@@ -402,34 +326,10 @@ export const AgentPromptCommandPayloadSchema =
         context.addIssue({
           code: "custom",
           path: ["longAgentProfile", "id"],
-          message:
-            "Long workspace agent profile must match the active long-form agent."
+          message: "Novel workspace agent profile must match the active agent."
         });
       }
     }
-    if (
-      Boolean(value.workspaceContext?.learningImitation) !==
-      Boolean(value.learningImitationProfile)
-    ) {
-      context.addIssue({
-        code: "custom",
-        path: ["learningImitationProfile"],
-        message:
-          "Learning-imitation context and agent profile must be provided together."
-      });
-    }
-    if (
-      value.learningImitationProfile &&
-      value.workspaceContext?.learningImitation?.stageId !==
-        value.learningImitationProfile.id
-    ) {
-      context.addIssue({
-        code: "custom",
-        path: ["learningImitationProfile", "id"],
-        message: "Learning-imitation profile must match the active stage."
-      });
-    }
-    validateBookAnalysisProfiles(value, context);
     if (
       Boolean(value.workspaceContext?.libraryWorkspace) !==
       Boolean(value.libraryAgentProfile)
@@ -456,7 +356,6 @@ export const AgentPromptCommandPayloadSchema =
 export type AgentPromptCommandPayload = z.infer<
   typeof AgentPromptCommandPayloadSchema
 >;
-
 export const AgentPromptCommandEnvelopeSchema = EnvelopeBaseSchema.extend({
   type: z.literal("agent.prompt"),
   payload: AgentPromptCommandPayloadSchema
@@ -477,12 +376,10 @@ export const AgentPromptCommandEnvelopeSchema = EnvelopeBaseSchema.extend({
     });
   }
 });
-
 export const AgentAbortCommandEnvelopeSchema = EnvelopeBaseSchema.extend({
   type: z.literal("agent.abort"),
   payload: SessionAbortCommandPayloadSchema
 }).superRefine(validateAbortCommandContext);
-
 export const AgentUserInputResponseCommandEnvelopeSchema =
   EnvelopeBaseSchema.extend({
     type: z.literal("agent.user_input_response"),

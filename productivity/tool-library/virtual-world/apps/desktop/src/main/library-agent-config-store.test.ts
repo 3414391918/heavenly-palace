@@ -77,6 +77,38 @@ afterEach(async () => {
 });
 
 describe("LibraryAgentConfigStore", () => {
+  it("upgrades each exact old builtin prompt while preserving customized library prompts and skills", async () => {
+    const root = await makeTemporaryRoot();
+    const input = defaultInput();
+    const material = byDomain(input.agents, "material");
+    material.systemPrompt = material.systemPrompt
+      .replace("虚拟世界", "DeepWrite")
+      .replace(
+        "素材库可供小说创作空间绑定",
+        "素材库可供短篇、剧本和长篇共同绑定"
+      );
+    material.readAccess.skills[0]!.content = "保留用户定制的技能内容。";
+    const skill = byDomain(input.agents, "skill");
+    skill.systemPrompt = "DeepWrite 用户自己的技能库配置。";
+    await mkdir(join(root, "config"));
+    await writeFile(
+      join(root, "config", "library-agents.json"),
+      JSON.stringify({ version: 1, ...input })
+    );
+    const settings = await new LibraryAgentConfigStore(root).list();
+    expect(byDomain(settings.agents, "material").systemPrompt).toContain(
+      "虚拟世界"
+    );
+    expect(byDomain(settings.agents, "material").systemPrompt).not.toMatch(
+      /DeepWrite|短篇|剧本|长篇/
+    );
+    expect(
+      byDomain(settings.agents, "material").readAccess.skills[0]!.content
+    ).toBe("保留用户定制的技能内容。");
+    expect(byDomain(settings.agents, "skill").systemPrompt).toBe(
+      skill.systemPrompt
+    );
+  });
   it("returns cloned builtin settings when no persisted config exists", async () => {
     const store = new LibraryAgentConfigStore(await makeTemporaryRoot());
 

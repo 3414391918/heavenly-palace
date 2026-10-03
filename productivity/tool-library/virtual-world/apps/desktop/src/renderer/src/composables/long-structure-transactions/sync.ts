@@ -22,7 +22,7 @@ async function previewWithTimeout<T>(preview: Promise<T>): Promise<T> {
       preview,
       new Promise<never>((_resolve, reject) => {
         timer = setTimeout(
-          () => reject(new Error("核对长篇结构影响超时，请重试。")),
+          () => reject(new Error("核对小说结构影响超时，请重试。")),
           LONG_STRUCTURE_PREVIEW_TIMEOUT_MS
         );
       })
@@ -81,13 +81,13 @@ export function createLongStructureSync(
         const summary = activeLongBookSummary.value;
         const index = activeLongWorkspaceIndex.value;
         if (!api || !summary || !index) {
-          const message = "当前长篇结构尚未就绪。";
+          const message = "当前小说结构尚未就绪。";
           uiMessage.warning(message);
           completion.fail(message);
           return;
         }
         if (payload.sourceBookId === summary.id) {
-          const message = "不能从当前长篇同步到自身。";
+          const message = "不能从当前小说同步到自身。";
           uiMessage.warning(message);
           completion.fail(message);
           return;
@@ -112,15 +112,15 @@ export function createLongStructureSync(
           } = await import("../../utils/longWorldbuildingSync");
           assertCurrentLongStructureMutationTarget(lease.target, lease);
           if (!(await saveActiveLongEditorChanges())) {
-            completion.fail("当前长篇修改尚未保存。");
+            completion.fail("当前小说修改尚未保存。");
             return;
           }
           if (!mutationIsCurrent(lease)) return;
           if (!captureLongStructureMutationTarget(lease.target.bookId)) {
-            throw new Error("活动长篇已切换，本次世界观同步未保存。");
+            throw new Error("活动小说已切换，本次世界观同步未保存。");
           }
           if (!(await refreshActiveLongWorkspace(lease.target.bookId))) {
-            throw new Error("无法同步最新长篇结构，本次修改未保存。");
+            throw new Error("无法同步最新小说结构，本次修改未保存。");
           }
           if (!mutationIsCurrent(lease)) return;
           const latestTarget = captureLongStructureMutationTarget(
@@ -128,7 +128,7 @@ export function createLongStructureSync(
           );
           const latestIndex = latestTarget?.index;
           if (!latestTarget || !latestIndex) {
-            throw new Error("活动长篇已切换，本次世界观同步未保存。");
+            throw new Error("活动小说已切换，本次世界观同步未保存。");
           }
           const source = await api.getWorkspaceIndex({
             bookId: payload.sourceBookId
@@ -136,16 +136,16 @@ export function createLongStructureSync(
           assertCurrentLongStructureMutationTarget(
             latestTarget,
             lease,
-            "活动长篇或结构已切换，本次世界观同步未保存。"
+            "活动小说或结构已切换，本次世界观同步未保存。"
           );
           if (source.bookId !== payload.sourceBookId) {
-            throw new Error("来源长篇工作区读取结果不一致。");
+            throw new Error("来源小说工作区读取结果不一致。");
           }
           const sourceCategories = filterSyncableWorldbuildingCategories(
             source.workspaceIndex.worldbuilding
           );
           if (sourceCategories.length === 0) {
-            throw new Error("所选长篇没有可同步的世界观分类。");
+            throw new Error("所选小说没有可同步的世界观分类。");
           }
           const contents = await loadSourceWorldbuildingContents(
             (input) => api.readDocument(input),
@@ -155,7 +155,7 @@ export function createLongStructureSync(
           assertCurrentLongStructureMutationTarget(
             latestTarget,
             lease,
-            "活动长篇或结构已切换，本次世界观同步未保存。"
+            "活动小说或结构已切换，本次世界观同步未保存。"
           );
           const plan = await buildLongWorldbuildingSyncBatch({
             target: latestIndex,
@@ -165,7 +165,7 @@ export function createLongStructureSync(
           assertCurrentLongStructureMutationTarget(
             latestTarget,
             lease,
-            "活动长篇或结构已切换，本次世界观同步未保存。"
+            "活动小说或结构已切换，本次世界观同步未保存。"
           );
           const confirmation = await previewLongStructureImpact(
             lease.target.bookId,
@@ -174,7 +174,7 @@ export function createLongStructureSync(
           assertCurrentLongStructureMutationTarget(
             latestTarget,
             lease,
-            "活动长篇或结构已切换，本次世界观同步影响已变化。"
+            "活动小说或结构已切换，本次世界观同步影响已变化。"
           );
           completion.review({
             batch: plan.batch,
@@ -209,7 +209,7 @@ export function createLongStructureSync(
     const workspaceApi = resolveLongWorkspaceApi();
     if (!workspaceApi || !mutationIsCurrent(lease)) {
       if (!isDisposed()) {
-        const message = "当前长篇结构尚未就绪。";
+        const message = "当前小说结构尚未就绪。";
         uiMessage.warning(message);
         completion.fail(message);
       }
@@ -229,12 +229,12 @@ export function createLongStructureSync(
       options.saveEditor !== false &&
       !(await saveActiveLongEditorChanges())
     ) {
-      if (mutationIsCurrent(lease)) completion.fail("当前长篇修改尚未保存。");
+      if (mutationIsCurrent(lease)) completion.fail("当前小说修改尚未保存。");
       return;
     }
     if (!mutationIsCurrent(lease)) return;
     if (!captureLongStructureMutationTarget(expectedBookId)) {
-      const message = "活动长篇已切换，本次结构修改未保存。";
+      const message = "活动小说已切换，本次结构修改未保存。";
       completion.fail(message);
       uiMessage.warning(message);
       return;
@@ -242,7 +242,7 @@ export function createLongStructureSync(
     let previewImpact: LongWorkspaceImpactConfirmation | null = null;
     try {
       if (!(await refreshActiveLongWorkspace(expectedBookId))) {
-        throw new Error("无法同步最新长篇结构，本次修改未保存。");
+        throw new Error("无法同步最新小说结构，本次修改未保存。");
       }
       if (!mutationIsCurrent(lease)) return;
       const latestTarget = captureLongStructureMutationTarget(expectedBookId);
@@ -252,7 +252,7 @@ export function createLongStructureSync(
         !latestIndex ||
         activeLongBookSummary.value?.id !== expectedBookId
       ) {
-        throw new Error("活动长篇已切换，本次结构修改未保存。");
+        throw new Error("活动小说已切换，本次结构修改未保存。");
       }
       assertCurrentLongStructureMutationTarget(latestTarget, lease);
       const { expectedImpact: batchExpectedImpact, ...unconfirmedBatch } =
@@ -266,7 +266,7 @@ export function createLongStructureSync(
       );
       assertCurrentLongStructureMutationTarget(latestTarget, lease);
       if (preview.bookId !== expectedBookId) {
-        throw new Error("结构影响预览返回了其他长篇项目。");
+        throw new Error("结构影响预览返回了其他小说项目。");
       }
       previewImpact = preview.preview.confirmation;
       assertCurrentLongStructureMutationTarget(latestTarget, lease);
@@ -297,7 +297,7 @@ export function createLongStructureSync(
         activeLongBookId.value !== expectedBookId ||
         activeLongBookSummary.value?.id !== expectedBookId
       ) {
-        throw new Error("活动长篇已切换，无法发布结构保存结果。");
+        throw new Error("活动小说已切换，无法发布结构保存结果。");
       }
       longBooks.value = replaceLongBookSummary(
         longBooks.value,
@@ -311,7 +311,7 @@ export function createLongStructureSync(
           "结构修改已保存，但界面未能同步最新结构。"
         );
         uiMessage.warning(
-          "结构修改已保存，但界面未能同步最新结构；请重新打开长篇设置。"
+          "结构修改已保存，但界面未能同步最新结构；请重新打开小说设置。"
         );
         return;
       }
@@ -321,12 +321,12 @@ export function createLongStructureSync(
       completion.succeed();
       uiMessage.success(
         options.successMessage ??
-          `已直接保存 ${batch.operations.length} 项长篇结构修改`
+          `已直接保存 ${batch.operations.length} 项小说结构修改`
       );
     } catch (error: unknown) {
       if (isDisposed()) return;
       const rawMessage =
-        error instanceof Error ? error.message : "保存长篇结构修改失败。";
+        error instanceof Error ? error.message : "保存小说结构修改失败。";
       const message = /impact_mismatch|影响.*变化/iu.test(rawMessage)
         ? "关联关系已变化，请核对最新影响后再次确认。"
         : rawMessage;
@@ -353,7 +353,7 @@ export function createLongStructureSync(
   ): Promise<LongWorkspaceImpactConfirmation> {
     const workspaceApi = resolveLongWorkspaceApi();
     if (!workspaceApi) {
-      throw new Error("当前长篇结构尚未就绪。");
+      throw new Error("当前小说结构尚未就绪。");
     }
     const { expectedImpact: _expectedImpact, ...unconfirmedBatch } = batch;
     const preview = await previewWithTimeout(
@@ -363,7 +363,7 @@ export function createLongStructureSync(
       })
     );
     if (preview.bookId !== bookId) {
-      throw new Error("结构影响预览返回了其他长篇项目。");
+      throw new Error("结构影响预览返回了其他小说项目。");
     }
     return preview.preview.confirmation;
   }

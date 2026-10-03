@@ -101,26 +101,12 @@ function createHarness(options: HarnessOptions = {}) {
       documents: () => documents,
       documentById: (documentId) =>
         documents.find(({ id }) => id === documentId),
-      draftDirectoryForWorkspace: (workspaceId) =>
-        directories.find((directory) => directory.workspaceId === workspaceId),
-      draftFileDocument(directory, sectionId, fileKind) {
-        const section = directory.sections.find(({ id }) => id === sectionId);
-        const documentId =
-          fileKind === "body"
-            ? section?.bodyDocumentId
-            : section?.characterStateDocumentId;
-        return documents.find(({ id }) => id === documentId);
-      },
       refresh: options.refresh ?? (async () => undefined)
     },
     resources: {
       resourceIdForDocumentId: (documentId) => resourceIds.get(documentId),
       node: (resourceId) => nodes.get(resourceId),
       libraryNode: (libraryId) => nodes.get(`library:${libraryId}`),
-      draftSectionResourceId: (directoryNode, sectionId) =>
-        directoryNode && nodes.has(`${directoryNode.id}:${sectionId}`)
-          ? `${directoryNode.id}:${sectionId}`
-          : undefined,
       async select(node) {
         selectedNodes.push(node.id);
         selectedResourceId = node.id;
@@ -172,12 +158,6 @@ function createHarness(options: HarnessOptions = {}) {
         }))
     },
     view: {
-      selectExpertSection(directoryId, sectionId) {
-        selectedExpertSections.push([directoryId, sectionId]);
-      },
-      selectDraftFile(directoryId, fileKind) {
-        selectedDraftFiles.push([directoryId, fileKind]);
-      },
       showConversation() {
         conversationsShown += 1;
       },
@@ -260,7 +240,7 @@ describe("useApprovalNavigationCoordinator", () => {
     expect(harness.selectedResourceId).toBe(node.id);
   });
 
-  it("routes library, draft-section, and character-item targets", async () => {
+  it("routes library targets and rejects retired creation targets", async () => {
     const harness = createHarness();
     const libraryDocument = workspaceDocument("library-entry", {
       domain: "skill",
@@ -324,24 +304,18 @@ describe("useApprovalNavigationCoordinator", () => {
         sectionId: "section-1",
         fileKind: "body"
       })
-    ).resolves.toBe(true);
+    ).resolves.toBe(false);
     await expect(
       coordinator.navigateToTarget({
         kind: "character-item",
         workspaceId: "workspace-1",
         itemId: "character-1"
       })
-    ).resolves.toBe(true);
+    ).resolves.toBe(false);
 
-    expect(harness.selectedNodes).toEqual([
-      "library-resource",
-      "draft-directory:section-1",
-      "character-resource"
-    ]);
-    expect(harness.selectedExpertSections).toEqual([
-      ["draft-directory", "section-1"]
-    ]);
-    expect(harness.selectedDraftFiles).toEqual([["draft-directory", "body"]]);
+    expect(harness.selectedNodes).toEqual(["library-resource"]);
+    expect(harness.selectedExpertSections).toEqual([]);
+    expect(harness.selectedDraftFiles).toEqual([]);
   });
 
   it("lets the newest request win after an older refresh settles", async () => {

@@ -1,12 +1,8 @@
 import type {
-  Book,
-  CharacterStructureMutation,
   CreateLibraryEntryInput,
   CreateLibraryGroupInput,
   CreateLibraryInput,
   CreateLongBookInput,
-  CreateScriptBookInput,
-  CreateShortBookInput,
   CatalogLibrary,
   ExternalLibrarySelectionResult,
   ExternalLibrarySourceKind,
@@ -24,7 +20,6 @@ import type {
   MaterialLibraryGroup,
   MaterialLibraryKind,
   MaterialStageId,
-  PlotStructureMutation,
   SkillLibrary,
   SkillLibraryGroup,
   UpdateLibraryGroupInput
@@ -35,17 +30,12 @@ import type {
 } from "./BookTransferDialog.vue";
 import type { PopupSelectOption } from "./PopupSelect.vue";
 import type {
-  BookResourceDialogMode,
-  ResourceTreeNode
-} from "../types/workspace";
-import type {
   LongStructureMutationCompletion,
   LongWorldbuildingSyncCompletion,
   LongWorldbuildingSyncRequest
 } from "../types/longWorkspace";
 import type { LongWorldbuildingSyncBookOption } from "../utils/longWorldbuildingSync";
 import type { LongManuscriptExportRequest } from "../utils/longManuscriptExport";
-import type { ShortManuscriptExportTarget } from "../utils/shortManuscriptExport";
 
 export interface DialogMutationCompletion {
   succeed(): void;
@@ -64,10 +54,7 @@ export type BookBindingPayload =
       linksByKind: LinkedMaterialIdsByKind;
     };
 
-export type CreateCreativeBookPayload =
-  | ({ workspaceType: "short"; templateId?: string } & CreateShortBookInput)
-  | ({ workspaceType: "script"; templateId?: string } & CreateScriptBookInput)
-  | ({ workspaceType: "long" } & CreateLongBookInput);
+export type CreateCreativeBookPayload = CreateLongBookInput;
 
 export type LibraryDomain = "material" | "skill";
 export type LibraryProjectOperation =
@@ -79,41 +66,6 @@ export type LibraryProjectOperation =
 export type CreateLibraryEntryDraft =
   | Omit<Extract<CreateLibraryEntryInput, { domain: "material" }>, "content">
   | Omit<Extract<CreateLibraryEntryInput, { domain: "skill" }>, "content">;
-
-export interface BookResourceDialogModule {
-  kind: "book-resource";
-  mode: BookResourceDialogMode;
-  book: ResourceTreeNode | null;
-  skillLibraries: ResourceTreeNode[];
-  materialLibraries: ResourceTreeNode[];
-  materialGroups: readonly MaterialLibraryGroup[];
-  skillGroups: readonly SkillLibraryGroup[];
-  loading: boolean;
-  submitting: boolean;
-}
-
-export interface PlotStructureDialogModule {
-  kind: "plot-structure";
-  book: Book | null;
-  pending: boolean;
-  writingContext: string | null;
-  writingContextLoading: boolean;
-  writingContextPending: boolean;
-}
-
-export interface CharacterItemDialogModule {
-  kind: "character-item";
-  mode: "create" | "rename" | "delete";
-  title: string;
-  pending: boolean;
-}
-
-export interface ExportShortDialogModule {
-  kind: "export-short";
-  bookTitle: string;
-  workspaceType: "short" | "script";
-  submitting: boolean;
-}
 
 export interface ExportLongDialogModule {
   kind: "export-long";
@@ -132,7 +84,6 @@ export interface LibraryRemovalDialogModule {
 
 export interface CreateBookDialogModule {
   kind: "create-book";
-  fromTemplate?: boolean;
   materials: readonly MaterialLibrary[];
   materialGroups: readonly MaterialLibraryGroup[];
   skills: readonly SkillLibrary[];
@@ -300,30 +251,12 @@ export interface SaveConflictDialogModule {
   submitting: boolean;
 }
 
-export interface CreateExpertSectionDialogModule {
-  kind: "create-expert-section";
-  suggestedTitle: string;
-  workspaceType: "short" | "script";
-  pending: boolean;
-}
-
-export interface DeleteExpertSectionDialogModule {
-  kind: "delete-expert-section";
-  sectionTitle: string;
-  hasContent: boolean;
-  workspaceType: "short" | "script";
-}
-
 export interface StartupAlertDialogModule {
   kind: "startup-alert";
   messages: readonly string[];
 }
 
 export type WorkspaceDialogModule =
-  | BookResourceDialogModule
-  | PlotStructureDialogModule
-  | CharacterItemDialogModule
-  | ExportShortDialogModule
   | ExportLongDialogModule
   | LibraryRemovalDialogModule
   | CreateBookDialogModule
@@ -347,17 +280,11 @@ export type WorkspaceDialogModule =
   | LibraryEntryMoveDialogModule
   | LibraryGroupDialogModule
   | SaveConflictDialogModule
-  | CreateExpertSectionDialogModule
-  | DeleteExpertSectionDialogModule
   | StartupAlertDialogModule;
 
 export type WorkspaceDialogKind = WorkspaceDialogModule["kind"];
 
 export const WORKSPACE_DIALOG_KINDS = [
-  "book-resource",
-  "plot-structure",
-  "character-item",
-  "export-short",
   "export-long",
   "library-removal",
   "create-book",
@@ -381,37 +308,15 @@ export const WORKSPACE_DIALOG_KINDS = [
   "library-entry-move",
   "library-group",
   "save-conflict",
-  "create-expert-section",
-  "delete-expert-section",
   "startup-alert"
 ] as const satisfies readonly WorkspaceDialogKind[];
 
 export interface WorkspaceDialogLayerEmits {
-  closeBookResource: [];
-  renameBook: [payload: { bookId: string; label: string }];
-  removeBook: [bookId: string];
-  deleteBook: [bookId: string];
-  updateBookBindings: [payload: BookBindingPayload];
-  closePlotStructure: [];
-  plotStructureMutation: [
-    mutation: PlotStructureMutation,
-    completion: DialogMutationCompletion
-  ];
-  characterStructureMutation: [
-    mutation: CharacterStructureMutation,
-    completion: DialogMutationCompletion
-  ];
-  saveWritingContext: [content: string, completion: DialogMutationCompletion];
-  closeCharacterItem: [];
-  submitCharacterItem: [title: string];
-  closeExportShort: [];
-  exportShort: [target: ShortManuscriptExportTarget];
   closeExportLong: [];
   exportLong: [request: LongManuscriptExportRequest];
   closeLibraryRemoval: [];
   confirmLibraryRemoval: [];
   closeCreateBook: [];
-  openTemplateSettings: [];
   submitCreateBook: [payload: CreateCreativeBookPayload];
   closeBookTransfer: [];
   selectBookTransfer: [action: BookTransferAction];
@@ -504,9 +409,5 @@ export interface WorkspaceDialogLayerEmits {
   keepSaveConflict: [];
   reloadSaveConflict: [];
   overwriteSaveConflict: [];
-  closeCreateExpertSection: [];
-  submitCreateExpertSection: [title: string];
-  closeDeleteExpertSection: [];
-  confirmDeleteExpertSection: [];
   closeStartupAlert: [];
 }

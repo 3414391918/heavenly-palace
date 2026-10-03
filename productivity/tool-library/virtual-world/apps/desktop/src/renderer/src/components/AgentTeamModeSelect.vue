@@ -3,9 +3,8 @@ import { computed, watch } from "vue";
 import type {
   AgentTeamRunMode,
   AgentTeamWorkspaceType,
-  LongAgentId,
-  WorkspaceAgentId
-} from "@deepwrite/contracts";
+  LongAgentId
+} from "@deepwrite/contracts/renderer";
 import { useSettingsStore } from "../stores/settingsStore";
 import { resolveAgentTeamModeAvailability } from "../utils/agentTeamModeAvailability";
 import AppIcon from "./AppIcon.vue";
@@ -14,7 +13,7 @@ import PopupSelect, { type PopupSelectOption } from "./PopupSelect.vue";
 const props = defineProps<{
   modelValue: AgentTeamRunMode;
   workspaceType: AgentTeamWorkspaceType;
-  parentAgentId: WorkspaceAgentId | LongAgentId;
+  parentAgentId: LongAgentId;
 }>();
 
 const emit = defineEmits<{

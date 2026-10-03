@@ -1,4 +1,3 @@
-import { shortBookConversationKey } from "./bookConversationKey";
 import {
   type AgentTeamRunMode,
   type ThinkingLevel
@@ -25,15 +24,6 @@ export interface AgentRunPreferences {
 
 export type AgentRunPreferencesByScope = Record<string, AgentRunPreferences>;
 
-export function activeAgentDocumentForSelection(
-  selectedDocument: WorkspaceDocument,
-  activeCreationDocument: WorkspaceDocument
-): WorkspaceDocument {
-  return selectedDocument.domain === "creation"
-    ? activeCreationDocument
-    : selectedDocument;
-}
-
 export function agentRunScopeForDocument(document: WorkspaceDocument): string {
   if (
     document.libraryId &&
@@ -53,9 +43,7 @@ export function agentConversationKeyForDocument(
   ) {
     return `library:${document.domain}:${document.libraryId}`;
   }
-  return document.workspaceId
-    ? shortBookConversationKey(document.workspaceId)
-    : "general";
+  return "general";
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

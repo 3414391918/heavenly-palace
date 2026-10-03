@@ -112,8 +112,6 @@ export function toSubagentRuntimeEvents(
     .filter(
       (event) =>
         event.type === "library.editor_mutation" ||
-        event.type === "workspace.editor_mutation" ||
-        event.type === "workspace.stage_selection" ||
         event.type === "long.mutation_proposal" ||
         event.type === "long.worldbuilding_file_proposal" ||
         event.type === "long.character_file_proposal" ||

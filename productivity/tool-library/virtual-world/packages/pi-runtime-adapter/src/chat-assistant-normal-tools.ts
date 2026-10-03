@@ -56,7 +56,7 @@ export function buildNormalTools(
   const listProjects = defineTool({
     name: "list_creation_projects",
     label: "列出创作项目",
-    description: "列出本机登记的短篇、剧本和长篇项目元数据，不返回任何正文。",
+    description: "列出本机登记的书籍项目元数据，不返回任何正文。",
     parameters: Type.Object({
       query: Type.Optional(Type.String({ maxLength: 200 })),
       project_type: Type.Optional(
@@ -88,7 +88,7 @@ export function buildNormalTools(
         const book = context.longBooks.find(
           (candidate) => candidate.id === params.project_id
         );
-        if (!book) return textResult("未找到指定长篇项目。");
+        if (!book) return textResult("未找到指定书籍项目。");
         return jsonResult({
           project_type: "long",
           project_id: book.id,

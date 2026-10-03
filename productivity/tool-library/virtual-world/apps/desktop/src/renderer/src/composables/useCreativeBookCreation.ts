@@ -1,47 +1,27 @@
-import { ref, type Ref } from "vue";
-import type {
-  CatalogIndexSnapshot,
-  CreateLongBookInput,
-  WorkspaceAgentSettings
-} from "@deepwrite/contracts";
-import type { CreateCreativeBookPayload } from "../components/WorkspaceDialogLayer.types";
-import type { CreateShortOrScriptBookInput } from "./useShortBookLifecycleCoordinator";
+import type { Ref } from "vue";
+import type { CreateLongBookInput } from "@deepwrite/contracts";
 import { uiMessage } from "../ui-feedback";
+
 export interface CreativeBookCreationOptions {
   open: Ref<boolean>;
   pending(): boolean;
-  settings: Ref<WorkspaceAgentSettings[]>;
-  catalog: Ref<CatalogIndexSnapshot | null>;
-  createShort(input: CreateShortOrScriptBookInput): Promise<void>;
   createLong(input: CreateLongBookInput): Promise<void>;
-  openSettings(category: string): Promise<void>;
 }
 export function useCreativeBookCreation(options: CreativeBookCreationOptions) {
-  const createFromTemplate = ref(false);
   function closeCreateBookDialog() {
     if (!options.pending()) options.open.value = false;
   }
-  function openCreateBookDialog(fromTemplate = false) {
+  function openCreateBookDialog() {
     if (!window.deepwrite) {
       uiMessage.warning("浏览器预览不能保存作品，请使用桌面客户端创建。");
       return;
     }
-    createFromTemplate.value = fromTemplate;
     options.open.value = true;
   }
-  async function createCreativeBook(input: CreateCreativeBookPayload) {
-    const { submitCreativeBook } = await import("./submitCreativeBook");
-    await submitCreativeBook(input, options);
+  async function createCreativeBook(input: CreateLongBookInput) {
+    // contextBridge cannot clone nested Vue proxies from the binding form.
+    const snapshot = JSON.parse(JSON.stringify(input)) as CreateLongBookInput;
+    await options.createLong(snapshot);
   }
-  async function openTemplateSettings() {
-    closeCreateBookDialog();
-    await options.openSettings("short-agents");
-  }
-  return {
-    createFromTemplate,
-    closeCreateBookDialog,
-    openCreateBookDialog,
-    createCreativeBook,
-    openTemplateSettings
-  };
+  return { closeCreateBookDialog, openCreateBookDialog, createCreativeBook };
 }

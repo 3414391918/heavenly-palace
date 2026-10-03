@@ -10,7 +10,7 @@ import {
 } from "@earendil-works/pi-ai";
 import { buildRunTools } from "./run-tools";
 import { buildSpawnSubagentTool } from "./subagent-runtime";
-import { shortProfile, shortWorkspace } from "./short-agent-tools.test-support";
+import { profile, workspace } from "./long-agent-tools.test-support";
 
 function harness() {
   const faux = fauxProvider({
@@ -50,10 +50,10 @@ describe("subagent material context", () => {
         sessionId: "session",
         runId: "run",
         prompt: "父对话私有内容",
-        agentProfile: shortProfile(),
+        longAgentProfile: profile("long"),
         subagentDefinitions: [definition],
         workspaceContext: {
-          shortWorkspace: shortWorkspace("character_design"),
+          longWorkspace: workspace("long", "character_design"),
           materialReadNotice: "测试读取提示",
           attachedMaterials: [
             {

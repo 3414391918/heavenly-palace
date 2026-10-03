@@ -292,7 +292,7 @@ export function useLongWorkspacePresentationCoordinator(
 
   const longEditorLockedReason = computed(() => {
     if (options.long.refreshStatus.value?.pending) {
-      return "正在同步长篇工作区，编辑暂时锁定";
+      return "正在同步小说工作区，编辑暂时锁定";
     }
     if (options.long.sendPreflightPending.value) {
       return "正在保存并准备发送，编辑暂时锁定";
@@ -305,9 +305,9 @@ export function useLongWorkspacePresentationCoordinator(
         options.edits.acceptingWorkspaceIds.value.has(workspaceId)
       )
     ) {
-      return "正在应用长篇提案，编辑暂时锁定";
+      return "正在应用小说提案，编辑暂时锁定";
     }
-    return "正在应用长篇修改，编辑暂时锁定";
+    return "正在应用小说修改，编辑暂时锁定";
   });
 
   const editorLocked = computed(() => {

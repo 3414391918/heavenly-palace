@@ -179,8 +179,8 @@ describe("useAgentActivityCoordinator", () => {
     const test = setup();
     test.currentView.value = {
       controller: test.first,
-      agentLabel: "长篇智能体",
-      contextLabel: "测试长篇 · 第二章",
+      agentLabel: "小说智能体",
+      contextLabel: "测试小说 · 第二章",
       targetResourceId: "chapter-card-two",
       chapterCardId: "chapter-two"
     };
@@ -196,8 +196,8 @@ describe("useAgentActivityCoordinator", () => {
 
     test.currentView.value = {
       controller: test.first,
-      agentLabel: "长篇智能体",
-      contextLabel: "测试长篇 · 规则",
+      agentLabel: "小说智能体",
+      contextLabel: "测试小说 · 规则",
       targetResourceId: "world-rules"
     };
     await nextTick();

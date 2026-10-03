@@ -76,7 +76,7 @@ onBeforeUnmount(() => document.removeEventListener("keydown", handleKeydown));
       >
         <header>
           <div>
-            <span class="dialog-eyebrow">长篇 · 续写导入</span>
+            <span class="dialog-eyebrow">小说 · 续写导入</span>
             <h2 id="continuation-import-title">核对 TXT 章节顺序</h2>
           </div>
           <button
@@ -111,7 +111,7 @@ onBeforeUnmount(() => document.removeEventListener("keydown", handleKeydown));
               <PopupSelect
                 :model-value="genre"
                 :options="genreOptions"
-                accessible-label="长篇题材"
+                accessible-label="小说题材"
                 size="large"
                 :disabled="submitting"
                 :menu-min-width="180"

@@ -8,28 +8,19 @@ import {
   buildRuntimeUserPrompt,
   buildLongFollowUpTurnUserMessageContent
 } from "./prompts";
-import {
-  buildShortWorkspaceTools,
-  buildScriptWorkspaceTools
-} from "./short-agent-tools";
 import { buildLongWorkspaceTools } from "./long-agent-tools";
 import {
-  shortWorkspace,
-  shortProfile,
+  workspace as longWorkspace,
+  profile as longProfile,
   resultText,
   toolByName
-} from "./short-agent-tools.test-support";
-import { screenplayWorkspace, scriptAgentProfile } from "./index.test-support";
-import {
-  workspace as longWorkspace,
-  profile as longProfile
 } from "./long-agent-tools.test-support";
 import type { AgentRunInput } from "./runtime-types";
 
 const catalog: MaterialCatalogContext = {
   scope: {
     bookId: "book",
-    bookType: "short",
+    bookType: "long",
     stageId: "plot_design",
     kinds: ["plot", "character"]
   },
@@ -60,10 +51,10 @@ function run(): AgentRunInput {
     sessionId: "session",
     prompt: "继续创作",
     workspaceContext: {
-      shortWorkspace: shortWorkspace(),
+      longWorkspace: longWorkspace("long", "plot_design"),
       materialCatalog: catalog
     },
-    agentProfile: shortProfile(),
+    longAgentProfile: longProfile("long"),
     materialCommandExecutor: vi.fn(
       async (command: CatalogQueryMaterialsCommand) => ({
         status: "accepted" as const,
@@ -94,7 +85,7 @@ describe("runtime material bridge", () => {
     expect(prompt).toContain("适合剧情转折");
     expect(prompt).toContain("共 80 条");
     expect(prompt).toContain("cursor=64");
-    const { agentProfile: _profile, ...longBase } = input;
+    const longBase = input;
     const longInput: AgentRunInput = {
       ...longBase,
       longAgentProfile: longProfile("long"),
@@ -138,20 +129,10 @@ describe("runtime material bridge", () => {
     );
   });
 
-  it("wires the existing material tool through the bridge for short, script and long workspaces", async () => {
+  it("wires the existing material tool through the bridge for the creation workspace", async () => {
     const input = run();
     const queryMaterials = createMaterialQueryRunner(input)!;
     const variants = [
-      buildShortWorkspaceTools({
-        workspace: shortWorkspace(),
-        profile: shortProfile(),
-        queryMaterials
-      }),
-      buildScriptWorkspaceTools({
-        workspace: screenplayWorkspace(),
-        profile: scriptAgentProfile(),
-        queryMaterials
-      }),
       buildLongWorkspaceTools({
         workspace: longWorkspace("long", "plot_design"),
         profile: longProfile("long"),
@@ -167,7 +148,7 @@ describe("runtime material bridge", () => {
       ).execute("read", { mode: "read", entry_id: catalog.entries[0]!.id });
       expect(resultText(result)).toContain("完整原文");
     }
-    expect(input.materialCommandExecutor).toHaveBeenCalledTimes(3);
+    expect(input.materialCommandExecutor).toHaveBeenCalledTimes(1);
   });
 
   it("surfaces rejected or incomplete reads instead of returning an empty successful body", async () => {

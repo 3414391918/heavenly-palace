@@ -81,10 +81,10 @@ describe("portable tool schema compatibility", () => {
     expect(resolvePortableToolSchemaProfile({})).toBe("default");
     expect(
       resolvePortableToolSchemaProfile(workspaceContext("shortWorkspace"))
-    ).toBe("writing-workspace");
+    ).toBe("default");
     expect(
       resolvePortableToolSchemaProfile(workspaceContext("scriptWorkspace"))
-    ).toBe("writing-workspace");
+    ).toBe("default");
     expect(
       resolvePortableToolSchemaProfile(workspaceContext("longWorkspace"))
     ).toBe("writing-workspace");

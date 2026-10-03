@@ -2,7 +2,6 @@ import type {
   LongBookSummary,
   LongWorkspaceIndexSnapshot
 } from "@deepwrite/contracts";
-import type { DraftDirectoryProjection } from "../data/catalogWorkspace";
 import type { LongWorkspaceSelection } from "../types/longWorkspace";
 import type { ResourceTreeNode, WorkspaceDocument } from "../types/workspace";
 import type {
@@ -11,20 +10,11 @@ import type {
   ResolvedLongApprovalNavigation
 } from "../utils/approvalNavigation";
 
-type DraftFileKind = "body" | "character-state";
 type LongTarget = Extract<ApprovalNavigationTarget, { kind: "long" }>;
 
 export interface ApprovalNavigationCatalogPort {
   documents(): readonly WorkspaceDocument[];
   documentById(documentId: string): WorkspaceDocument | undefined;
-  draftDirectoryForWorkspace(
-    workspaceId: string
-  ): DraftDirectoryProjection | undefined;
-  draftFileDocument(
-    directory: DraftDirectoryProjection,
-    sectionId: string,
-    fileKind: DraftFileKind
-  ): WorkspaceDocument | undefined;
   refresh(): Promise<unknown>;
 }
 
@@ -32,10 +22,6 @@ export interface ApprovalNavigationResourcePort {
   resourceIdForDocumentId(documentId: string): string | undefined;
   node(resourceId: string): ResourceTreeNode | undefined;
   libraryNode(libraryId: string): ResourceTreeNode | undefined;
-  draftSectionResourceId(
-    directoryNode: ResourceTreeNode | undefined,
-    sectionId: string
-  ): string | undefined;
   select(node: ResourceTreeNode): Promise<void>;
   selectedResourceId(): string;
   documentForResourceId(resourceId: string): WorkspaceDocument | undefined;
@@ -74,8 +60,6 @@ export interface ApprovalNavigationLongWorkspacePort {
 }
 
 export interface ApprovalNavigationViewPort {
-  selectExpertSection(directoryId: string, sectionId: string): void;
-  selectDraftFile(directoryId: string, fileKind: DraftFileKind): void;
   showConversation(): void;
   expandRightPane(): void;
   afterUpdate(): Promise<void>;
@@ -147,35 +131,10 @@ export function useApprovalNavigationCoordinator(
     requestId: number
   ): Promise<boolean> {
     if (!requestIsCurrent(requestId)) return false;
-    let targetResourceId =
+    const targetResourceId =
       context.resources.resourceIdForDocumentId(document.id) ?? document.id;
-    let draftDirectoryId: string | undefined;
-    if (document.draftFileKind && document.expertSectionId) {
-      const directory = document.workspaceId
-        ? context.catalog.draftDirectoryForWorkspace(document.workspaceId)
-        : undefined;
-      if (directory) {
-        draftDirectoryId = directory.id;
-        context.view.selectExpertSection(
-          directory.id,
-          document.expertSectionId
-        );
-        if (!requestIsCurrent(requestId)) return false;
-        targetResourceId =
-          context.resources.draftSectionResourceId(
-            context.resources.node(directory.id),
-            document.expertSectionId
-          ) ?? directory.id;
-      }
-    }
     const node = context.resources.node(targetResourceId);
     if (!node || !(await selectResource(node, requestId))) return false;
-    if (draftDirectoryId && document.draftFileKind) {
-      context.view.selectDraftFile(draftDirectoryId, document.draftFileKind);
-      if (!requestIsCurrent(requestId)) return false;
-      await context.view.afterUpdate();
-      if (!requestIsCurrent(requestId)) return false;
-    }
     return context.resources.documentForResourceId(node.id)?.id === document.id;
   }
 
@@ -236,101 +195,6 @@ export function useApprovalNavigationCoordinator(
       .libraryNode(target.libraryId)
       ?.children?.find((node) => node.catalogNodeType === "document");
     return fallbackNode ? await selectResource(fallbackNode, requestId) : false;
-  }
-
-  async function navigateToDraftSectionInternal(
-    target: Extract<ApprovalNavigationTarget, { kind: "draft-section" }>,
-    requestId: number,
-    refresh = true
-  ): Promise<boolean> {
-    const directory = context.catalog.draftDirectoryForWorkspace(
-      target.workspaceId
-    );
-    if (!directory) {
-      if (!refresh) return false;
-      await context.catalog.refresh();
-      if (!requestIsCurrent(requestId)) return false;
-      return await navigateToDraftSectionInternal(target, requestId, false);
-    }
-    const directoryNode = context.resources.node(directory.id);
-    if (!target.sectionId) {
-      return directoryNode
-        ? await selectResource(directoryNode, requestId)
-        : false;
-    }
-    const section = directory.sections.find(
-      ({ id }) => id === target.sectionId
-    );
-    if (!section) {
-      if (refresh) {
-        await context.catalog.refresh();
-        if (!requestIsCurrent(requestId)) return false;
-        return await navigateToDraftSectionInternal(target, requestId, false);
-      }
-      return directoryNode
-        ? await selectResource(directoryNode, requestId)
-        : false;
-    }
-    context.view.selectExpertSection(directory.id, section.id);
-    if (!requestIsCurrent(requestId)) return false;
-    const requestedDocument = context.catalog.draftFileDocument(
-      directory,
-      section.id,
-      target.fileKind
-    );
-    const resourceId =
-      context.resources.draftSectionResourceId(directoryNode, section.id) ??
-      directory.id;
-    const node = context.resources.node(resourceId) ?? directoryNode;
-    if (!node || !(await selectResource(node, requestId))) return false;
-    context.view.selectDraftFile(
-      directory.id,
-      requestedDocument ? target.fileKind : "body"
-    );
-    if (!requestIsCurrent(requestId)) return false;
-    await context.view.afterUpdate();
-    if (!requestIsCurrent(requestId)) return false;
-    return requestedDocument
-      ? context.resources.documentForResourceId(node.id)?.id ===
-          requestedDocument.id
-      : true;
-  }
-
-  async function navigateToCharacterItemInternal(
-    target: Extract<ApprovalNavigationTarget, { kind: "character-item" }>,
-    requestId: number,
-    refresh = true
-  ): Promise<boolean> {
-    const exact = target.itemId
-      ? context.catalog
-          .documents()
-          .find(
-            (document) =>
-              document.workspaceId === target.workspaceId &&
-              document.stageId === "character_design" &&
-              document.characterItemId === target.itemId
-          )
-      : undefined;
-    const fallback = context.catalog
-      .documents()
-      .find(
-        (document) =>
-          document.workspaceId === target.workspaceId &&
-          document.stageId === "character_design" &&
-          document.characterFileKind === "overview"
-      );
-    if (exact && (await navigateToApprovalDocumentInternal(exact, requestId))) {
-      return true;
-    }
-    if (!requestIsCurrent(requestId)) return false;
-    if (!exact && target.itemId && refresh) {
-      await context.catalog.refresh();
-      if (!requestIsCurrent(requestId)) return false;
-      return await navigateToCharacterItemInternal(target, requestId, false);
-    }
-    return fallback
-      ? await navigateToApprovalDocumentInternal(fallback, requestId)
-      : false;
   }
 
   async function resolveLongNavigation(
@@ -429,13 +293,9 @@ export function useApprovalNavigationCoordinator(
     if (target.kind === "library") {
       return await navigateToLibraryInternal(target, requestId);
     }
-    if (target.kind === "draft-section") {
-      return await navigateToDraftSectionInternal(target, requestId);
-    }
-    if (target.kind === "character-item") {
-      return await navigateToCharacterItemInternal(target, requestId);
-    }
-    return await navigateToLongInternal(target, requestId);
+    if (target.kind === "long")
+      return await navigateToLongInternal(target, requestId);
+    return false;
   }
 
   function navigateToApprovalDocument(
@@ -459,22 +319,6 @@ export function useApprovalNavigationCoordinator(
   ): Promise<boolean> {
     return schedule((requestId) =>
       navigateToLibraryInternal(target, requestId)
-    );
-  }
-
-  function navigateToDraftSection(
-    target: Extract<ApprovalNavigationTarget, { kind: "draft-section" }>
-  ): Promise<boolean> {
-    return schedule((requestId) =>
-      navigateToDraftSectionInternal(target, requestId)
-    );
-  }
-
-  function navigateToCharacterItem(
-    target: Extract<ApprovalNavigationTarget, { kind: "character-item" }>
-  ): Promise<boolean> {
-    return schedule((requestId) =>
-      navigateToCharacterItemInternal(target, requestId)
     );
   }
 
@@ -507,9 +351,7 @@ export function useApprovalNavigationCoordinator(
     dispose,
     drain,
     navigateToApprovalDocument,
-    navigateToCharacterItem,
     navigateToDocument,
-    navigateToDraftSection,
     navigateToLibrary,
     navigateToLong,
     navigateToTarget

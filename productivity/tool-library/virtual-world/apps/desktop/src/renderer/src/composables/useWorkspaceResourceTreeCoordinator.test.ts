@@ -14,7 +14,6 @@ import {
   longBookResourceId,
   type LongWorkspaceSelection
 } from "../types/longWorkspace";
-import { BOOK_RESOURCE_PREFERENCES_STORAGE_KEY } from "../utils/bookResourcePreferences";
 import { longNavigationNodeId } from "../utils/longWorkspaceResourceTree";
 import {
   useWorkspaceResourceTreeCoordinator,
@@ -74,7 +73,7 @@ function bookSummary(id = "longbook_tree"): LongBookSummary {
     schemaVersion: 1,
     kind: "deepwrite.long-book",
     id,
-    title: "资源树长篇",
+    title: "资源树小说",
     bookType: "long",
     genre: "测试",
     status: "editing",
@@ -234,41 +233,6 @@ function createHarness(
 }
 
 describe("useWorkspaceResourceTreeCoordinator", () => {
-  it("retains stored preferences through empty startup and rebuilds the final lookup after Catalog refresh", () => {
-    const getItem = vi.fn(() =>
-      JSON.stringify({
-        "short-one": { label: "会话内书名" }
-      })
-    );
-    const harness = createHarness({
-      storage: () => ({ getItem, setItem: vi.fn() })
-    });
-
-    expect(harness.resourceTreeLookup.value.nodeById.size).toBe(0);
-    harness.catalogProjection.value = projection([
-      { id: "short-one", label: "磁盘书名", icon: "book" }
-    ]);
-
-    expect(
-      harness.resourceTreeLookup.value.nodeById.get("short-one")?.label
-    ).toBe("会话内书名");
-    expect(getItem).toHaveBeenCalledTimes(1);
-
-    const refreshedNode: ResourceTreeNode = {
-      id: "short-two",
-      label: "刷新后的书",
-      icon: "book"
-    };
-    harness.catalogProjection.value = projection([refreshedNode]);
-
-    expect(harness.resourceTreeLookup.value.nodeById.has("short-one")).toBe(
-      false
-    );
-    expect(
-      harness.resourceTreeLookup.value.nodeById.get("short-two")
-    ).toMatchObject(refreshedNode);
-  });
-
   it("adds available and unavailable long books to the final tree without duplicate diagnostics", () => {
     const available = bookSummary("longbook_available");
     const harness = createHarness({
@@ -305,41 +269,6 @@ describe("useWorkspaceResourceTreeCoordinator", () => {
         longNavigationNodeId(available.id, "root:worldbuilding")
       )
     ).toBe(true);
-  });
-
-  it("survives storage read and write failures while keeping the current-session preference", () => {
-    const setItem = vi.fn(() => {
-      throw new Error("storage full");
-    });
-    let readAttempts = 0;
-    const harness = createHarness({
-      projection: projection([
-        { id: "short-one", label: "原书名", icon: "book" }
-      ]),
-      storage: () => ({
-        getItem() {
-          readAttempts += 1;
-          throw new Error("storage blocked");
-        },
-        setItem
-      })
-    });
-
-    expect(readAttempts).toBe(1);
-    expect(
-      harness.resourceTreeLookup.value.nodeById.get("short-one")?.label
-    ).toBe("原书名");
-
-    harness.updateBookPreference("short-one", { label: "临时书名" });
-
-    expect(setItem).toHaveBeenCalledWith(
-      BOOK_RESOURCE_PREFERENCES_STORAGE_KEY,
-      JSON.stringify({ "short-one": { label: "临时书名" } })
-    );
-    expect(
-      harness.resourceTreeLookup.value.nodeById.get("short-one")?.label
-    ).toBe("临时书名");
-    expect(harness.notifications.warning).toHaveBeenCalledOnce();
   });
 
   it("maps each long-form selection to its left-tree node and keeps top-tab layouts on their branch", () => {
@@ -447,28 +376,25 @@ describe("useWorkspaceResourceTreeCoordinator", () => {
     ).toBeUndefined();
   });
 
-  it("synchronizes layout selection only when the refreshed final lookup contains the preferred node", () => {
+  it("keeps novel layout selection independent of legacy catalog creation nodes", () => {
     const index = workspaceIndex({
       worldbuildingItemLayout: "left-tree",
       characterAndContinuityItemLayout: "left-tree",
       plotItemLayout: "left-tree"
     });
-    const activeSelection = selection(
-      "worldbuilding:geography",
-      "worldbuilding",
-      {
-        worldbuildingItemId: "harbor"
-      }
-    );
+    const activeSelection = selection("plot-design:book-line", "plot_design", {
+      bookLineVolumeId: "volume_one"
+    });
     const preferredId = longNavigationNodeId(
       "longbook_tree",
-      "worldbuilding:geography:item:harbor"
+      "plot-design:book-line:volume:volume_one"
     );
     const harness = createHarness({
       projection: projection([
         { id: preferredId, label: "港口", icon: "file" }
       ]),
       index,
+      longBooks: [bookSummary()],
       selection: activeSelection,
       selectedResourceId: "before-refresh"
     });
@@ -481,7 +407,7 @@ describe("useWorkspaceResourceTreeCoordinator", () => {
     ]);
     harness.selectedResourceId.value = "after-refresh";
     harness.synchronizeSelectedLongResourceForLayout("longbook_tree");
-    expect(harness.selectedResourceId.value).toBe("after-refresh");
+    expect(harness.selectedResourceId.value).toBe(preferredId);
 
     harness.catalogProjection.value = projection([
       { id: preferredId, label: "恢复后的港口", icon: "file" }

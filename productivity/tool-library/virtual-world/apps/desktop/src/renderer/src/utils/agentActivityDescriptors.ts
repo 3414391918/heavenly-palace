@@ -1,11 +1,8 @@
 import {
-  resolveScriptWorkspaceAgentIdForStage,
-  resolveShortWorkspaceAgentIdForStage,
   type LibraryAgentSettings,
   type LongAgentSettings,
   type LongBookSummary,
-  type LongWorkspaceRoot,
-  type WorkspaceAgentSettings
+  type LongWorkspaceRoot
 } from "@deepwrite/contracts";
 import type {
   AgentActivityDescriptor,
@@ -23,7 +20,6 @@ import {
 export interface AgentActivityDescriptorSources {
   documents: readonly WorkspaceDocument[];
   resourceTree: ResourceTreeLookup;
-  workspaceAgents: readonly WorkspaceAgentSettings[];
   longAgents: LongAgentSettings;
   libraryAgents: LibraryAgentSettings;
   longBooks: readonly LongBookSummary[];
@@ -34,26 +30,6 @@ function resourceIdForDocument(
   lookup: ResourceTreeLookup
 ): string {
   return lookup.resourceIdByDocumentId.get(document.id) ?? document.id;
-}
-
-function shortAgentLabel(
-  document: WorkspaceDocument,
-  settings: readonly WorkspaceAgentSettings[]
-): string | undefined {
-  if (
-    !document.stageId ||
-    (document.workspaceType !== "short" && document.workspaceType !== "script")
-  ) {
-    return undefined;
-  }
-  const agentId =
-    document.shortAgentId ??
-    (document.workspaceType === "script"
-      ? resolveScriptWorkspaceAgentIdForStage(document.stageId)
-      : resolveShortWorkspaceAgentIdForStage(document.stageId));
-  return settings
-    .find(({ workspaceType }) => workspaceType === document.workspaceType)
-    ?.agents.find(({ id }) => id === agentId)?.label;
 }
 
 function resolveDocumentDescriptor(
@@ -73,7 +49,7 @@ function resolveDocumentDescriptor(
     ? sources.libraryAgents.agents.find(
         ({ domain }) => domain === libraryDomain
       )?.label
-    : shortAgentLabel(document, sources.workspaceAgents);
+    : undefined;
   const owner = document.workspaceTitle ?? document.path[0] ?? document.title;
   return {
     conversationKey,
@@ -204,10 +180,10 @@ function resolveLongDescriptor(
       : undefined;
   return {
     conversationKey,
-    agentLabel: agent?.label ?? "长篇智能体",
+    agentLabel: agent?.label ?? "小说智能体",
     contextLabel: parsed.root
-      ? `${book?.title ?? "长篇作品"} · ${LONG_WORKSPACE_ROOT_LABELS[parsed.root]}`
-      : (book?.title ?? "长篇作品"),
+      ? `${book?.title ?? "小说作品"} · ${LONG_WORKSPACE_ROOT_LABELS[parsed.root]}`
+      : (book?.title ?? "小说作品"),
     targetResourceId:
       matchingNode?.id ??
       (parsed.root

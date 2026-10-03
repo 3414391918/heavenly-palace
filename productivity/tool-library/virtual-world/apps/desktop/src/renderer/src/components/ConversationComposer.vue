@@ -5,8 +5,7 @@ import type {
   LongAgentId,
   ModelConfig,
   ThinkingLevel,
-  UserPromptAttachment,
-  WorkspaceAgentId
+  UserPromptAttachment
 } from "@deepwrite/contracts";
 import type {
   AgentApprovalMode,
@@ -51,8 +50,8 @@ const props = defineProps<{
   temperature: number;
   approvalMode: AgentApprovalMode;
   agentTeamMode: AgentTeamRunMode;
-  agentId: WorkspaceAgentId | LongAgentId | undefined;
-  agentWorkspaceType: "short" | "script" | "long" | undefined;
+  agentId: LongAgentId | undefined;
+  agentWorkspaceType: "long" | undefined;
   libraryDomain: LibraryAgentDomain | undefined;
   availableSkills: ComposerReferenceOption[];
   availableMaterials: ComposerReferenceOption[];

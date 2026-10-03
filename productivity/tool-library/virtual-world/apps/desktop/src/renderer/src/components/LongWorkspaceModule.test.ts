@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import shellSource from "../WorkspaceShell.vue?raw";
+import shellSource from "../test-support/workspaceShellSource";
 import editorBridgeSource from "../composables/useLongWorkspaceModuleEditorBridge.ts?raw";
 import editorSource from "./LongWorkspaceEditor.vue?raw";
 import source from "./LongWorkspaceModule.vue?raw";

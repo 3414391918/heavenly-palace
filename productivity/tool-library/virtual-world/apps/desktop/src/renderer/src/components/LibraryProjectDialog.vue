@@ -296,9 +296,7 @@ onBeforeUnmount(() => document.removeEventListener("keydown", handleKeydown));
                 :disabled="submitting"
               />
             </label>
-            <p class="book-resource-help">
-              此资料库由短篇、剧本和长篇共用，可在任意作品中绑定。
-            </p>
+            <p class="book-resource-help">此资料库可在任意作品中绑定。</p>
             <label
               class="book-resource-name-field catalog-resource-stage-field"
             >

@@ -14,7 +14,7 @@ import { PiAgentRuntimeAdapter } from "@deepwrite/pi-runtime-adapter";
 import { FolderCatalogStore } from "./folder-catalog-store";
 import { toEventEnvelope } from "./agent-event-envelope";
 import { RevisionAnalysisConfigStore } from "../main/extras/revision-analysis/config-store";
-import { createBookAnalysisServices } from "../main/extras/book-analysis-services";
+import { assertRevisionAnalysisRuntime } from "../main/extras/revision-analysis/runtime-validation";
 import { useRevisionAnalysis } from "../renderer/src/extras/revision-analysis/useRevisionAnalysis";
 
 describe("revision analysis runtime to persisted skill", () => {
@@ -74,12 +74,12 @@ describe("revision analysis runtime to persisted skill", () => {
       await nextTick();
       expect(request).toBeDefined();
       // Main rejects missing models before dispatching; the adapter also checks its effective model.
-      await expect(
-        createBookAnalysisServices(root).resolve(
-          request!.workspaceContext,
+      expect(() =>
+        assertRevisionAnalysisRuntime(
+          request!.workspaceContext!.revisionAnalysis!,
           undefined
         )
-      ).rejects.toThrow("可用模型");
+      ).toThrow("可用模型");
       for await (const event of runtime.start({
         runId: "integration-run",
         sessionId: request!.sessionId,

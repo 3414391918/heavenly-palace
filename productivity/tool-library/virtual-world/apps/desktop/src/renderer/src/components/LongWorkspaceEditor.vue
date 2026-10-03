@@ -1,5 +1,9 @@
 <script setup lang="ts">
 import {
+  novelDocumentEyebrow,
+  NOVEL_EDITOR_LABELS
+} from "./novelWorkspacePresentation";
+import {
   computed,
   nextTick,
   onBeforeUnmount,
@@ -792,21 +796,9 @@ const currentSaving = computed(
       false
     )
 );
-const documentEyebrow = computed(() => {
-  const role = currentSelectionFile.value?.role;
-  if (props.selection?.root === "draft") {
-    if (role === "character-state") return "长篇 · 章节人物状态";
-    if (role === "handoff") return "长篇 · 章节交接";
-    return "长篇 · 章节正文";
-  }
-  if (props.selection?.root === "worldbuilding") return "长篇 · 世界设定";
-  if (props.selection?.root === "character_design") return "长篇 · 人物档案";
-  if (props.selection?.root === "plot_design") return "长篇 · 剧情设计";
-  if (props.selection?.root === "continuity_ledger") {
-    return "长篇 · 连续性记录";
-  }
-  return "长篇文稿";
-});
+const documentEyebrow = computed(() =>
+  novelDocumentEyebrow(props.selection?.root, currentSelectionFile.value?.role)
+);
 const canUseTextTools = computed(
   () =>
     !currentIsCharacterCoreProfile.value &&
@@ -1509,7 +1501,7 @@ onBeforeUnmount(() => {
         currentUsesTopPlotTabs ||
         currentUsesTopWorldbuildingTabs
     }"
-    aria-label="长篇文件编辑器"
+    :aria-label="NOVEL_EDITOR_LABELS.accessibleName"
   >
     <template v-if="selection">
       <header class="long-editor-header">
@@ -1561,7 +1553,7 @@ onBeforeUnmount(() => {
             v-if="rightPane !== false"
             class="long-editor-collapse-button"
             type="button"
-            aria-label="收起长篇编辑栏"
+            aria-label="收起小说编辑栏"
             @click="emit('collapse')"
           >
             <AppIcon name="panel-right" :size="18" />
@@ -2682,7 +2674,7 @@ onBeforeUnmount(() => {
                       ? "结构修改会直接保存到本机"
                       : "选择情节后可编辑正文"
                 : locked
-                  ? (lockedReason ?? "正在处理长篇修改，编辑暂时锁定")
+                  ? (lockedReason ?? NOVEL_EDITOR_LABELS.editLocked)
                   : currentSaving
                     ? "正在原子保存本机文稿"
                     : currentReadOnly
@@ -2719,7 +2711,7 @@ onBeforeUnmount(() => {
       <span class="long-editor-empty-icon">
         <AppIcon name="book" :size="28" />
       </span>
-      <h2>选择一个长篇文件</h2>
+      <h2>{{ NOVEL_EDITOR_LABELS.emptyTitle }}</h2>
       <p>从左侧五个工作区根目录中选择设定、人物、故事线、章节或账本记录。</p>
     </div>
 

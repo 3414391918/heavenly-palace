@@ -23,7 +23,7 @@ const emit = defineEmits<{
 
 const isDelete = computed(() => props.action === "delete");
 const dialogTitle = computed(() =>
-  isDelete.value ? "永久删除长篇项目？" : "从创作空间移除长篇？"
+  isDelete.value ? "永久删除小说项目？" : "从创作空间移除小说？"
 );
 const confirmLabel = computed(() => {
   if (props.pending) {
@@ -126,7 +126,7 @@ onBeforeUnmount(() => document.removeEventListener("keydown", handleKeydown));
             <AppIcon :name="isDelete ? 'trash' : 'archive'" :size="20" />
           </span>
           <div>
-            <span>长篇创作空间</span>
+            <span>小说创作空间</span>
             <h2 id="long-removal-dialog-title">{{ dialogTitle }}</h2>
           </div>
         </header>
@@ -135,7 +135,7 @@ onBeforeUnmount(() => document.removeEventListener("keydown", handleKeydown));
           <strong :title="title">“{{ title }}”</strong>
           <template v-if="isDelete">
             <p>
-              将永久删除整个长篇项目文件夹，包括世界观、人物、情节结构、全部章节正文与连续性账本。
+              将永久删除整个小说项目文件夹，包括世界观、人物、情节结构、全部章节正文与连续性账本。
             </p>
             <p class="long-removal-warning is-danger">
               此操作不可恢复。请确认项目文件夹已在其他位置完成备份。
@@ -143,10 +143,10 @@ onBeforeUnmount(() => document.removeEventListener("keydown", handleKeydown));
           </template>
           <template v-else>
             <p>
-              只会取消该长篇在当前创作空间中的登记，不会删除磁盘上的项目文件夹或其中任何内容。
+              只会取消该小说在当前创作空间中的登记，不会删除磁盘上的项目文件夹或其中任何内容。
             </p>
             <p class="long-removal-warning">
-              稍后仍可通过“打开已有作品”选择长篇，重新登记并继续创作。
+              稍后仍可通过“打开已有作品”选择小说，重新登记并继续创作。
             </p>
           </template>
         </div>

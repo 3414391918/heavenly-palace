@@ -8,26 +8,13 @@ import source from "./WorkspaceFeatureModules.vue?raw";
 
 describe("WorkspaceFeatureModules boundary", () => {
   it("owns the mutually exclusive non-writing feature branches", () => {
-    for (const kind of [
-      "settings",
-      "agent-team",
-      "directory",
-      "models",
-      "imitation",
-      "marketplace",
-      "cloud-backup",
-      "zhuque-detection"
-    ]) {
+    for (const kind of ["settings", "agent-team", "directory", "models"]) {
       expect(source).toContain(`module.kind === '${kind}'`);
     }
     expect(source).toContain("<SettingsPage");
-    expect(source).toContain("<AgentTeamSettingsPanel");
+    expect(source).toContain("<AgentTeamCatalogFeature");
     expect(source).toContain("<WorkspaceDirectoryFeature");
     expect(source).toContain("<ModelSettingsFeature");
-    expect(source).toContain("<LearningImitationDialog");
-    expect(source).toContain("<SkillMarketplacePage");
-    expect(source).toContain("<CloudBackupPage");
-    expect(source).toContain("<ZhuqueDetectionPage");
     expect(source).not.toContain("v-show");
     expect(source).not.toContain("KeepAlive");
   });
@@ -51,9 +38,6 @@ describe("WorkspaceFeatureModules boundary", () => {
     expect(source).toContain("module: WorkspaceFeatureModule");
     expect(typesSource).toContain(
       "authoring: SubagentAuthoringController | null"
-    );
-    expect(typesSource).toContain(
-      "controller: LearningImitationController | null"
     );
     expect(source).not.toMatch(/\bany\b/u);
     expect(typesSource).not.toMatch(/\bany\b/u);

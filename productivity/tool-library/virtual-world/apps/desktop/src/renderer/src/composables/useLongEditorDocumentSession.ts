@@ -320,7 +320,7 @@ export function useLongEditorDocumentSession(options: {
       first.file.updatedAt !== next.file.updatedAt ||
       first.totalCharacters !== next.totalCharacters
     ) {
-      throw new Error("长篇文件在分页读取期间发生变化，请重新打开。");
+      throw new Error("小说文件在分页读取期间发生变化，请重新打开。");
     }
   }
 
@@ -346,7 +346,7 @@ export function useLongEditorDocumentSession(options: {
     }
     const api = resolveLongWorkspaceApi();
     if (!api) {
-      uiMessage.warning("当前环境未连接长篇工作区，请使用桌面客户端。");
+      uiMessage.warning("当前环境未连接小说工作区，请使用桌面客户端。");
       return;
     }
 
@@ -389,7 +389,7 @@ export function useLongEditorDocumentSession(options: {
           });
           if (requestClockByFile.get(key) !== ownRequest) return;
           if (page.file.id !== selectedFile.file.id) {
-            throw new Error("长篇文档读取结果与所选文件不一致。");
+            throw new Error("小说文档读取结果与所选文件不一致。");
           }
           if (firstPage) {
             assertSameReadSnapshot(firstPage, page);
@@ -399,7 +399,7 @@ export function useLongEditorDocumentSession(options: {
           contentChunks.push(page.content);
           if (page.nextOffset === null) break;
           if (page.nextOffset <= offset) {
-            throw new Error("长篇文档分页游标无效。");
+            throw new Error("小说文档分页游标无效。");
           }
           offset = page.nextOffset;
         }
@@ -447,7 +447,7 @@ export function useLongEditorDocumentSession(options: {
         const latest = documentStates.value[key];
         if (requestClockByFile.get(key) === ownRequest && latest) {
           const message =
-            error instanceof Error ? error.message : "读取长篇文件失败。";
+            error instanceof Error ? error.message : "读取小说文件失败。";
           replaceDocumentState(key, {
             ...latest,
             loading: false,
@@ -547,7 +547,7 @@ export function useLongEditorDocumentSession(options: {
       state.content === state.savedContent
     ) {
       if (!api) {
-        uiMessage.warning("当前环境未连接长篇工作区，请使用桌面客户端。");
+        uiMessage.warning("当前环境未连接小说工作区，请使用桌面客户端。");
       }
       return Boolean(api && state && !state.loading && !state.saving);
     }
@@ -603,7 +603,7 @@ export function useLongEditorDocumentSession(options: {
         replaceDocumentState(key, { ...latest, saving: false });
       }
       const message =
-        error instanceof Error ? error.message : "保存长篇文件失败。";
+        error instanceof Error ? error.message : "保存小说文件失败。";
       uiMessage.error(message);
       return false;
     }
@@ -737,9 +737,9 @@ export function useLongEditorDocumentSession(options: {
         dirtyKeys.length +
         dirtyVolumeIds.length +
         dirtyPlotPointSummaryIds.length;
-      uiMessage.success(`离开前已自动保存 ${savedCount} 项长篇修改`);
+      uiMessage.success(`离开前已自动保存 ${savedCount} 项小说修改`);
     } else {
-      uiMessage.warning("长篇修改尚未保存，已取消切换以保留当前内容。");
+      uiMessage.warning("小说修改尚未保存，已取消切换以保留当前内容。");
     }
     return saved;
   }

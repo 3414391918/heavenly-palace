@@ -100,7 +100,7 @@ function bookSummary(bookId = BOOK_ID): LongBookSummary {
     schemaVersion: 1,
     kind: "deepwrite.long-book",
     id: bookId,
-    title: `长篇 ${bookId}`,
+    title: `小说 ${bookId}`,
     bookType: "long",
     genre: "测试",
     status: "editing",
@@ -311,7 +311,7 @@ describe("useLongStructureTransactionsCoordinator", () => {
     );
 
     expect(duplicateCompletion.fail).toHaveBeenCalledWith(
-      "另一项长篇结构修改仍在处理中。"
+      "另一项小说结构修改仍在处理中。"
     );
     pendingApply.resolve({
       bookId: BOOK_ID,
@@ -419,10 +419,10 @@ describe("useLongStructureTransactionsCoordinator", () => {
 
       expect(harness.applyOperations).not.toHaveBeenCalled();
       expect(result.fail.mock.calls[0]?.[0]).toBe(
-        "核对长篇结构影响超时，请重试。"
+        "核对小说结构影响超时，请重试。"
       );
       expect(harness.notifications.error).toHaveBeenCalledWith(
-        "核对长篇结构影响超时，请重试。"
+        "核对小说结构影响超时，请重试。"
       );
       expect(harness.mutationPending.value).toBe(false);
     } finally {

@@ -308,7 +308,7 @@ export function createLongStructureDelete(
   ): Promise<void> {
     const expectedBookId = activeLongBookId.value;
     if (!expectedBookId) {
-      uiMessage.warning("当前长篇结构尚未就绪。");
+      uiMessage.warning("当前小说结构尚未就绪。");
       completion(false);
       return;
     }
@@ -326,7 +326,7 @@ export function createLongStructureDelete(
     const expectedBookId = activeLongBookId.value;
     const index = activeLongWorkspaceIndex.value;
     if (!expectedBookId || !index) {
-      uiMessage.warning("当前长篇结构尚未就绪。");
+      uiMessage.warning("当前小说结构尚未就绪。");
       completion();
       return;
     }

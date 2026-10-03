@@ -9,62 +9,31 @@ import {
 } from "./rightPanePreferences";
 
 describe("right pane preferences", () => {
-  it("shares character, plot, and draft area widths across short books", () => {
-    const worldbuilding = rightPanePreferenceKey({
-      domain: "creation",
-      workspaceType: "short",
-      stageId: "worldbuilding"
-    });
-    expect(worldbuilding).toBe("short:plot");
+  it("keys only novel workspace roots", () => {
     expect(
       rightPanePreferenceKey({
         domain: "creation",
-        workspaceType: "short",
-        stageId: "worldbuilding"
+        workspaceType: "long",
+        stageId: "draft"
       })
-    ).toBe(worldbuilding);
-    expect(
-      rightPanePreferenceKey({
-        domain: "creation",
-        workspaceType: "short",
-        stageId: "plot_design"
-      })
-    ).toBe("short:plot");
-    expect(
-      rightPanePreferenceKey({
-        domain: "creation",
-        workspaceType: "short",
-        stageId: "plot_refine"
-      })
-    ).toBe("short:plot");
-    expect(
-      rightPanePreferenceKey({
-        domain: "creation",
-        workspaceType: "short",
-        stageId: "character_design"
-      })
-    ).toBe("short:character");
+    ).toBe("long:draft");
     expect(
       rightPanePreferenceKey({
         domain: "creation",
         workspaceType: "short",
         stageId: "draft"
       })
-    ).toBe("short:draft");
+    ).toBeUndefined();
     expect(
       rightPanePreferenceKey({
         domain: "creation",
         workspaceType: "script",
-        stageId: "plot_design"
+        stageId: "draft"
       })
-    ).toBe("script:plot");
+    ).toBeUndefined();
     expect(
-      rightPanePreferenceKey({
-        domain: "creation",
-        workspaceType: "long",
-        stageId: "character_design"
-      })
-    ).toBe("long:character_design");
+      rightPanePreferenceKey({ domain: "material", stageId: "draft" })
+    ).toBeUndefined();
   });
 
   it("rejects malformed or out-of-range stored widths", () => {

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { NOVEL_PROPOSAL_ACCESSIBLE_NAME } from "./novelWorkspacePresentation";
 import { computed } from "vue";
 import type {
   LongContinuityFileChange,
@@ -442,7 +443,7 @@ function diffLineMark(type: "context" | "addition" | "deletion"): string {
       'is-conversation-card': conversationCard,
       'has-edit-proposal-surface-items': hasEditProposalSurfaceItems
     }"
-    aria-label="长篇待审批提案"
+    :aria-label="NOVEL_PROPOSAL_ACCESSIBLE_NAME"
   >
     <header v-if="!embedded">
       <div>

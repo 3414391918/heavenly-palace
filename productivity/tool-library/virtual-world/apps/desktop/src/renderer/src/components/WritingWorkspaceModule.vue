@@ -58,14 +58,6 @@ type WritingEditorViewModel = Readonly<
     | "autoSaveEnabled"
     | "defaultViewMode"
     | "boundToCurrentBook"
-    | "sectionTabs"
-    | "activeSectionId"
-    | "sectionTabsLabel"
-    | "canCreateSection"
-    | "createSectionLabel"
-    | "showDeleteSection"
-    | "canDeleteSection"
-    | "deleteSectionLabel"
     | "entrySearchItems"
   >
 >;
@@ -113,10 +105,6 @@ const emit = defineEmits<{
   save: [payload: { id: string; title: string; content: string }];
   liveChange: [payload: { id: string; title: string; content: string }];
   insertSelection: [reference: EditorTextReference];
-  selectSection: [sectionId: string];
-  createSection: [];
-  deleteSection: [];
-  selectDraftFile: [fileKind: "body" | "character-state"];
   selectEntrySearchResult: [documentId: string];
   prepareEntrySearch: [];
   resizeStart: [event: PointerEvent];
@@ -179,10 +167,6 @@ const emit = defineEmits<{
     @save="emit('save', $event)"
     @live-change="emit('liveChange', $event)"
     @insert-selection="emit('insertSelection', $event)"
-    @select-section="emit('selectSection', $event)"
-    @create-section="emit('createSection')"
-    @delete-section="emit('deleteSection')"
-    @select-draft-file="emit('selectDraftFile', $event)"
     @select-entry-search-result="emit('selectEntrySearchResult', $event)"
     @prepare-entry-search="emit('prepareEntrySearch')"
   />

@@ -24,7 +24,7 @@ export function useLongWorkspaceModuleEditorBridge(options: {
     reference: EditorTextReference
   ): Promise<void> {
     if (await currentEditorPort?.locateEditorReference(reference)) return;
-    options.warn("引用的长篇文本已不在当前编辑区，请重新选择后插入");
+    options.warn("引用的小说文本已不在当前编辑区，请重新选择后插入");
   }
 
   onBeforeUnmount(() => {

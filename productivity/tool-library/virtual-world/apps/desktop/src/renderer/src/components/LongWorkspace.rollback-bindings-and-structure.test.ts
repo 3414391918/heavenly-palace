@@ -91,14 +91,12 @@ describe("long-form renderer vertical slice: bindings-and-structure", () => {
       '@confirm-long-removal="confirmLongBookRemoval"'
     );
     expect(legacySyncSource).toContain("现有内容不会删除或覆盖");
-    expect(removalSource).toContain("整个长篇项目文件夹");
+    expect(removalSource).toContain("整个小说项目文件夹");
     expect(appSource).toContain("stopBookAgentRuns: stopLongBookAgentRuns");
     expect(longBookLifecycleSource).toContain(
       "await workflow.stopBookAgentRuns(target.bookId)"
     );
-    expect(proposalRuntimeSource).toContain(
-      "context.conversations.remove(key, options)"
-    );
+
     expect(conversationStoreSource).toContain("controller.dispose(");
     expect(conversationStoreSource).toContain(
       "{ clearPersistence: options.clearPersistence }"
@@ -110,7 +108,7 @@ describe("long-form renderer vertical slice: bindings-and-structure", () => {
       "context.removeAgentRunPreferences(`long:${bookId}`)"
     );
     expect(appSource).toContain("longCatalogDiagnostics");
-    expect(resourceTreeCoordinatorSource).toContain("不可用长篇 ·");
+    expect(resourceTreeCoordinatorSource).toContain("不可用小说 ·");
     expect(resourceTreeCoordinatorSource).toContain("unavailable: true");
     expect(sectionSource).toContain('id: "refresh-long-books"');
     expect(longWorkspaceSessionSource).toContain(
@@ -196,7 +194,7 @@ describe("long-form renderer vertical slice: bindings-and-structure", () => {
     );
     expect(structureSource).toContain("builder.createWorldbuilding");
     expect(structureSource).toContain("builder.updateWorldbuilding");
-    expect(structureSource).toContain("加载其他书籍世界观");
+    expect(structureSource).toContain("加载其他小说世界观");
     expect(structureSource).not.toContain("<LongPlotStructureManager");
     expect(structureSource).toContain('@click="openCreate"');
     expect(structureSource).toContain('@click="openEdit(row)"');

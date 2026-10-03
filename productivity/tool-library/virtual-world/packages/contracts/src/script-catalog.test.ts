@@ -1,11 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   BookSchema,
-  CatalogCommandEnvelopeSchema,
-  CatalogCreateScriptBookAtPathCommandEnvelopeSchema,
-  CatalogCreateScriptBookCommandEnvelopeSchema,
   CatalogSnapshotSchema,
-  CommandEnvelopeSchema,
   CreateLibraryAtPathInputSchema,
   CreateLibraryInputSchema,
   CreateScriptBookAtPathInputSchema,
@@ -17,7 +13,6 @@ import {
   createDefaultCreativePlotStages,
   createCatalogDraftDirectory,
   createDefaultScriptDraft,
-  createEnvelope,
   createScriptCatalogDraftDirectory
 } from "./index";
 
@@ -195,7 +190,7 @@ describe("script catalog contracts", () => {
     ).toBe("script");
   });
 
-  it("accepts create-script inputs and command envelopes", () => {
+  it("parses legacy script creation input shapes", () => {
     const input = CreateScriptBookInputSchema.parse({
       title: "测试剧本",
       genre: "悬疑"
@@ -205,36 +200,6 @@ describe("script catalog contracts", () => {
       input
     });
     expect(atPath.input.title).toBe("测试剧本");
-
-    const create = createEnvelope("catalog.createScriptBook", input, {
-      id: "create_script"
-    });
-    const createAtPath = createEnvelope(
-      "catalog.createScriptBookAtPath",
-      atPath,
-      {
-        id: "create_script_at_path"
-      }
-    );
-    expect(
-      CatalogCreateScriptBookCommandEnvelopeSchema.parse(create).type
-    ).toBe("catalog.createScriptBook");
-    expect(
-      CatalogCreateScriptBookAtPathCommandEnvelopeSchema.parse(createAtPath)
-        .type
-    ).toBe("catalog.createScriptBookAtPath");
-    expect(CatalogCommandEnvelopeSchema.parse(create).type).toBe(
-      "catalog.createScriptBook"
-    );
-    expect(CatalogCommandEnvelopeSchema.parse(createAtPath).type).toBe(
-      "catalog.createScriptBookAtPath"
-    );
-    expect(CommandEnvelopeSchema.parse(create).type).toBe(
-      "catalog.createScriptBook"
-    );
-    expect(CommandEnvelopeSchema.parse(createAtPath).type).toBe(
-      "catalog.createScriptBookAtPath"
-    );
   });
 
   it("keeps library type optional and short-compatible while accepting script", () => {

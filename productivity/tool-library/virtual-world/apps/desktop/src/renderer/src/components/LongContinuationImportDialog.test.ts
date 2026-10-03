@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import dialogSource from "./LongContinuationImportDialog.vue?raw";
 import transferSource from "./BookTransferDialog.vue?raw";
-import appSource from "../WorkspaceShell.vue?raw";
+import appSource from "../test-support/workspaceShellSource";
 import longBookLifecycleSource from "../composables/useLongBookLifecycleCoordinator.ts?raw";
 import resourceTreeSource from "../utils/longWorkspaceContinuityTree.ts?raw";
 
@@ -9,7 +9,7 @@ describe("LongContinuationImportDialog", () => {
   it("adds the continuation import entry and uses the protected preview API", () => {
     expect(transferSource).toContain("续写导入（TXT 章节）");
     expect(transferSource).toContain('action: "import-continuation-long-book"');
-    expect(transferSource).not.toContain("旧版本长篇");
+    expect(transferSource).not.toContain("旧版本小说");
     expect(transferSource).not.toContain("旧版本短篇/剧本");
     expect(appSource).toContain("await chooseContinuationImportSource();");
     expect(appSource).toContain(

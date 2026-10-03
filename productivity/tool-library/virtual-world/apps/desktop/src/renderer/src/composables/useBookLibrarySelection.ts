@@ -15,7 +15,7 @@ export interface BookLibrarySelectionProps {
   skills: readonly SkillLibrary[];
   materialGroups: readonly MaterialLibraryGroup[];
   skillGroups: readonly SkillLibraryGroup[];
-  workspaceType: "short" | "script" | "long";
+  workspaceType: "long";
   initialMaterials?: LinkedMaterialIdsByKind | undefined;
   initialSkills?: LinkedSkillIdsByKind | undefined;
   preserveMissing?: boolean;
@@ -40,7 +40,7 @@ export function useBookLibrarySelection(props: BookLibrarySelectionProps) {
     other: ""
   });
   // Library type is retained in persisted manifests for backwards compatibility,
-  // but short stories, scripts, and long-form books all bind from one shared pool.
+  // Libraries bind from one shared pool.
   const workspaceMaterials = computed(() => props.materials);
   const workspaceSkills = computed(() => props.skills);
   const materialById = computed(
@@ -72,40 +72,21 @@ export function useBookLibrarySelection(props: BookLibrarySelectionProps) {
   ): string {
     if (workspaceType.value === "long") {
       if (kind.id === "plot") return "长线情节与结构参考";
-      if (kind.id === "other") return "自定义长篇素材";
+      if (kind.id === "other") return "自定义小说素材";
     }
-    return workspaceType.value === "script" && kind.id === "plot"
-      ? "剧情设计与细化"
-      : kind.description;
+    return kind.description;
   }
 
   function skillKindDescription(kind: (typeof SKILL_KINDS)[number]): string {
-    if (workspaceType.value === "long") {
-      if (kind.id === "general") return "多个长篇阶段均可使用";
-      if (kind.id === "style") return "章节与分节写作方法";
-    }
-    return workspaceType.value === "script" && kind.id === "style"
-      ? "正文与分集写作方法"
-      : kind.description;
+    if (kind.id === "general") return "多个创作阶段均可使用";
+    return kind.description;
   }
 
   function emptyMaterialLinks(): Record<MaterialKind, string[]> {
-    return {
-      character: [],
-      gimmick: [],
-      plot: [],
-      draft: [],
-      other: []
-    };
+    return { character: [], gimmick: [], plot: [], draft: [], other: [] };
   }
-
   function emptySkillLinks(): Record<SkillKind, string[]> {
-    return {
-      general: [],
-      plot: [],
-      style: [],
-      other: []
-    };
+    return { general: [], plot: [], style: [], other: [] };
   }
 
   function materialGroupLinks(

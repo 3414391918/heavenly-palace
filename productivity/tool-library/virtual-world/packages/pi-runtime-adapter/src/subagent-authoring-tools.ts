@@ -67,7 +67,7 @@ export function renderSubagentAuthoringSystemPrompt(
         ].join("\n");
 
   return [
-    "你是 DeepWrite 的「技能转子智能体」助手。根据用户选定的技能正文，为当前主智能体生成一份可保存的子智能体草稿。",
+    "你是虚拟世界的「技能转子智能体」助手。根据用户选定的技能正文，为当前主智能体生成一份可保存的子智能体草稿。",
     "",
     `【目标主智能体】${context.parentAgentLabel}（${context.parentAgentId}）`,
     `【用户确认的产出方式】${modeLabel}`,

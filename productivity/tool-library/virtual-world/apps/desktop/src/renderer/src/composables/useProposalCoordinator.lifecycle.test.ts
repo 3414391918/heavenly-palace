@@ -95,23 +95,18 @@ function createFixture() {
     },
     catalog: {
       snapshot: shallowRef({} as CatalogIndexSnapshot),
-      projection: shallowRef(null),
-      catalogBook: vi.fn(),
       findCatalogLibrary: vi.fn(() => library),
       loadSnapshot: vi.fn(async () => undefined),
       applyAcceptedDocumentLocally: vi.fn(),
       applyCreatedLibraryEntry: vi.fn(async () => undefined),
       applySavedLibraryEntry: vi.fn(async () => undefined),
       applyUpdatedLibrary: vi.fn(async () => undefined),
-      isConflict: vi.fn(() => false),
-      refreshBookAfterSave: vi.fn(async () => true)
+      isConflict: vi.fn(() => false)
     },
     editor: {
       documents: shallowRef([]),
       drafts: ref({}),
       liveDocuments: computed(() => []),
-      selectedDraftFileKinds: ref({}),
-      selectedExpertSectionIds: ref({}),
       acceptingWorkspaceIds: ref(new Set<string>()),
       savingDocumentIds: ref(new Set<string>()),
       rememberWorkspaceMutationEvent: vi.fn(() => true),
@@ -123,7 +118,6 @@ function createFixture() {
       activeLong: computed(() => null),
       byKey: new Map(),
       all: () => [conversation],
-      legacyDraftSectionKeys: vi.fn(() => []),
       forLongProposal: vi.fn()
     },
     longWorkspace: {
@@ -246,23 +240,18 @@ function createAutomaticLongDeleteFixture() {
     },
     catalog: {
       snapshot: shallowRef({} as CatalogIndexSnapshot),
-      projection: shallowRef(null),
-      catalogBook: vi.fn(),
       findCatalogLibrary: vi.fn(),
       loadSnapshot: vi.fn(async () => undefined),
       applyAcceptedDocumentLocally: vi.fn(),
       applyCreatedLibraryEntry: vi.fn(async () => undefined),
       applySavedLibraryEntry: vi.fn(async () => undefined),
       applyUpdatedLibrary: vi.fn(async () => undefined),
-      isConflict: vi.fn(() => false),
-      refreshBookAfterSave: vi.fn(async () => true)
+      isConflict: vi.fn(() => false)
     },
     editor: {
       documents: shallowRef([]),
       drafts: ref({}),
       liveDocuments: computed(() => []),
-      selectedDraftFileKinds: ref({}),
-      selectedExpertSectionIds: ref({}),
       acceptingWorkspaceIds: ref(new Set<string>()),
       savingDocumentIds: ref(new Set<string>()),
       rememberWorkspaceMutationEvent: vi.fn(() => true),
@@ -274,7 +263,6 @@ function createAutomaticLongDeleteFixture() {
       activeLong: computed(() => conversation),
       byKey: new Map(),
       all: () => [conversation],
-      legacyDraftSectionKeys: vi.fn(() => []),
       forLongProposal: vi.fn()
     },
     longWorkspace: {
@@ -302,6 +290,26 @@ function createAutomaticLongDeleteFixture() {
 }
 
 describe("useProposalCoordinator lifecycle", () => {
+  it("refuses recovered retired proposals without writing preview documents", async () => {
+    const fixture = createFixture();
+    delete fixture.proposal().libraryTarget;
+    await fixture.coordinator.reviewAgentEdit({
+      runId: fixture.proposal().runId,
+      proposalId: fixture.proposal().id,
+      decision: "accept"
+    });
+    await fixture.coordinator.drain();
+    expect(fixture.createLibraryEntry).not.toHaveBeenCalled();
+    expect(fixture.proposal().status).toBe("conflict");
+    await fixture.coordinator.dispose();
+  });
+  it("exposes only novel and library proposal staging", async () => {
+    const fixture = createFixture();
+    expect(fixture.coordinator).not.toHaveProperty("stageAgentEditProposal");
+    expect(fixture.coordinator).toHaveProperty("stageLibraryEditProposal");
+    expect(fixture.coordinator).toHaveProperty("stageLongDraftEditProposal");
+    await fixture.coordinator.dispose();
+  });
   it("drains a deferred keyed commit before reporting completion", async () => {
     const fixture = createFixture();
     fixture.coordinator.resumeRecoveredAutomaticAgentEdits();

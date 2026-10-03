@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import source from "./WorkspaceShell.vue?raw";
+import source from "./test-support/workspaceShellSource";
 import dialogLayerSource from "./components/WorkspaceDialogLayer.vue?raw";
 import modelCoordinatorSource from "./composables/useModelSettingsCoordinator.ts?raw";
 import dialogCoordinatorSource from "./composables/useWorkspaceDialogModuleCoordinator.ts?raw";

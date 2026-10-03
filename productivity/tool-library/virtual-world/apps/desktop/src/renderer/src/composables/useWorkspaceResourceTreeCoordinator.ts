@@ -3,19 +3,13 @@ import type {
   LongListBooksResult,
   LongWorkspaceIndexSnapshot
 } from "@deepwrite/contracts";
-import { computed, ref, type Ref } from "vue";
+import { computed, type Ref } from "vue";
 import type { CatalogWorkspaceProjection } from "../data/catalogWorkspace";
 import type { ResourceTreeNode, ResourceTreeSection } from "../types/workspace";
 import {
   longBookResourceId,
   type LongWorkspaceSelection
 } from "../types/longWorkspace";
-import {
-  applyBookResourcePreferences,
-  BOOK_RESOURCE_PREFERENCES_STORAGE_KEY,
-  parseBookResourcePreferences,
-  type BookResourcePreference
-} from "../utils/bookResourcePreferences";
 import {
   longNavigationNodeId,
   projectLongWorkspaceNavigation
@@ -50,18 +44,6 @@ function collectResourceNodeIds(node: ResourceTreeNode): string[] {
   return [node.id, ...(node.children?.flatMap(collectResourceNodeIds) ?? [])];
 }
 
-function readStoredPreferences(
-  storage: WorkspaceResourceTreeCoordinatorOptions["storage"]
-): string | null {
-  try {
-    return storage()?.getItem(BOOK_RESOURCE_PREFERENCES_STORAGE_KEY) ?? null;
-  } catch {
-    // Storage can be unavailable in hardened browser contexts. An unreadable
-    // preference must never prevent the workspace tree from rendering.
-    return null;
-  }
-}
-
 /**
  * Owns the final visible resource tree and its lookup indexes. Catalog
  * selection reconciliation remains in useWorkspaceResourceCoordinator so a
@@ -75,23 +57,9 @@ export function useWorkspaceResourceTreeCoordinator(
       ...section,
       nodes: []
     }));
-  const serializedBookResourcePreferences = ref<string | null>(
-    readStoredPreferences(options.storage)
-  );
-
   const baseResourceSections = computed<ResourceTreeSection[]>(
     () =>
       options.catalogProjection.value?.resourceSections ?? emptyResourceSections
-  );
-
-  // Keep the serialized source until a Catalog projection is available. This
-  // avoids discarding valid preferences merely because startup begins with an
-  // empty projection, while still revalidating ids after every Catalog refresh.
-  const bookResourcePreferences = computed(() =>
-    parseBookResourcePreferences(
-      serializedBookResourcePreferences.value,
-      baseResourceSections.value
-    )
   );
 
   const longBookResourceNodes = computed<ResourceTreeNode[]>(() => {
@@ -111,7 +79,6 @@ export function useWorkspaceResourceTreeCoordinator(
           id: longBookResourceId(book.id),
           label: book.title,
           icon: "book" as const,
-          badge: "长篇",
           workspaceType: "long" as const,
           longBookId: book.id,
           catalogNodeType: "long-book" as const,
@@ -121,12 +88,9 @@ export function useWorkspaceResourceTreeCoordinator(
       }),
       ...[...unavailable.values()].map((diagnostic) => ({
         id: longBookResourceId(diagnostic.bookId),
-        label: `不可用长篇 · ${diagnostic.bookId}`,
+        label: `不可用小说 · ${diagnostic.bookId}`,
         icon: "book" as const,
-        badge:
-          diagnostic.code === "invalid"
-            ? "长篇 · 项目读取失败"
-            : "长篇 · 暂不可用",
+        badge: diagnostic.code === "invalid" ? "项目读取失败" : "暂不可用",
         workspaceType: "long" as const,
         longBookId: diagnostic.bookId,
         catalogNodeType: "long-book" as const,
@@ -137,14 +101,11 @@ export function useWorkspaceResourceTreeCoordinator(
   });
 
   const resourceTreeSections = computed(() =>
-    applyBookResourcePreferences(
-      baseResourceSections.value,
-      bookResourcePreferences.value
-    ).map((section) =>
+    baseResourceSections.value.map((section) =>
       section.id === "creation"
         ? {
             ...section,
-            nodes: [...section.nodes, ...longBookResourceNodes.value]
+            nodes: longBookResourceNodes.value
           }
         : section
     )
@@ -155,31 +116,6 @@ export function useWorkspaceResourceTreeCoordinator(
   const resourceTreeLookup = computed(() =>
     createResourceTreeLookup(resourceTreeSections.value)
   );
-
-  function updateBookPreference(
-    bookId: string,
-    patch: BookResourcePreference
-  ): void {
-    const nextPreferences = {
-      ...bookResourcePreferences.value,
-      [bookId]: {
-        ...bookResourcePreferences.value[bookId],
-        ...patch
-      }
-    };
-    const serialized = JSON.stringify(nextPreferences);
-
-    // Publish the in-memory value before persistence. A storage failure should
-    // not roll back the user's current-session action.
-    serializedBookResourcePreferences.value = serialized;
-    try {
-      const storage = options.storage();
-      if (!storage) throw new Error("Resource preference storage unavailable");
-      storage.setItem(BOOK_RESOURCE_PREFERENCES_STORAGE_KEY, serialized);
-    } catch {
-      options.notifications.warning("书籍设置暂时无法保存，但本次操作仍然有效");
-    }
-  }
 
   function preferredLongResourceIdForSelection(
     bookId: string,
@@ -285,13 +221,11 @@ export function useWorkspaceResourceTreeCoordinator(
 
   return {
     baseResourceSections,
-    bookResourcePreferences,
     collectResourceNodeIds,
     longBookResourceNodes,
     preferredLongResourceIdForSelection,
     resourceTreeLookup,
     resourceTreeSections,
-    synchronizeSelectedLongResourceForLayout,
-    updateBookPreference
+    synchronizeSelectedLongResourceForLayout
   };
 }

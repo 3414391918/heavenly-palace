@@ -19,7 +19,7 @@ const emit = defineEmits<{
 }>();
 
 const sourceLabels: Record<LongMigrationSourceKind, string> = {
-  "write-claw-zip": "旧版本长篇压缩包",
+  "write-claw-zip": "旧版本小说压缩包",
   "long-workspace-json": "long_workspace.json",
   "book-json": "book.json"
 };
@@ -58,7 +58,7 @@ onBeforeUnmount(() => document.removeEventListener("keydown", handleKeydown));
             <AppIcon name="check" :size="20" />
           </span>
           <div>
-            <span>旧版本长篇导入</span>
+            <span>旧版本小说导入</span>
             <h2 id="long-migration-dialog-title">导入完成</h2>
           </div>
         </header>
@@ -66,7 +66,7 @@ onBeforeUnmount(() => document.removeEventListener("keydown", handleKeydown));
         <main class="long-migration-content">
           <p id="long-migration-summary" class="long-migration-summary">
             “<strong :title="title">{{ title }}</strong
-            >”已创建为独立的 DeepWrite 长篇项目，可以继续编辑。
+            >”已创建为独立的 DeepWrite 小说项目，可以继续编辑。
           </p>
 
           <dl class="long-migration-meta">
@@ -101,7 +101,7 @@ onBeforeUnmount(() => document.removeEventListener("keydown", handleKeydown));
             <h3>源文件保持不变</h3>
             <p>
               导入只会新建 DeepWrite
-              长篇项目，不会修改、覆盖或删除所选的旧版本源文件。
+              小说项目，不会修改、覆盖或删除所选的旧版本源文件。
             </p>
           </section>
 

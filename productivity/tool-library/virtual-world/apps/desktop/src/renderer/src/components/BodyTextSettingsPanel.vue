@@ -27,9 +27,7 @@ const formatOptions: { value: BodyTextFormat; label: string }[] = [
   { value: "indent-spaced", label: "缩进两字，段间空一行" }
 ];
 const fields: { kind: BodyTextKind; label: string }[] = [
-  { kind: "short", label: "短篇正文格式规范" },
-  { kind: "script", label: "剧本正文格式规范" },
-  { kind: "long", label: "长篇正文格式规范" }
+  { kind: "long", label: "小说正文格式规范" }
 ];
 </script>
 

@@ -10,14 +10,9 @@ import {
   useBookLibrarySelection,
   type BookLibrarySelectionProps
 } from "./useBookLibrarySelection";
-import { bookTemplateReferenceError } from "../utils/bookTemplateReferences";
-import {
-  loadBookTemplateDraftSchema,
-  createDefaultCreativePlotStages
-} from "@deepwrite/contracts";
 function properties(): BookLibrarySelectionProps {
   return {
-    workspaceType: "short",
+    workspaceType: "long",
     materials: [
       {
         id: "material_1",
@@ -70,57 +65,6 @@ describe("shared book library selection", () => {
       props.skillGroups[0]!.members.style = "";
       expect(materials.character).toEqual(["material_1"]);
       expect(skills.style).toEqual(["skill_1"]);
-    } finally {
-      scope.stop();
-    }
-  });
-  it("retains missing template references so validation blocks creation instead of dropping bindings", async () => {
-    const scope = effectScope();
-    const configuration = (await loadBookTemplateDraftSchema()).parse({
-      workspaceType: "short",
-      name: "模板",
-      genre: "其他",
-      characterFormat: "text",
-      defaultPlotStageIds: ["plot_design"],
-      linkedMaterialIdsByKind: {
-        character: ["deleted_material"],
-        gimmick: [],
-        plot: [],
-        draft: [],
-        other: []
-      },
-      linkedSkillIdsByKind: { general: [], plot: [], style: [], other: [] }
-    });
-    const props = reactive({
-      ...properties(),
-      preserveMissing: true,
-      initialMaterials: configuration.linkedMaterialIdsByKind
-    });
-    try {
-      const selection = scope.run(() => useBookLibrarySelection(props))!;
-      expect(selection.selectedMaterialLinks().character).toEqual([
-        "deleted_material"
-      ]);
-      expect(selection.materialSelectOptions("character")).toContainEqual({
-        value: "deleted_material",
-        label: "已失效的素材库（请重新选择）"
-      });
-      expect(
-        bookTemplateReferenceError(configuration, {
-          ...props,
-          creativePlotStages: createDefaultCreativePlotStages()
-        })
-      ).toContain("素材库已失效");
-      selection.selectedMaterialIds.character = "material_1";
-      expect(
-        bookTemplateReferenceError(
-          {
-            ...configuration,
-            linkedMaterialIdsByKind: selection.selectedMaterialLinks()
-          },
-          { ...props, creativePlotStages: createDefaultCreativePlotStages() }
-        )
-      ).toBeNull();
     } finally {
       scope.stop();
     }

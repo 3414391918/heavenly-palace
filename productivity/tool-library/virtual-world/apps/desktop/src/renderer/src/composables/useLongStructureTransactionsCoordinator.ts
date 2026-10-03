@@ -111,7 +111,7 @@ export function useLongStructureTransactionsCoordinator(
   ): Promise<void> {
     const expectedBookId = state.activeBookId.value;
     if (!expectedBookId) {
-      const message = "当前长篇结构尚未就绪。";
+      const message = "当前小说结构尚未就绪。";
       options.notifications.warning(message);
       completion.fail(message);
       return;
@@ -126,7 +126,7 @@ export function useLongStructureTransactionsCoordinator(
     const expectedBookId = state.activeBookId.value;
     const expectedIndex = state.workspaceIndex.value;
     if (!expectedBookId || !expectedIndex) {
-      options.notifications.warning("当前长篇结构尚未就绪。");
+      options.notifications.warning("当前小说结构尚未就绪。");
       completion();
       return;
     }
@@ -226,7 +226,7 @@ export function useLongStructureTransactionsCoordinator(
         async (mutationLease) => {
           if (mutationLease.target.index !== index) {
             options.notifications.warning(
-              "活动长篇或结构已切换，本次调整已取消。"
+              "活动小说或结构已切换，本次调整已取消。"
             );
             return;
           }
@@ -237,7 +237,7 @@ export function useLongStructureTransactionsCoordinator(
             lease.assertCurrentLongStructureMutationTarget(
               mutationLease.target,
               mutationLease,
-              "活动长篇或结构已切换，本次调整已取消。"
+              "活动小说或结构已切换，本次调整已取消。"
             );
             batch = createLongStructureMutationBuilder(index).reorderChapter(
               chapterCardId,

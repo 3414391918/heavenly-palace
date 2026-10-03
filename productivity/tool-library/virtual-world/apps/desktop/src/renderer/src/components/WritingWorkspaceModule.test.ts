@@ -1,6 +1,6 @@
 import { expectSourceToContain } from "../../../test-utils/sourceText";
 import { describe, expect, it } from "vitest";
-import appSource from "../WorkspaceShell.vue?raw";
+import appSource from "../test-support/workspaceShellSource";
 import asyncComponentsSource from "./lazyAppComponents.ts?raw";
 import featureImportsSource from "./lazyFeatureImports.ts?raw";
 const lazyComponentsSource = `${asyncComponentsSource}\n${featureImportsSource}`;

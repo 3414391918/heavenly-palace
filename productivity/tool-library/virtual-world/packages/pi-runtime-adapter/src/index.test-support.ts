@@ -8,20 +8,11 @@ import {
 import {
   DEFAULT_LIBRARY_AGENT_PROFILES,
   DEFAULT_LONG_AGENT_PROFILES,
-  DEFAULT_SCRIPT_WORKSPACE_AGENT_PROFILES,
-  DEFAULT_SHORT_WORKSPACE_AGENT_PROFILES,
-  SCRIPT_SCREENPLAY_FORMAT_REQUIREMENTS,
-  SCRIPT_WORKSPACE_TEXT_STAGE_IDS,
-  SHORT_WORKSPACE_TEXT_STAGE_IDS,
-  cloneEmptyLearningImitationResult,
   createDefaultCreativePlotStages,
   createShortWorkspaceContentRevision,
   type AgentProviderRuntimeConfig,
   type ChatAssistantRuntimeContext,
-  type LongWorkspaceRuntimeContext,
-  type ScriptWorkspaceAgentProfile,
-  type ScriptWorkspaceSnapshot,
-  type ShortWorkspaceSnapshot
+  type LongWorkspaceRuntimeContext
 } from "@deepwrite/contracts";
 import {
   buildEffectiveSystemPrompt,
@@ -95,58 +86,6 @@ function normalChatContext(): ChatAssistantRuntimeContext {
       "30d": dashboard,
       all: dashboard
     }
-  };
-}
-
-function scriptAgentProfile(): ScriptWorkspaceAgentProfile {
-  const profile = DEFAULT_SCRIPT_WORKSPACE_AGENT_PROFILES[0]!;
-  return {
-    ...profile,
-    systemPrompt: "用户在设置中编辑的剧本正文专家提示词。"
-  };
-}
-
-function screenplayWorkspace(): ScriptWorkspaceSnapshot {
-  const emptyRevision = createShortWorkspaceContentRevision("");
-  return {
-    id: "script-runtime-test",
-    title: "雾港剧本",
-    categories: ["悬疑"],
-    activeStageId: "draft",
-    activeAgentId: "script",
-    activeSectionId: "episode-1",
-    characterStructure: { format: "text" },
-    plotStages: createDefaultCreativePlotStages(),
-    expertDraft: {
-      id: "draft",
-      title: "正文",
-      revision: createShortWorkspaceContentRevision("episode-1"),
-      sections: [
-        {
-          id: "episode-1",
-          title: "第一集",
-          wordCountRequirement: "15 分钟",
-          body: {
-            documentId: "draft:episode-1:body",
-            title: "第一集",
-            content: "",
-            revision: emptyRevision
-          },
-          characterState: {
-            documentId: "draft:episode-1:state",
-            title: "第一集 · 人物状态",
-            content: "",
-            revision: emptyRevision
-          }
-        }
-      ]
-    },
-    stages: SCRIPT_WORKSPACE_TEXT_STAGE_IDS.map((stageId) => ({
-      stageId,
-      title: stageId,
-      content: "",
-      revision: emptyRevision
-    }))
   };
 }
 
@@ -306,12 +245,7 @@ async function captureToolPayload(
 export {
   DEFAULT_LIBRARY_AGENT_PROFILES,
   DEFAULT_LONG_AGENT_PROFILES,
-  DEFAULT_SCRIPT_WORKSPACE_AGENT_PROFILES,
-  DEFAULT_SHORT_WORKSPACE_AGENT_PROFILES,
   PiAgentRuntimeAdapter,
-  SCRIPT_SCREENPLAY_FORMAT_REQUIREMENTS,
-  SCRIPT_WORKSPACE_TEXT_STAGE_IDS,
-  SHORT_WORKSPACE_TEXT_STAGE_IDS,
   Type,
   buildAgentEvaluationSnapshot,
   buildEffectiveSystemPrompt,
@@ -322,7 +256,6 @@ export {
   captureDisabledThinkingPayload,
   captureThinkingPayload,
   captureToolPayload,
-  cloneEmptyLearningImitationResult,
   createAssistantMessageEventStream,
   createDefaultCreativePlotStages,
   createShortWorkspaceContentRevision,
@@ -335,8 +268,6 @@ export {
   ollamaGrammarRegressionTool,
   providerRuntime,
   reconcileToolCallArguments,
-  screenplayWorkspace,
-  scriptAgentProfile,
   toRuntimeEvents,
   toToolStreamRuntimeEvent,
   toUsageObservedRuntimeEvent,
@@ -349,8 +280,5 @@ export type {
   AgentTool,
   AssistantMessage,
   ChatAssistantRuntimeContext,
-  LongWorkspaceRuntimeContext,
-  ScriptWorkspaceAgentProfile,
-  ScriptWorkspaceSnapshot,
-  ShortWorkspaceSnapshot
+  LongWorkspaceRuntimeContext
 };

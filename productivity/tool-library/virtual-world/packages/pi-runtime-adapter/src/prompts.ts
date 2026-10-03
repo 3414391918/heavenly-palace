@@ -1,5 +1,4 @@
 import { revisionAnalysisUserPrompt } from "./revision-analysis";
-import { shortAnalysisUserPrompt } from "./short-book-analysis";
 import { materialCatalogEntries } from "./material-query-runtime";
 import {
   buildWorkspaceMaterialContext,
@@ -13,13 +12,6 @@ import {
 import type { UserMessage } from "@earendil-works/pi-ai";
 import { buildRawUserText, imageContentBlocks } from "./prompts-user-message";
 import type { AgentRunInput } from "./runtime-types";
-import { buildStyleComparisonUserPrompt } from "./style-comparison";
-
-export {
-  scriptRuntimeFormatRequirements,
-  scriptRuntimeSystemRequirements,
-  shortRuntimeSystemRequirements
-} from "./prompts-writing";
 
 export {
   buildDeepWriteSystemPrompt,
@@ -30,52 +22,30 @@ export {
 export function buildRuntimeUserPrompt(input: AgentRunInput): string {
   if (input.workspaceContext?.revisionAnalysis)
     return revisionAnalysisUserPrompt(input.workspaceContext.revisionAnalysis);
-  if (input.workspaceContext?.shortBookAnalysis)
-    return shortAnalysisUserPrompt(input.workspaceContext.shortBookAnalysis);
-  if (input.workspaceContext?.styleComparison) {
-    return buildStyleComparisonUserPrompt(
-      input.workspaceContext.styleComparison
-    );
-  }
   const active = input.workspaceContext?.activeResource;
   const libraryContext = input.workspaceContext?.libraryWorkspace;
-  const shortWorkspace = input.workspaceContext?.shortWorkspace;
-  const scriptWorkspace = input.workspaceContext?.scriptWorkspace;
   const longWorkspace = input.workspaceContext?.longWorkspace;
-  const writingWorkspace = scriptWorkspace ?? shortWorkspace;
-  const writingProfile = input.scriptAgentProfile ?? input.agentProfile;
   const longProfile = input.longAgentProfile;
   const skills = input.workspaceContext?.attachedSkills ?? [];
   const materials = input.workspaceContext?.materialCatalog
     ? materialCatalogEntries(input.workspaceContext.materialCatalog)
     : (input.workspaceContext?.attachedMaterials ?? []);
-  const isWritingAgentRun = Boolean(writingWorkspace && writingProfile);
   const isLibraryAgentRun = Boolean(
     libraryContext && input.libraryAgentProfile
   );
   // The unified long agent owns every stage, so all fixed context is injected
   // and no implementation-level ids are exposed.
   const isLongRun = Boolean(longWorkspace && longProfile);
-  const learningContext = input.workspaceContext?.learningImitation;
-  const longBookAnalysisContext = input.workspaceContext?.longBookAnalysis;
-  const readableSkills = writingProfile
+  const readableSkills = longProfile
     ? skills.filter(
         (item) =>
           item.kind !== undefined &&
-          writingProfile.readAccess.skill.includes(item.kind)
+          longProfile.readAccess.skillKinds.includes(item.kind)
       )
-    : longProfile
-      ? skills.filter(
-          (item) =>
-            item.kind !== undefined &&
-            longProfile.readAccess.skillKinds.includes(item.kind)
-        )
-      : input.libraryAgentProfile
-        ? skills
-        : skills;
+    : skills;
   const isLongAgentRun = isLongRun;
   const skillContext =
-    isWritingAgentRun || isLibraryAgentRun || isLongAgentRun
+    isLibraryAgentRun || isLongAgentRun
       ? readableSkills.length
         ? isLibraryAgentRun
           ? `可按需加载的技能：\n${input
@@ -94,79 +64,25 @@ export function buildRuntimeUserPrompt(input: AgentRunInput): string {
       : skills.length
         ? `显式附加技能:\n${skills.map((item) => `- ${item.title}: ${item.content}`).join("\n")}`
         : "显式附加技能: 无";
-  const materialContext =
-    isWritingAgentRun || isLongAgentRun
-      ? buildWorkspaceMaterialContext(input)
-      : materials.length
-        ? `显式附加素材:\n${materials
-            .map((item) => `- ${item.title}: ${item.content}`)
-            .join("\n")}`
-        : "显式附加素材: 无";
+  const materialContext = isLongAgentRun
+    ? buildWorkspaceMaterialContext(input)
+    : materials.length
+      ? `显式附加素材:\n${materials
+          .map((item) => `- ${item.title}: ${item.content}`)
+          .join("\n")}`
+      : "显式附加素材: 无";
   const lines = [
     "【本次智能体会话固定上下文】",
     isLongRun ? "" : `sessionId: ${input.sessionId}`,
     isLongRun ? "" : `runId: ${input.runId}`,
-    writingWorkspace
-      ? `【${scriptWorkspace ? "剧本" : "短篇"}上下文（AGENTS.md）】\n${writingWorkspace.agentsMd ?? "未提供"}`
-      : "",
-    writingWorkspace
-      ? `【当前${scriptWorkspace ? "剧本" : "短篇"}情况（发送时快照）】`
-      : "",
-    writingWorkspace
-      ? `${scriptWorkspace ? "剧本" : "短篇"}作品: 《${writingWorkspace.title}》`
-      : "",
     ...(isLongRun ? buildLongFixedContextLines(longWorkspace!) : []),
-    writingWorkspace
-      ? `作品分类: ${writingWorkspace.categories.join("、") || "未分类"}`
-      : "",
-    writingWorkspace ? `当前阶段: ${writingWorkspace.activeStageId}` : "",
-    writingWorkspace
-      ? `剧情结构顺序: ${writingWorkspace.plotStages
-          .map((stage) => `${stage.title} (${stage.id})`)
-          .join(" → ")}`
-      : "",
-    writingWorkspace?.activeSectionId
-      ? `当前用户正在操作的${scriptWorkspace ? "剧集" : "小节"}: ${
-          writingWorkspace.expertDraft.sections.find(
-            (section) => section.id === writingWorkspace.activeSectionId
-          )?.title ?? "未知标题"
-        }（section_id=${writingWorkspace.activeSectionId}）`
-      : "",
-    writingWorkspace
-      ? writingWorkspace.characterStructure?.format === "list"
-        ? `人物结构: 条目样式；人物条目索引: ${
-            writingWorkspace.characterStructure.items.length
-              ? writingWorkspace.characterStructure.items
-                  .map((item) => `${item.title} (${item.id})`)
-                  .join("、")
-              : "无"
-          }`
-        : "人物结构: 文本样式（所有人物写在同一份总稿，kind=character_overview、id=character_design）"
-      : "",
-    writingWorkspace?.expertDraft.sections.length
-      ? `正文目录${scriptWorkspace ? "剧集" : "小节"}（由早到晚）: ${writingWorkspace.expertDraft.sections
-          .map((section) => `${section.title} (${section.id})`)
-          .join("、")}`
-      : "",
-    writingProfile
-      ? `当前智能体: ${writingProfile.label} (${writingProfile.id})`
-      : longProfile
-        ? `当前智能体: ${longProfile.label}`
-        : input.libraryAgentProfile
-          ? `当前智能体: ${input.libraryAgentProfile.label} (${input.libraryAgentProfile.domain})`
-          : input.learningImitationProfile
-            ? `当前智能体: ${input.learningImitationProfile.label} (${input.learningImitationProfile.id})`
-            : input.longBookAnalysisProfile
-              ? `当前智能体: ${input.longBookAnalysisProfile.name} (${input.longBookAnalysisProfile.id})`
-              : "",
-    learningContext
-      ? `学习阶段: ${learningContext.stageId}；样本文档: ${learningContext.documents.length} 篇`
-      : "",
-    longBookAnalysisContext
-      ? `拆书阶段: ${longBookAnalysisContext.phase}；选择范围: 第 ${longBookAnalysisContext.selectionStart}-${longBookAnalysisContext.selectionEnd} 章`
-      : "",
+    longProfile
+      ? `当前智能体: ${longProfile.label}`
+      : input.libraryAgentProfile
+        ? `当前智能体: ${input.libraryAgentProfile.label} (${input.libraryAgentProfile.domain})`
+        : "",
     libraryContext
-      ? `当前资料库: 《${libraryContext.title}》 (${libraryContext.domain} / ${libraryContext.kind}；短篇、剧本、长篇共用)`
+      ? `当前资料库: 《${libraryContext.title}》 (${libraryContext.domain} / ${libraryContext.kind})`
       : "",
     libraryContext
       ? `资料库状态: ${libraryContext.readOnly ? "只读" : "可写"}${libraryContext.projectRevision === undefined ? "" : `；项目版本 ${libraryContext.projectRevision}`}`
@@ -191,16 +107,9 @@ export function buildRuntimeUserPrompt(input: AgentRunInput): string {
       : "",
     active
       ? `当前资源: ${active.title} (${active.domain}${active.format ? ` / ${active.format}` : ""})`
-      : learningContext
-        ? "当前资源: 学习仿写样本文档（正文请通过工具按需读取）"
-        : longBookAnalysisContext
-          ? "当前资源: 长篇拆书输入（章节正文或中间笔记请通过工具按需读取）"
-          : "当前资源: 未提供",
+      : "当前资源: 未提供",
     active && !isLongRun ? `资源路径: ${active.path.join(" / ")}` : "",
-    active &&
-    !writingWorkspace &&
-    !longWorkspace &&
-    !input.workspaceContext?.libraryWorkspace
+    active && !longWorkspace && !input.workspaceContext?.libraryWorkspace
       ? `实时内容:\n${active.content}`
       : "",
     skillContext,
@@ -266,4 +175,21 @@ export function buildRawUserMessage(
     content: images.length ? [{ type: "text", text }, ...images] : text,
     timestamp
   };
+}
+
+/** Selects stable fixed context or the lightweight current creation snapshot. */
+export function buildRunUserMessageContent(
+  input: AgentRunInput,
+  persistInitialRuntimeContext: boolean
+): UserMessage["content"] {
+  if (input.mode === "chat-assistant")
+    return buildRawUserMessage(input).content;
+  if (persistInitialRuntimeContext)
+    return buildRuntimeUserMessageContent(input);
+  if (
+    longAgentRefreshesDesignContextOnLaterTurns(input.longAgentProfile?.id) &&
+    input.workspaceContext?.longWorkspace
+  )
+    return buildLongFollowUpTurnUserMessageContent(input);
+  return buildRawUserMessage(input).content;
 }

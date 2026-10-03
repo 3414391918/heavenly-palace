@@ -49,8 +49,7 @@ export function buildShortProjectTools(book: Book): AgentTool[] {
   const listTool = defineTool({
     name: "list_workspace_content",
     label: "列出项目阶段",
-    description:
-      "列出当前短篇或剧本的阶段、人物文件和正文小节目录，不返回正文。",
+    description: "列出当前书籍的阶段、人物文件和正文小节目录，不返回正文。",
     parameters: Type.Object({}),
     execute: async () =>
       jsonResult({
@@ -78,7 +77,7 @@ export function buildShortProjectTools(book: Book): AgentTool[] {
   const searchTool = defineTool({
     name: "search_workspace_text",
     label: "搜索项目文本",
-    description: "在当前锁定的短篇或剧本全部阶段中搜索原文，只返回定位片段。",
+    description: "在当前锁定的书籍全部阶段中搜索原文，只返回定位片段。",
     parameters: Type.Object({
       query: Type.String({ minLength: 1, maxLength: 600 }),
       document_id: Type.Optional(Type.String({ minLength: 1, maxLength: 512 })),

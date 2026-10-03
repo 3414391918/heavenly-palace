@@ -15,14 +15,7 @@ function createDependencies(order: string[] = []) {
     handleEvent: vi.fn(() => order.push("conversation"))
   };
   const dependencies: WorkspaceSystemEventRouteDependencies = {
-    learningImitation: {
-      handleEvent: vi.fn(() => order.push("learning"))
-    },
     revisionAnalysis: { handleEvent: vi.fn() },
-    shortBookAnalysis: { handleEvent: vi.fn() },
-    longBookAnalysis: {
-      handleEvent: vi.fn(() => order.push("long-book-analysis"))
-    },
     subagentAuthoring: {
       handleEvent: vi.fn(() => order.push("subagent"))
     },
@@ -33,9 +26,7 @@ function createDependencies(order: string[] = []) {
     handleLongWorkspaceProposal: vi.fn(async () => {
       order.push("long");
     }),
-    stageAgentEditProposal: vi.fn(() => order.push("workspace-edit")),
     stageLibraryEditProposal: vi.fn(() => order.push("library-edit")),
-    navigateToWorkspaceStage: vi.fn(() => order.push("navigation")),
     allConversations: vi.fn(() => [conversation]),
     scheduleQueuedAgentEdits: vi.fn((predicate) => {
       expect(
@@ -68,14 +59,7 @@ describe("workspace system event routes", () => {
       })
     );
 
-    expect(order).toEqual([
-      "learning",
-      "long-book-analysis",
-      "subagent",
-      "long",
-      "conversation",
-      "queued-edits"
-    ]);
+    expect(order).toEqual(["subagent", "long", "conversation", "queued-edits"]);
   });
 
   it.each([
@@ -130,7 +114,7 @@ describe("workspace system event routes", () => {
     dispose();
     center.publish(event({ type: "agent.usage_observed", payload: {} }));
 
-    expect(dependencies.learningImitation.handleEvent).not.toHaveBeenCalled();
+    expect(dependencies.revisionAnalysis.handleEvent).not.toHaveBeenCalled();
     expect(dependencies.allConversations).not.toHaveBeenCalled();
     expect(dependencies.handleLongWorkspaceProposal).not.toHaveBeenCalled();
   });

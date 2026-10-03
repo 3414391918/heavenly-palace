@@ -1,19 +1,11 @@
 import { describe, expect, it } from "vitest";
-import appSource from "./WorkspaceShell.vue?raw";
+import appSource from "./test-support/workspaceShellSource";
 import libraryTransactionsSource from "./composables/useCatalogLibraryTransactionsCoordinator.ts?raw";
 import longBookLifecycleSource from "./composables/useLongBookLifecycleCoordinator.ts?raw";
-import lazyShortBookLifecycleSource from "./composables/useLazyShortBookLifecycleCoordinator.ts?raw";
-import shortBookLifecycleSource from "./composables/useShortBookLifecycleCoordinator.ts?raw";
-import shortStructureSource from "./composables/useShortWorkspaceStructureCoordinator.ts?raw";
 
 describe("project duplicate integration", () => {
   it("saves catalog drafts, calls the duplicate API and navigates to normal copies", () => {
     expect(appSource).toContain("prepareLibraryProjectsForDuplicate");
-    expect(shortStructureSource).toContain(
-      "prepareBookStructureMutation(book.id)"
-    );
-    expect(shortStructureSource).toContain("api.duplicateProject");
-    expect(shortStructureSource).toContain('domain: "book"');
     expect(libraryTransactionsSource).toContain(
       'payload.action === "duplicate-group"'
     );
@@ -21,15 +13,6 @@ describe("project duplicate integration", () => {
       "duplicated.copiedMemberLibraryIds.length"
     );
     expect(libraryTransactionsSource).toContain("api.duplicateProject({");
-    expect(appSource).toContain("resolvePreferredBookResourceId");
-    expect(shortStructureSource).toContain("enqueueWorkspaceMutation(book.id");
-    expect(lazyShortBookLifecycleSource).toContain(
-      "loaded.duplicateBook(target)"
-    );
-    expect(shortBookLifecycleSource).toContain(
-      "await structure.duplicateBook(target.node as ResourceTreeNode)"
-    );
-    expect(appSource).toContain("duplicateBook: duplicateCatalogBook");
   });
 
   it("saves the active long editor and opens the copy", () => {

@@ -2,20 +2,22 @@ import toolsSource from "./EditorTextTools.vue?raw";
 import metadataSource from "./EditorDocumentMetadata.vue?raw";
 import { describe, expect, it } from "vitest";
 import { expectSourceToContain } from "../../../test-utils/sourceText";
-import appSource from "../WorkspaceShell.vue?raw";
-import source from "./RightEditorPane.vue?raw";
+import appSource from "../test-support/workspaceShellSource";
+import editorSource from "./RightEditorPane.vue?raw";
+import headerSource from "./LibraryEditorHeader.vue?raw";
+const source = editorSource + headerSource;
 import selectionMenuSource from "../../../main/text-context-menu-items.ts?raw";
 import writingWorkspaceSource from "./WritingWorkspaceModule.vue?raw";
-import persistenceSource from "../composables/useCatalogDocumentPersistence.ts?raw";
-import resourceSource from "../composables/useWorkspaceResourceCoordinator.ts?raw";
-import structureSource from "../composables/useShortWorkspaceStructureCoordinator.ts?raw";
-import dialogLayerSource from "./WorkspaceDialogLayer.vue?raw";
-import dialogCoordinatorSource from "../composables/useWorkspaceDialogModuleCoordinator.ts?raw";
+import persistenceCoordinatorSource from "../composables/useCatalogDocumentPersistence.ts?raw";
 import fixedTitleSource from "../utils/fixedWorkspaceDocumentTitle.ts?raw";
 import saveViewportSource from "../composables/useEditorSaveViewport.ts?raw";
 import scrollMemorySource from "../composables/useLongEditorScrollMemory.ts?raw";
 import textViewModeSource from "../composables/useTextViewMode.ts?raw";
 import selectionInsertionSource from "../composables/useEditorSelectionInsertion.ts?raw";
+
+import libraryPersistenceSource from "../composables/catalogLibraryPersistence.ts?raw";
+const persistenceSource =
+  persistenceCoordinatorSource + libraryPersistenceSource;
 
 describe("RightEditorPane expert draft navigation", () => {
   it("expands a collapsed right-side agent when the editor is centered", () => {
@@ -112,28 +114,6 @@ describe("RightEditorPane expert draft navigation", () => {
     expect(persistenceSource).toContain("normalizedPayload");
   });
 
-  it("renders independently managed section tabs before the active section editor", () => {
-    const tabsStart = source.indexOf('class="section-tabs-bar"');
-    const editorStart = source.indexOf('class="editor-document"', tabsStart);
-
-    expect(tabsStart).toBeGreaterThan(-1);
-    expect(source).toContain(':aria-label="resolvedSectionTabsLabel"');
-    expect(source).toContain(
-      "props.sectionTabsLabel ?? `正文${draftUnitLabel.value}`"
-    );
-    expect(source).toContain(
-      'props.document.workspaceType === "script" ? "剧集" : "小节"'
-    );
-    expect(source).toContain("emit('selectSection', section.id)");
-    expect(source).toContain('v-if="canCreateSection"');
-    expect(source).toContain(':aria-label="resolvedCreateSectionLabel"');
-    expect(source).toContain("emit('createSection')");
-    expect(source).toContain('v-if="showDeleteSection"');
-    expect(source).toContain('class="section-tabs-remove"');
-    expect(source).toContain("emit('deleteSection')");
-    expect(editorStart).toBeGreaterThan(tabsStart);
-  });
-
   it("remembers the scroll position of every section instead of reusing the previous section position", () => {
     expect(source).toContain("editorScrollMemoryKey(props.document)");
     expect(source).toContain("useLongEditorScrollMemory({");
@@ -196,70 +176,6 @@ describe("RightEditorPane expert draft navigation", () => {
     expect(source).not.toContain(
       ":class=\"{ 'is-readonly': document.readOnly || locked }\""
     );
-  });
-
-  it("routes the short-story tab add button through a named confirmation dialog", () => {
-    expect(structureSource).toContain(
-      "async function addExpertSectionFromEditor()"
-    );
-    expect(structureSource).toContain('directory.workspaceType !== "short"');
-    expect(structureSource).toContain("await addExpertSection(draftNode)");
-    expect(structureSource).toContain("function requestCreateExpertSection(");
-    expect(structureSource).toContain(
-      "async function confirmCreateExpertSection("
-    );
-    expect(structureSource).toContain("suggestedDraftSectionTitle(");
-    expect(structureSource).toContain("title,");
-    expect(structureSource).toContain("await api.createDraftSection({");
-    expect(dialogCoordinatorSource).toContain('kind: "create-expert-section"');
-    expect(dialogLayerSource).toContain("<CreateExpertSectionDialog");
-    expect(appSource).toContain('@create-section="createEditorSection"');
-    expect(resourceSource).toContain(
-      'activeDocument.value.workspaceType === "short"'
-    );
-  });
-
-  it("routes the short-story tab remove button through the existing sidebar deletion flow", () => {
-    expect(resourceSource).toContain(
-      "const editorShowsExpertSectionTabs = computed"
-    );
-    expect(resourceSource).toContain(
-      "const showEditorDeleteSection = computed"
-    );
-    expect(resourceSource).toContain('return "删除当前小节"');
-    expect(resourceSource).toContain("(directory?.sections.length ?? 0) > 1");
-    expect(structureSource).toContain(
-      "function removeExpertSectionFromEditor()"
-    );
-    expect(structureSource).toContain(
-      "requestRemoveExpertSection(sectionNode)"
-    );
-    expect(appSource).toContain(
-      "showDeleteSection: showEditorDeleteSection.value"
-    );
-    expect(writingWorkspaceSource).toContain('v-bind="editor"');
-    expect(appSource).toContain('@delete-section="deleteEditorSection"');
-  });
-
-  it("reuses section tabs for list-style short character items with add and remove controls", () => {
-    expect(resourceSource).toContain(
-      "const activeCharacterItemTabs = computed"
-    );
-    expect(resourceSource).toContain(
-      'book.characterStructure.format !== "list"'
-    );
-    expect(resourceSource).toContain('title: "概览"');
-    expect(resourceSource).toContain('? "人物条目"');
-    expect(resourceSource).toContain('? "新建人物条目"');
-    expect(resourceSource).toContain('return "删除当前人物条目"');
-    expect(appSource).toContain(
-      "showDeleteSection: showEditorDeleteSection.value"
-    );
-    expect(structureSource).toContain("function addCharacterItemFromEditor()");
-    expect(structureSource).toContain(
-      "function deleteCharacterItemFromEditor()"
-    );
-    expect(appSource).toContain('@delete-section="deleteEditorSection"');
   });
 
   it("offers one insert action only after right-clicking a selected editor range", () => {

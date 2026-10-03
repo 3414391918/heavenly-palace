@@ -5,19 +5,15 @@ import {
   type AgentTeamCatalogSnapshot,
   type AgentTeamProfile,
   type AgentTeamProfileSaveInput,
-  type AgentTeamWorkspaceType,
-  type LongAgentTeamSettings,
   type ModelConfig,
   type SkillLibrary,
   type SubagentAuthoringDraft,
-  type SubagentAuthoringRuntimeContext,
-  type WorkspaceAgentTeamSettings
-} from "@deepwrite/contracts";
+  type SubagentAuthoringRuntimeContext
+} from "@deepwrite/contracts/renderer";
 import { computed, ref, watch } from "vue";
 import { uiMessage } from "../ui-feedback";
-import AgentTeamSettingsPanel from "./AgentTeamSettingsPanel.vue";
+import LongAgentTeamSettingsPanel from "./LongAgentTeamSettingsPanel.vue";
 import AppIcon from "./AppIcon.vue";
-import PopupSelect, { type PopupSelectOption } from "./PopupSelect.vue";
 
 const props = defineProps<{
   catalog: AgentTeamCatalogSnapshot | null;
@@ -37,7 +33,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   retry: [];
-  create: [input: { name: string; workspaceType: AgentTeamWorkspaceType }];
+  create: [input: { name: string }];
   rename: [input: { teamId: string; name: string }];
   delete: [input: { teamId: string }];
   download: [input: { teamId: string }];
@@ -55,7 +51,6 @@ const selectedTeamId = ref<string | null>(null);
 const dialogMode = ref<"create" | "rename" | "delete" | null>(null);
 const dialogTeam = ref<AgentTeamProfile | null>(null);
 const nameDraft = ref("");
-const createWorkspaceType = ref<AgentTeamWorkspaceType>("short");
 const pendingCreatedName = ref<string | null>(null);
 let pendingExistingTeamIds = new Set<string>();
 
@@ -64,21 +59,6 @@ const selectedTeam = computed(
     props.catalog?.teams.find((team) => team.id === selectedTeamId.value) ??
     null
 );
-const editorSettings = computed<WorkspaceAgentTeamSettings[]>(() =>
-  selectedTeam.value && selectedTeam.value.workspaceType !== "long"
-    ? [selectedTeam.value.settings]
-    : []
-);
-const editorLongSettings = computed<LongAgentTeamSettings | null>(() =>
-  selectedTeam.value?.workspaceType === "long"
-    ? selectedTeam.value.settings
-    : null
-);
-const workspaceTypeOptions: PopupSelectOption[] = [
-  { value: "short", label: "短篇" },
-  { value: "script", label: "剧本" },
-  { value: "long", label: "长篇" }
-];
 const catalogTeams = computed(() => props.catalog?.teams ?? []);
 
 watch(
@@ -121,23 +101,14 @@ function subagentCount(team: AgentTeamProfile): number {
   );
 }
 
-function workspaceTypeLabel(workspaceType: AgentTeamWorkspaceType): string {
-  return workspaceType === "short"
-    ? "短篇"
-    : workspaceType === "script"
-      ? "剧本"
-      : "长篇";
-}
-
 function isEnabled(team: AgentTeamProfile): boolean {
-  return props.catalog?.enabledTeamIds[team.workspaceType] === team.id;
+  return props.catalog?.enabledTeamIds.long === team.id;
 }
 
 function openCreate(): void {
   dialogMode.value = "create";
   dialogTeam.value = null;
   nameDraft.value = "";
-  createWorkspaceType.value = "short";
 }
 
 function openRename(team: AgentTeamProfile): void {
@@ -169,7 +140,7 @@ function submitName(): void {
     pendingExistingTeamIds = new Set(
       props.catalog?.teams.map((team) => team.id)
     );
-    emit("create", { name, workspaceType: createWorkspaceType.value });
+    emit("create", { name });
   } else if (dialogMode.value === "rename" && dialogTeam.value) {
     emit("rename", { teamId: dialogTeam.value.id, name });
   }
@@ -196,24 +167,16 @@ function leaveEditor(): void {
         <span>返回团队列表</span>
       </button>
       <strong>{{ selectedTeam.name }}</strong>
-      <span class="type-badge">{{
-        workspaceTypeLabel(selectedTeam.workspaceType)
-      }}</span>
       <span v-if="isEnabled(selectedTeam)" class="active-badge">已启用</span>
     </header>
-    <AgentTeamSettingsPanel
-      :workspace-type="selectedTeam.workspaceType"
-      :settings="editorSettings"
-      :long-settings="editorLongSettings"
+    <LongAgentTeamSettingsPanel
+      :settings="selectedTeam.settings"
       :models="models"
       :skills="skills ?? []"
       :preferred-model-id="preferredModelId ?? null"
       :loading="loading"
       :saving="saving"
       :load-error="loadError ?? null"
-      :long-loading="loading"
-      :long-saving="saving"
-      :long-load-error="loadError ?? null"
       :runtime-available="runtimeAvailable"
       :authoring-generating="Boolean(authoringGenerating)"
       :authoring-draft="authoringDraft ?? null"
@@ -221,7 +184,6 @@ function leaveEditor(): void {
       :authoring-error="authoringError ?? null"
       @retry="emit('retry')"
       @save="emit('save', { teamId: selectedTeam.id, settings: $event })"
-      @save-long="emit('save', { teamId: selectedTeam.id, settings: $event })"
       @authoring-generate="emit('authoringGenerate', $event)"
       @authoring-stop="emit('authoringStop')"
       @authoring-reset="emit('authoringReset')"
@@ -231,11 +193,9 @@ function leaveEditor(): void {
   <section v-else class="team-catalog" aria-labelledby="team-catalog-title">
     <header class="catalog-header">
       <div>
-        <span>学习仿写 · 智能体团队</span>
-        <h2 id="team-catalog-title">智能体团队</h2>
-        <p>
-          每个团队只服务一种创作类型；每种类型最多启用一个，也可以全部关闭。
-        </p>
+        <span>虚拟世界 · 子智能体团队</span>
+        <h2 id="team-catalog-title">子智能体团队</h2>
+        <p>为主智能体配置专项助手；最多启用一个团队，也可以全部关闭。</p>
       </div>
       <div class="catalog-header-actions">
         <button
@@ -265,9 +225,9 @@ function leaveEditor(): void {
       :disabled="loading || saving || !runtimeAvailable"
     />
     <h2 id="creative-teams-title" class="team-section-title">创作团队</h2>
-    <div v-if="loading" class="catalog-state">正在加载智能体团队…</div>
+    <div v-if="loading" class="catalog-state">正在加载子智能体团队…</div>
     <div v-else-if="loadError && !catalog" class="catalog-state" role="alert">
-      <strong>智能体团队未加载</strong>
+      <strong>子智能体团队未加载</strong>
       <p>{{ loadError }}</p>
       <button type="button" class="secondary-button" @click="emit('retry')">
         重新加载
@@ -289,11 +249,7 @@ function leaveEditor(): void {
             :disabled="saving || !runtimeAvailable"
             :aria-label="`${isEnabled(team) ? '关闭' : '启用'}${team.name}`"
             :aria-pressed="isEnabled(team)"
-            :title="
-              isEnabled(team)
-                ? '关闭团队'
-                : `启用该${workspaceTypeLabel(team.workspaceType)}团队`
-            "
+            :title="isEnabled(team) ? '关闭团队' : '启用团队'"
             @click.stop="
               emit('setEnabled', { teamId: team.id, enabled: !isEnabled(team) })
             "
@@ -307,9 +263,6 @@ function leaveEditor(): void {
           >
             <span class="team-title-row">
               <strong>{{ team.name }}</strong>
-              <span class="type-badge">{{
-                workspaceTypeLabel(team.workspaceType)
-              }}</span>
             </span>
             <span class="team-counts"
               >{{ subagentCount(team) }} 个子智能体</span
@@ -351,11 +304,7 @@ function leaveEditor(): void {
       <section class="team-dialog" role="dialog" aria-modal="true">
         <template v-if="dialogMode === 'delete'">
           <h3>确认删除“{{ dialogTeam?.name }}”？</h3>
-          <p>
-            该{{
-              workspaceTypeLabel(dialogTeam?.workspaceType ?? "short")
-            }}团队中的子智能体配置会被删除，此操作不可恢复。
-          </p>
+          <p>该团队中的子智能体配置会被删除，此操作不可恢复。</p>
           <div class="dialog-actions">
             <button type="button" @click="closeDialog">取消</button>
             <button
@@ -371,7 +320,9 @@ function leaveEditor(): void {
         <template v-else>
           <h3>
             {{
-              dialogMode === "create" ? "新建智能体团队" : "重命名智能体团队"
+              dialogMode === "create"
+                ? "新建子智能体团队"
+                : "重命名子智能体团队"
             }}
           </h3>
           <label>
@@ -381,15 +332,6 @@ function leaveEditor(): void {
               :maxlength="AGENT_TEAM_PROFILE_NAME_MAX_LENGTH"
               autofocus
               @keyup.enter="submitName"
-            />
-          </label>
-          <label v-if="dialogMode === 'create'">
-            创作类型
-            <PopupSelect
-              v-model="createWorkspaceType"
-              :options="workspaceTypeOptions"
-              accessible-label="团队创作类型"
-              :menu-z-index="2200"
             />
           </label>
           <div class="dialog-actions">

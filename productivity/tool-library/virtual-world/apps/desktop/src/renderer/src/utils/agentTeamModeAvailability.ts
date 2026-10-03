@@ -25,26 +25,6 @@ function enabledMemberCount(
   const enabledTeamId = catalog.enabledTeamIds[workspaceType];
   if (!enabledTeamId) return 0;
 
-  if (workspaceType === "short") {
-    const profile = catalog.teams.find(
-      (team) => team.id === enabledTeamId && team.workspaceType === "short"
-    );
-    return (
-      profile?.settings.teams
-        .find((team) => team.parentAgentId === parentAgentId)
-        ?.subagents.filter((member) => member.enabled).length ?? 0
-    );
-  }
-  if (workspaceType === "script") {
-    const profile = catalog.teams.find(
-      (team) => team.id === enabledTeamId && team.workspaceType === "script"
-    );
-    return (
-      profile?.settings.teams
-        .find((team) => team.parentAgentId === parentAgentId)
-        ?.subagents.filter((member) => member.enabled).length ?? 0
-    );
-  }
   const profile = catalog.teams.find(
     (team) => team.id === enabledTeamId && team.workspaceType === "long"
   );
@@ -59,16 +39,16 @@ export function resolveAgentTeamModeAvailability(
   input: AgentTeamModeAvailabilityInput
 ): AgentTeamModeAvailability {
   if (input.loading) {
-    return { available: false, description: "正在加载智能体团队配置…" };
+    return { available: false, description: "正在加载子智能体团队配置…" };
   }
   if (input.loadError) {
     return {
       available: false,
-      description: "智能体团队配置加载失败，请到智能体团队页面重试。"
+      description: "子智能体团队配置加载失败，请到子智能体团队页面重试。"
     };
   }
   if (!input.loaded || !input.catalog) {
-    return { available: false, description: "智能体团队配置尚未加载。" };
+    return { available: false, description: "子智能体团队配置尚未加载。" };
   }
   if (
     enabledMemberCount(
@@ -80,7 +60,7 @@ export function resolveAgentTeamModeAvailability(
     return {
       available: false,
       description:
-        "当前智能体没有已启用且含可用成员的团队，请先到智能体团队设置中配置。"
+        "当前智能体没有已启用且含可用成员的团队，请先到子智能体团队设置中配置。"
     };
   }
   return {

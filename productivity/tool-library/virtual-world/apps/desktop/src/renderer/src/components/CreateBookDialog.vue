@@ -1,24 +1,8 @@
 <script setup lang="ts">
-import {
-  computed,
-  nextTick,
-  onBeforeUnmount,
-  onMounted,
-  ref,
-  watch
-} from "vue";
-import {
-  LONG_BOOK_GENRES,
-  SCRIPT_BOOK_GENRES,
-  SHORT_BOOK_GENRES,
-  LongBookGenreSchema,
-  ScriptBookGenreSchema,
-  ShortBookGenreSchema
-} from "@deepwrite/contracts";
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { LONG_BOOK_GENRES, LongBookGenreSchema } from "@deepwrite/contracts";
 import type {
   CreateLongBookInput,
-  CreateScriptBookInput,
-  CreateShortBookInput,
   LinkedMaterialIdsByKind,
   LinkedSkillIdsByKind,
   MaterialLibrary,
@@ -49,55 +33,22 @@ const props = withDefaults(
   }
 );
 
-type CreateCreativeBookPayload =
-  | ({ workspaceType: "short" } & CreateShortBookInput)
-  | ({ workspaceType: "script" } & CreateScriptBookInput)
-  | ({ workspaceType: "long" } & CreateLongBookInput);
-
 const emit = defineEmits<{
   close: [];
-  submit: [payload: CreateCreativeBookPayload];
+  submit: [payload: CreateLongBookInput];
 }>();
 
 const title = ref("");
-const workspaceType = ref<"short" | "script" | "long">("short");
-const genre = ref<string>("世情");
-const workspaceTypeOptions = [
-  {
-    value: "short",
-    label: "短篇",
-    description: "人物、剧情、导语、大纲与正文"
-  },
-  { value: "script", label: "剧本", description: "人物、剧情、大纲与分集正文" },
-  {
-    value: "long",
-    label: "长篇",
-    description: "世界观、人物、情节、正文与连续性"
-  }
-] as const;
-const genreOptions = computed<readonly string[]>(() =>
-  workspaceType.value === "long"
-    ? LONG_BOOK_GENRES
-    : workspaceType.value === "script"
-      ? SCRIPT_BOOK_GENRES
-      : SHORT_BOOK_GENRES
-);
+const genre = ref<string>(LONG_BOOK_GENRES[0]);
+const genreOptions = LONG_BOOK_GENRES;
 const titleInput = ref<HTMLInputElement | null>(null);
 const bindings = ref<{
   linkedMaterialIdsByKind: LinkedMaterialIdsByKind;
   linkedSkillIdsByKind: LinkedSkillIdsByKind;
 }>();
-function workspaceTypeLabel(): string {
-  return (
-    workspaceTypeOptions.find((option) => option.value === workspaceType.value)
-      ?.label ?? "短篇"
-  );
-}
-
 function resetDraft(): void {
   title.value = "";
-  workspaceType.value = "short";
-  genre.value = "世情";
+  genre.value = LONG_BOOK_GENRES[0];
   bindings.value = undefined;
 }
 
@@ -114,35 +65,14 @@ function submit(): void {
   }
   const linkedMaterialIdsByKind = bindings.value?.linkedMaterialIdsByKind;
   const linkedSkillIdsByKind = bindings.value?.linkedSkillIdsByKind;
-  if (workspaceType.value === "long") {
-    if (Array.from(normalizedTitle).length > 256) {
-      uiMessage.warning("长篇书名不能超过 256 个字符");
-      titleInput.value?.focus();
-      return;
-    }
-    emit("submit", {
-      workspaceType: "long",
-      title: normalizedTitle,
-      genre: LongBookGenreSchema.parse(genre.value),
-      linkedMaterialIdsByKind,
-      linkedSkillIdsByKind
-    });
-    return;
-  }
-  if (workspaceType.value === "script") {
-    emit("submit", {
-      workspaceType: "script",
-      title: normalizedTitle,
-      genre: ScriptBookGenreSchema.parse(genre.value),
-      linkedMaterialIdsByKind,
-      linkedSkillIdsByKind
-    });
+  if (Array.from(normalizedTitle).length > 256) {
+    uiMessage.warning("书名不能超过 256 个字符");
+    titleInput.value?.focus();
     return;
   }
   emit("submit", {
-    workspaceType: "short",
     title: normalizedTitle,
-    genre: ShortBookGenreSchema.parse(genre.value),
+    genre: LongBookGenreSchema.parse(genre.value),
     linkedMaterialIdsByKind,
     linkedSkillIdsByKind
   });
@@ -162,11 +92,6 @@ watch(
   { immediate: true }
 );
 
-watch(workspaceType, () => {
-  genre.value = genreOptions.value[0] ?? "世情";
-  bindings.value = undefined;
-});
-
 onMounted(() => document.addEventListener("keydown", handleKeydown));
 onBeforeUnmount(() => document.removeEventListener("keydown", handleKeydown));
 </script>
@@ -182,18 +107,8 @@ onBeforeUnmount(() => document.removeEventListener("keydown", handleKeydown));
       >
         <header>
           <div>
-            <span class="dialog-eyebrow"
-              >创作空间 · {{ workspaceTypeLabel() }}</span
-            >
-            <h2 id="create-book-title">
-              新建{{
-                workspaceType === "long"
-                  ? "长篇作品"
-                  : workspaceType === "script"
-                    ? "剧本"
-                    : "短篇书籍"
-              }}
-            </h2>
+            <span class="dialog-eyebrow">创作空间</span>
+            <h2 id="create-book-title">新建书籍</h2>
           </div>
           <button
             class="dialog-close"
@@ -212,36 +127,6 @@ onBeforeUnmount(() => document.removeEventListener("keydown", handleKeydown));
         >
           <section
             class="create-short-book-basics"
-            aria-labelledby="create-workspace-type-heading"
-          >
-            <h3 id="create-workspace-type-heading">创作类型</h3>
-            <div
-              class="create-short-binding-modes create-workspace-type-options"
-              role="tablist"
-              aria-label="创作类型"
-            >
-              <button
-                v-for="option in workspaceTypeOptions"
-                :key="option.value"
-                class="create-workspace-type-tab"
-                :class="{ 'is-selected': workspaceType === option.value }"
-                type="button"
-                role="tab"
-                :aria-selected="workspaceType === option.value"
-                :tabindex="workspaceType === option.value ? 0 : -1"
-                :disabled="submitting"
-                @click="workspaceType = option.value"
-              >
-                <span
-                  ><strong>{{ option.label }}</strong
-                  ><small>{{ option.description }}</small></span
-                >
-              </button>
-            </div>
-          </section>
-
-          <section
-            class="create-short-book-basics"
             aria-labelledby="create-short-basics-heading"
           >
             <h3 id="create-short-basics-heading">书籍信息</h3>
@@ -251,23 +136,15 @@ onBeforeUnmount(() => document.removeEventListener("keydown", handleKeydown));
                 ref="titleInput"
                 v-model="title"
                 type="text"
-                :maxlength="workspaceType === 'long' ? 256 : 80"
+                maxlength="256"
                 autocomplete="off"
-                :placeholder="
-                  workspaceType === 'long' ? '请输入长篇书名' : '请输入书名'
-                "
+                placeholder="请输入书名"
                 :disabled="submitting"
               />
             </label>
 
             <fieldset class="create-short-genre-field">
-              <legend>
-                {{
-                  workspaceType === "long"
-                    ? "长篇题材"
-                    : `${workspaceType === "script" ? "剧本" : "短篇"}分类`
-                }}
-              </legend>
+              <legend>题材</legend>
               <div class="create-short-genre-options">
                 <label
                   v-for="option in genreOptions"
@@ -278,7 +155,7 @@ onBeforeUnmount(() => document.removeEventListener("keydown", handleKeydown));
                   <input
                     v-model="genre"
                     type="radio"
-                    name="shortBookGenre"
+                    name="bookGenre"
                     :value="option"
                     :disabled="submitting"
                   />
@@ -289,12 +166,12 @@ onBeforeUnmount(() => document.removeEventListener("keydown", handleKeydown));
           </section>
 
           <BookLibraryBindings
-            :key="`${open}-${workspaceType}`"
+            :key="String(open)"
             :materials="materials"
             :skills="skills"
             :material-groups="materialGroups"
             :skill-groups="skillGroups"
-            :workspace-type="workspaceType"
+            workspace-type="long"
             :loading="loading"
             :submitting="submitting"
             @change="bindings = $event"
@@ -321,15 +198,7 @@ onBeforeUnmount(() => document.removeEventListener("keydown", handleKeydown));
               type="submit"
               :disabled="loading || submitting"
             >
-              {{
-                submitting
-                  ? "创建中…"
-                  : workspaceType === "long"
-                    ? "创建长篇"
-                    : workspaceType === "script"
-                      ? "创建剧本"
-                      : "创建书籍"
-              }}
+              {{ submitting ? "创建中…" : "创建书籍" }}
             </button>
           </div>
         </form>

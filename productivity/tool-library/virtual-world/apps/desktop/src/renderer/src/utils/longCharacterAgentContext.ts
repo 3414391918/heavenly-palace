@@ -60,7 +60,7 @@ async function readFocusText(
     maxCharacters: maximum
   });
   if (page.bookId !== bookId || page.file.id !== fileId || page.offset !== 0) {
-    throw new Error("长篇人物阶段读取结果与当前选择不一致。");
+    throw new Error("小说人物阶段读取结果与当前选择不一致。");
   }
   return snapshotText(page, maximum);
 }

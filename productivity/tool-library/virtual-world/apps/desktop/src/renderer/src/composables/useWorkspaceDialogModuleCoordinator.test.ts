@@ -4,8 +4,6 @@ import {
   WORKSPACE_DIALOG_KINDS,
   type WorkspaceDialogKind
 } from "../components/WorkspaceDialogLayer.types";
-import type { ResourceTreeNode } from "../types/workspace";
-import type { ShortBookLifecycleTarget } from "./useShortBookLifecycleCoordinator";
 import coordinatorSource from "./useWorkspaceDialogModuleCoordinator.ts?raw";
 import {
   WORKSPACE_DIALOG_PRIORITY,
@@ -18,25 +16,6 @@ function fixture<Value>(value: unknown): Value {
   return value as Value;
 }
 
-function shortBookTarget(
-  node: Readonly<ResourceTreeNode> = {
-    id: "book-1",
-    label: "短篇测试书",
-    workspaceType: "short"
-  }
-): ShortBookLifecycleTarget {
-  return {
-    requestId: 1,
-    bookId: node.id,
-    label: node.label,
-    workspaceType: node.workspaceType === "script" ? "script" : "short",
-    projectRevision: node.projectRevision,
-    unavailable: false,
-    node,
-    resourceIds: [node.id]
-  };
-}
-
 function createHarness() {
   const startupMessages = shallowRef<readonly string[]>([]);
   const conflict =
@@ -44,24 +23,6 @@ function createHarness() {
       WorkspaceDialogModuleCoordinatorOptions["save"]["conflict"]["value"]
     >(null);
   const saveSubmitting = shallowRef(false);
-
-  const expertCreation =
-    shallowRef<
-      WorkspaceDialogModuleCoordinatorOptions["shortStructure"]["expertCreation"]["value"]
-    >(null);
-  const expertDeletion =
-    shallowRef<
-      WorkspaceDialogModuleCoordinatorOptions["shortStructure"]["expertDeletion"]["value"]
-    >(null);
-  const characterDialog =
-    shallowRef<
-      WorkspaceDialogModuleCoordinatorOptions["shortStructure"]["characterDialog"]["value"]
-    >(null);
-  const plotBookId = shallowRef<string | null>(null);
-  const plotBook =
-    shallowRef<
-      WorkspaceDialogModuleCoordinatorOptions["shortStructure"]["plotBook"]["value"]
-    >(null);
 
   const characterCreation =
     shallowRef<
@@ -137,16 +98,8 @@ function createHarness() {
       null
     );
   const longManuscriptExportPending = shallowRef(false);
-
-  const shortExportTarget = shallowRef<ShortBookLifecycleTarget | null>(null);
-  const shortManuscriptExportPending = shallowRef(false);
   const createDialogOpen = shallowRef(false);
   const transferMode = shallowRef<"open" | "import" | null>(null);
-  const resourceMode =
-    shallowRef<
-      WorkspaceDialogModuleCoordinatorOptions["shortLifecycle"]["resourceMode"]["value"]
-    >(null);
-  const activeBookTarget = shallowRef<ShortBookLifecycleTarget | null>(null);
 
   const removalDialog =
     shallowRef<
@@ -179,8 +132,6 @@ function createHarness() {
     >(null);
   const catalogLoading = shallowRef(false);
   const catalogMutationPending = shallowRef(false);
-  const skillLibraries = shallowRef<ResourceTreeNode[]>([]);
-  const materialLibraries = shallowRef<ResourceTreeNode[]>([]);
   const materialStageOptions = vi.fn(
     () => [{ value: "other", label: "其他" }] as const
   );
@@ -188,13 +139,6 @@ function createHarness() {
   const options = {
     startup: { messages: startupMessages },
     save: { conflict, submitting: saveSubmitting },
-    shortStructure: {
-      expertCreation,
-      expertDeletion,
-      characterDialog,
-      plotBookId,
-      plotBook
-    },
     longStructure: {
       characterCreation,
       worldbuildingItemCreation,
@@ -224,14 +168,7 @@ function createHarness() {
       exportTarget: longExportTarget,
       manuscriptExportPending: longManuscriptExportPending
     },
-    shortLifecycle: {
-      exportTarget: shortExportTarget,
-      manuscriptExportPending: shortManuscriptExportPending,
-      createDialogOpen,
-      transferMode,
-      resourceMode,
-      activeBookTarget
-    },
+    creation: { createDialogOpen, transferMode },
     library: {
       removalDialog,
       projectDialog,
@@ -244,8 +181,6 @@ function createHarness() {
       snapshot: catalogSnapshot,
       loading: catalogLoading,
       mutationPending: catalogMutationPending,
-      skillLibraries,
-      materialLibraries,
       materialStageOptions
     }
   } satisfies WorkspaceDialogModuleCoordinatorOptions;
@@ -256,11 +191,6 @@ function createHarness() {
       startupMessages,
       conflict,
       saveSubmitting,
-      expertCreation,
-      expertDeletion,
-      characterDialog,
-      plotBookId,
-      plotBook,
       characterCreation,
       worldbuildingItemCreation,
       plotPointCreation,
@@ -284,12 +214,8 @@ function createHarness() {
       removalTarget,
       longExportTarget,
       longManuscriptExportPending,
-      shortExportTarget,
-      shortManuscriptExportPending,
       createDialogOpen,
       transferMode,
-      resourceMode,
-      activeBookTarget,
       removalDialog,
       projectDialog,
       externalLibraryImportDialog,
@@ -299,8 +225,6 @@ function createHarness() {
       catalogSnapshot,
       catalogLoading,
       catalogMutationPending,
-      skillLibraries,
-      materialLibraries,
       materialStageOptions
     }
   };
@@ -329,27 +253,6 @@ function setKindActive(
             },
             diskTitle: "磁盘文档",
             diskContent: "磁盘内容"
-          }
-        : null;
-      return;
-    case "create-expert-section":
-      state.expertCreation.value = active
-        ? {
-            draftDirectoryId: "draft-directory-1",
-            workspaceType: "short",
-            suggestedTitle: "专家章节"
-          }
-        : null;
-      return;
-    case "delete-expert-section":
-      state.expertDeletion.value = active
-        ? {
-            workspaceId: "book-1",
-            draftDirectoryId: "draft-directory-1",
-            sectionId: "section-1",
-            sectionTitle: "待删除章节",
-            hasContent: true,
-            workspaceType: "short"
           }
         : null;
       return;
@@ -433,7 +336,7 @@ function setKindActive(
       state.bindingsMode.value = active ? "skill" : null;
       state.activeBookSummary.value = active
         ? fixture({
-            title: "长篇测试书",
+            title: "小说测试书",
             linkedMaterialIdsByKind: {
               character: [],
               gimmick: [],
@@ -452,14 +355,14 @@ function setKindActive(
       return;
     case "long-rename":
       state.renameTarget.value = active
-        ? { bookId: "long-1", title: "长篇测试书" }
+        ? { bookId: "long-1", title: "小说测试书" }
         : null;
       return;
     case "long-removal":
       state.removalTarget.value = active
         ? {
             bookId: "long-1",
-            title: "长篇测试书",
+            title: "小说测试书",
             action: "unregister"
           }
         : null;
@@ -467,24 +370,9 @@ function setKindActive(
     case "long-structure":
       state.longStructureDialogOpen.value = active;
       return;
-    case "character-item":
-      state.characterDialog.value = active
-        ? {
-            mode: "create",
-            bookId: "book-1",
-            title: "新角色"
-          }
-        : null;
-      return;
-    case "plot-structure":
-      state.plotBookId.value = active ? "book-1" : null;
-      return;
-    case "export-short":
-      state.shortExportTarget.value = active ? shortBookTarget() : null;
-      return;
     case "export-long":
       state.longExportTarget.value = active
-        ? { bookId: "long-1", title: "长篇测试书" }
+        ? { bookId: "long-1", title: "小说测试书" }
         : null;
       return;
     case "library-removal":
@@ -532,9 +420,6 @@ function setKindActive(
     case "book-transfer":
       state.transferMode.value = active ? "open" : null;
       return;
-    case "book-resource":
-      state.resourceMode.value = active ? "rename" : null;
-      return;
     default: {
       const exhaustiveKind: never = kind;
       return exhaustiveKind;
@@ -556,8 +441,8 @@ function trackedRef<Value>(
 
 describe("useWorkspaceDialogModuleCoordinator", () => {
   it("covers every dialog kind and preserves the complete strict priority", () => {
-    expect(WORKSPACE_DIALOG_PRIORITY).toHaveLength(30);
-    expect(new Set(WORKSPACE_DIALOG_PRIORITY).size).toBe(30);
+    expect(WORKSPACE_DIALOG_PRIORITY).toHaveLength(24);
+    expect(new Set(WORKSPACE_DIALOG_PRIORITY).size).toBe(24);
     expect(new Set(WORKSPACE_DIALOG_PRIORITY)).toEqual(
       new Set(WORKSPACE_DIALOG_KINDS)
     );
@@ -598,7 +483,6 @@ describe("useWorkspaceDialogModuleCoordinator", () => {
     const harness = createHarness();
     const reads = {
       saveSubmitting: vi.fn(),
-      plotBook: vi.fn(),
       syncBookOptions: vi.fn(),
       longMutationPending: vi.fn(),
       activeBookSummary: vi.fn(),
@@ -606,17 +490,12 @@ describe("useWorkspaceDialogModuleCoordinator", () => {
       workspaceIndex: vi.fn(),
       bookActionPending: vi.fn(),
       longExportPending: vi.fn(),
-      shortExportPending: vi.fn(),
-      activeBookTarget: vi.fn(),
       activeGroup: vi.fn(),
       catalogSnapshot: vi.fn(),
       catalogLoading: vi.fn(),
-      catalogMutationPending: vi.fn(),
-      skillLibraries: vi.fn(),
-      materialLibraries: vi.fn()
+      catalogMutationPending: vi.fn()
     };
     harness.options.save.submitting = trackedRef(false, reads.saveSubmitting);
-    harness.options.shortStructure.plotBook = trackedRef(null, reads.plotBook);
     harness.options.longStructure.syncBookOptions = trackedRef(
       [],
       reads.syncBookOptions
@@ -645,28 +524,12 @@ describe("useWorkspaceDialogModuleCoordinator", () => {
       false,
       reads.longExportPending
     );
-    harness.options.shortLifecycle.manuscriptExportPending = trackedRef(
-      false,
-      reads.shortExportPending
-    );
-    harness.options.shortLifecycle.activeBookTarget = trackedRef(
-      null,
-      reads.activeBookTarget
-    );
     harness.options.library.activeGroup = trackedRef(null, reads.activeGroup);
     harness.options.catalog.snapshot = trackedRef(null, reads.catalogSnapshot);
     harness.options.catalog.loading = trackedRef(false, reads.catalogLoading);
     harness.options.catalog.mutationPending = trackedRef(
       false,
       reads.catalogMutationPending
-    );
-    harness.options.catalog.skillLibraries = trackedRef(
-      [],
-      reads.skillLibraries
-    );
-    harness.options.catalog.materialLibraries = trackedRef(
-      [],
-      reads.materialLibraries
     );
 
     expect(
@@ -678,36 +541,16 @@ describe("useWorkspaceDialogModuleCoordinator", () => {
     expect(harness.refs.materialStageOptions).not.toHaveBeenCalled();
   });
 
-  it("uses the immutable lifecycle target node for book-resource", () => {
-    const harness = createHarness();
-    const node: Readonly<ResourceTreeNode> = Object.freeze({
-      id: "book-root",
-      label: "请求级书籍快照",
-      workspaceType: "script"
-    });
-    const target = shortBookTarget(node);
-    harness.refs.activeBookTarget.value = target;
-    harness.refs.resourceMode.value = "rename";
-
-    const module = useWorkspaceDialogModuleCoordinator(harness.options).value;
-    expect(module?.kind).toBe("book-resource");
-    if (module?.kind !== "book-resource") {
-      throw new Error("Expected book-resource descriptor.");
-    }
-    expect(module.book).toBe(node);
-    expect(module.book).not.toBe(target);
-  });
-
   it("passes the long-form export book id into the export-long module", () => {
     const harness = createHarness();
     harness.refs.longExportTarget.value = {
       bookId: "long-1",
-      title: "长篇测试书"
+      title: "小说测试书"
     };
     const module = useWorkspaceDialogModuleCoordinator(harness.options).value;
     expect(module?.kind).toBe("export-long");
     if (module?.kind === "export-long") {
-      expect(module.bookTitle).toBe("长篇测试书");
+      expect(module.bookTitle).toBe("小说测试书");
       expect(module.bookId).toBe("long-1");
     }
   });
@@ -722,24 +565,6 @@ describe("useWorkspaceDialogModuleCoordinator", () => {
     expect(
       useWorkspaceDialogModuleCoordinator(bindings.options).value?.kind
     ).toBe("long-rename");
-
-    const plot = createHarness();
-    plot.refs.plotBookId.value = "book-missing";
-    const plotModule = useWorkspaceDialogModuleCoordinator(plot.options).value;
-    expect(plotModule?.kind).toBe("plot-structure");
-    if (plotModule?.kind === "plot-structure") {
-      expect(plotModule.book).toBeNull();
-    }
-
-    const resource = createHarness();
-    resource.refs.resourceMode.value = "rename";
-    const resourceModule = useWorkspaceDialogModuleCoordinator(
-      resource.options
-    ).value;
-    expect(resourceModule?.kind).toBe("book-resource");
-    if (resourceModule?.kind === "book-resource") {
-      expect(resourceModule.book).toBeNull();
-    }
 
     const legacy = createHarness();
     legacy.refs.legacyResult.value = fixture<

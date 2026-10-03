@@ -18,154 +18,10 @@ import {
   listAppearanceUiFontFamilyOptions,
   resolveAppearanceEditorFontStack,
   resolveAppearanceUiFontStack,
-  runtime,
-  shortWorkspaceRuntimeFixture
+  runtime
 } from "./index.test-support";
 
 describe("DeepWrite desktop contracts: snapshots-settings-and-libraries", () => {
-  it("allows a draft coordinator to bind the virtual draft directory", () => {
-    const shortWorkspace = shortWorkspaceRuntimeFixture();
-
-    expect(() =>
-      WorkspaceRuntimeContextSchema.parse({
-        shortWorkspace,
-        activeResource: {
-          id: "draft",
-          domain: "creation",
-          title: "正文",
-          path: ["运行时正文", "正文"],
-          source: "live-editor",
-          content: ""
-        }
-      })
-    ).not.toThrow();
-  });
-
-  it("binds the unified draft agent's active section to its physical files", () => {
-    const base = shortWorkspaceRuntimeFixture();
-    const shortWorkspace = {
-      ...base,
-      activeAgentId: "expert_draft_coordinator" as const,
-      activeSectionId: "section-1"
-    };
-
-    expect(() =>
-      WorkspaceRuntimeContextSchema.parse({
-        shortWorkspace,
-        activeResource: {
-          id: "draft:section-1:body",
-          domain: "creation",
-          title: "第一节·正文",
-          path: ["运行时正文", "正文", "第一节", "正文"],
-          source: "live-editor",
-          content: "第一节正文。"
-        }
-      })
-    ).not.toThrow();
-    expect(() =>
-      WorkspaceRuntimeContextSchema.parse({
-        shortWorkspace,
-        activeResource: {
-          id: "draft:section-2:body",
-          domain: "creation",
-          title: "第二节·正文",
-          path: ["运行时正文", "正文", "第二节", "正文"],
-          source: "live-editor",
-          content: "第二节正文。"
-        }
-      })
-    ).toThrow();
-    expect(() =>
-      WorkspaceRuntimeContextSchema.parse({
-        shortWorkspace,
-        activeResource: {
-          id: "draft",
-          domain: "creation",
-          title: "正文",
-          path: ["运行时正文", "正文"],
-          source: "live-editor",
-          content: ""
-        }
-      })
-    ).toThrow();
-  });
-
-  it("matches bounded live snapshots across short stages and draft files", () => {
-    const longContent = `雨夜。${"长".repeat(20_000)}`;
-    const base = shortWorkspaceRuntimeFixture();
-    const outlineWorkspace = {
-      ...base,
-      activeStageId: "outline" as const,
-      activeAgentId: "plot_design" as const,
-      stages: base.stages.map((stage) =>
-        stage.stageId === "outline"
-          ? {
-              ...stage,
-              content: longContent,
-              revision: createShortWorkspaceContentRevision(longContent)
-            }
-          : stage
-      )
-    };
-    const boundedResource = {
-      id: "outline",
-      domain: "creation" as const,
-      title: "大纲",
-      path: ["运行时正文", "大纲"],
-      source: "live-editor" as const,
-      content: longContent.slice(0, 20_000),
-      truncated: true as const,
-      originalLength: longContent.length
-    };
-
-    expect(() =>
-      WorkspaceRuntimeContextSchema.parse({
-        shortWorkspace: outlineWorkspace,
-        activeResource: boundedResource
-      })
-    ).not.toThrow();
-
-    const draftWorkspace = {
-      ...base,
-      activeSectionId: "section-1",
-      expertDraft: {
-        ...base.expertDraft,
-        sections: base.expertDraft.sections.map((section) =>
-          section.id === "section-1"
-            ? {
-                ...section,
-                body: {
-                  ...section.body,
-                  content: longContent,
-                  revision: createShortWorkspaceContentRevision(longContent)
-                }
-              }
-            : section
-        )
-      }
-    };
-    expect(() =>
-      WorkspaceRuntimeContextSchema.parse({
-        shortWorkspace: draftWorkspace,
-        activeResource: {
-          ...boundedResource,
-          id: "draft:section-1:body",
-          title: "第一节·正文"
-        }
-      })
-    ).not.toThrow();
-    expect(() =>
-      WorkspaceRuntimeContextSchema.parse({
-        shortWorkspace: draftWorkspace,
-        activeResource: {
-          ...boundedResource,
-          id: "draft:section-1:body",
-          content: `错${boundedResource.content.slice(1)}`
-        }
-      })
-    ).toThrow();
-  });
-
   it("does not allow material snapshots in the attached skill list", () => {
     expect(() =>
       WorkspaceRuntimeContextSchema.parse({
@@ -287,7 +143,7 @@ describe("DeepWrite desktop contracts: snapshots-settings-and-libraries", () => 
     ).toBe(false);
   });
 
-  it("keeps library workspaces isolated from short and learning contexts", () => {
+  it("keeps library workspaces isolated from retired contexts", () => {
     const body = "人物素材正文";
     const libraryWorkspace = {
       domain: "material" as const,
@@ -343,7 +199,7 @@ describe("DeepWrite desktop contracts: snapshots-settings-and-libraries", () => 
       WorkspaceRuntimeContextSchema.parse({
         activeResource,
         libraryWorkspace,
-        shortWorkspace: shortWorkspaceRuntimeFixture()
+        shortWorkspace: {}
       })
     ).toThrow();
 

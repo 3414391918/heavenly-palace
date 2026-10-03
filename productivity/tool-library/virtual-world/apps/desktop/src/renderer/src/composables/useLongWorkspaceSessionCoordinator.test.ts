@@ -80,7 +80,7 @@ function summary(bookId: string, sequence = 1): LongBookSummary {
     schemaVersion: 1,
     kind: "deepwrite.long-book",
     id: bookId,
-    title: `长篇 ${bookId}`,
+    title: `小说 ${bookId}`,
     bookType: "long",
     genre: "测试",
     status: "editing",
@@ -243,7 +243,7 @@ describe("long workspace session coordinator", () => {
       false
     );
     expect(harness.notifications.error).toHaveBeenCalledWith(
-      "长篇编辑器尚未准备好，已取消当前操作，请重试。"
+      "小说编辑器尚未准备好，已取消当前操作，请重试。"
     );
   });
 

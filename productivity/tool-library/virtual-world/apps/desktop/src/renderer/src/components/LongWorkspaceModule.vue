@@ -302,7 +302,7 @@ function forwardPreviewMutation(
     <div
       v-show="paneLayout === 'agent-editor' || !rightPane.collapsed"
       class="long-agent-column"
-      aria-label="长篇创作空间"
+      aria-label="小说创作空间"
     >
       <button
         v-if="leftCollapsed && !(conversationController && agentProfile)"
@@ -392,7 +392,7 @@ function forwardPreviewMutation(
         class="long-workspace-refresh-status is-error"
         aria-live="polite"
       >
-        <span>最新工作区索引尚未同步，长篇智能体已暂停发送。</span>
+        <span>最新工作区索引尚未同步，小说智能体已暂停发送。</span>
         <button type="button" @click="emit('retryWorkspaceRefresh')">
           重新同步
         </button>

@@ -304,7 +304,7 @@ describe("long approval navigation against the latest index", () => {
   };
   const summary = {
     id: "long_book",
-    title: "测试长篇",
+    title: "测试小说",
     navigation: {
       worldbuilding: [],
       characters: [],

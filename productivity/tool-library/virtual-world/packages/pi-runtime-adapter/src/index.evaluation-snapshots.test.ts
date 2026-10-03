@@ -1,3 +1,4 @@
+import { profile, workspace } from "./long-agent-tools.test-support";
 import type { AgentRuntimeEvent } from "./index.test-support";
 import {
   PiAgentRuntimeAdapter,
@@ -7,8 +8,6 @@ import {
   evaluationConversationHistory,
   expect,
   it,
-  screenplayWorkspace,
-  scriptAgentProfile,
   toolCallMessage
 } from "./index.test-support";
 
@@ -19,15 +18,19 @@ describe("DeepWrite Pi runtime adapter: evaluation snapshots", () => {
       tokensPerSecond: 0
     });
     const events: AgentRuntimeEvent[] = [];
-    const workspace = screenplayWorkspace();
+    const creation = workspace("long", "draft");
+    const configured = {
+      ...profile("long"),
+      systemPrompt: "用户配置的创作智能体提示词"
+    };
 
     for await (const event of runtime.start({
       runId: "run_evaluation_capture",
       sessionId: "session_evaluation_capture",
       prompt: "检查第一集并继续写作",
       thinkingLevel: "off",
-      scriptAgentProfile: scriptAgentProfile(),
-      workspaceContext: { scriptWorkspace: workspace }
+      longAgentProfile: configured,
+      workspaceContext: { longWorkspace: creation }
     })) {
       events.push(event);
     }
@@ -45,13 +48,13 @@ describe("DeepWrite Pi runtime adapter: evaluation snapshots", () => {
       runtimeContext: { kind: "initial-session-context" }
     });
     expect(captured?.payload.snapshot.systemPrompt).toContain(
-      "用户在设置中编辑的剧本正文专家提示词"
+      "用户配置的创作智能体提示词"
     );
     expect(captured?.payload.snapshot.runtimeContext.text).toContain(
       "检查第一集并继续写作"
     );
     expect(captured?.payload.snapshot.runtimeContext.text).toContain(
-      "剧本作品: 《雾港剧本》"
+      "创作作品: 《工具测试》"
     );
     const snapshots = events.filter(
       (

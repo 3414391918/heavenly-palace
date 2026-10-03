@@ -1,14 +1,13 @@
-import libraryStage from "./composables/proposal-coordinator/library-staging.ts?raw";
 import { describe, expect, it } from "vitest";
-import source from "./WorkspaceShell.vue?raw";
+import source from "./test-support/workspaceShellSource";
 import longWorkspaceSource from "./components/LongWorkspaceModule.vue?raw";
 import writingWorkspaceSource from "./components/WritingWorkspaceModule.vue?raw";
 import autoSaveSource from "./composables/useEditorAutoSaveCoordinator.ts?raw";
 import presentationCoordinatorSource from "./composables/useLongWorkspacePresentationCoordinator.ts?raw";
-import coordinatorSource from "./composables/useProposalCoordinator.ts?raw";
+import coordinatorSource from "./test-support/proposalCoordinatorSource";
 import worldbuildingLaneSource from "./composables/proposal-coordinator/long-worldbuilding-lane.ts?raw";
 import longImpactApprovalSource from "./composables/proposal-coordinator/long-impact-approval.ts?raw";
-import shortConversationSource from "./composables/useShortConversationCoordinator.ts?raw";
+import shortConversationSource from "./composables/useLibraryConversationCoordinator.ts?raw";
 import eventRoutesSource from "./events/registerWorkspaceSystemEventRoutes.ts?raw";
 
 describe("App agent realtime auto persistence", () => {
@@ -29,28 +28,6 @@ describe("App agent realtime auto persistence", () => {
     expect(source).not.toContain("function agentRunScopeHasWriteBarrier");
     expect(autoSaveSource).toContain("options.isWriteBlocked(document)");
     expect(presentationCoordinatorSource).toContain("请先接受或拒绝待审阅变更");
-  });
-
-  it("allows every short, script, library, and long content proposal to commit during a run", () => {
-    const eligibilityStart = coordinatorSource.indexOf(
-      "function canReviewAgentEditDuringRun"
-    );
-    const eligibilityEnd = coordinatorSource.indexOf(
-      "function removeQueuedAgentEdit",
-      eligibilityStart
-    );
-    const eligibility = coordinatorSource.slice(
-      eligibilityStart,
-      eligibilityEnd
-    );
-
-    expect(eligibility).toContain("Boolean(proposal.libraryTarget)");
-    expect(eligibility).toContain("Boolean(proposal.longWorldbuildingTarget)");
-    expect(eligibility).toContain("Boolean(proposal.longCharacterTarget)");
-    expect(eligibility).toContain("Boolean(proposal.longPlotDesignTarget)");
-    expect(eligibility).toContain("Boolean(proposal.longDraftTarget)");
-    expect(eligibility).toContain("isShortOrScriptAgentEdit(proposal)");
-    expect(eligibility).not.toContain('proposal.stageId === "draft"');
   });
 
   it("routes long chapter drafts into the standard conversation approval flow", () => {
@@ -140,21 +117,6 @@ describe("App agent realtime auto persistence", () => {
     expect(eventRouting).toMatch(
       /dependencies\.stageLongPlotDesignEditProposal\(event\);\s*} else if/s
     );
-  });
-
-  it("immediately schedules ordinary workspace and library auto approvals", () => {
-    const workspaceQueueStart = coordinatorSource.lastIndexOf(
-      "queueAgentEdit(",
-      coordinatorSource.indexOf("const stageLibraryEditProposal")
-    );
-    const workspaceQueue = coordinatorSource.slice(
-      workspaceQueueStart,
-      coordinatorSource.indexOf("const stageLibraryEditProposal")
-    );
-    expect(workspaceQueue).toContain("proposal.id");
-    expect(workspaceQueue).toMatch(/proposal\.id,\s*true,\s*true/s);
-
-    expect(libraryStage).toMatch(/proposalId,\s*true,\s*true/s);
   });
 
   it("enables live proposal handling for every main conversation context", () => {

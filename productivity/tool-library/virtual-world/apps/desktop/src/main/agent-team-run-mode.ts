@@ -3,19 +3,19 @@ import type {
   AgentTeamRunMode,
   AgentTeamWorkspaceType,
   ShortAgentSubagentDefinition,
-  WorkspaceAgentId
+  LongAgentId
 } from "@deepwrite/contracts";
 import { assertModelRunSettings } from "./model-run-settings";
 
 export interface AgentTeamRunTarget {
   workspaceType: AgentTeamWorkspaceType;
-  parentAgentId: WorkspaceAgentId | "long";
+  parentAgentId: LongAgentId;
 }
 
 export interface AgentTeamRunModeDependencies {
   resolveDefinitions(
     workspaceType: AgentTeamWorkspaceType,
-    parentAgentId: WorkspaceAgentId | "long"
+    parentAgentId: LongAgentId
   ): Promise<ShortAgentSubagentDefinition[]>;
   resolveModel(
     modelId: string
@@ -35,8 +35,12 @@ export async function resolveAgentTeamRuntime(
   if (mode !== "team") {
     return { subagentRuntimeConfigs: {} };
   }
-  if (!target) {
-    throw new Error("团队模式仅适用于短篇、剧本或长篇创作智能体。");
+  if (
+    !target ||
+    target.workspaceType !== "long" ||
+    target.parentAgentId !== "long"
+  ) {
+    throw new Error("子智能体团队模式仅适用于当前主智能体。");
   }
 
   const subagentDefinitions = await dependencies.resolveDefinitions(
@@ -45,7 +49,7 @@ export async function resolveAgentTeamRuntime(
   );
   if (subagentDefinitions.length === 0) {
     throw new Error(
-      "当前智能体没有已启用且含可用成员的团队，请先在“智能体团队”中完成配置。"
+      "当前智能体没有已启用且含可用成员的团队，请先在“子智能体团队”中完成配置。"
     );
   }
 

@@ -1,3 +1,4 @@
+import type { RevisionAnalysisConfigStore } from "../extras/revision-analysis/config-store";
 import type { BrowserWindow } from "electron";
 import type {
   AgentRuntimeRef,
@@ -15,8 +16,6 @@ import type {
   authorizeMainInternalCommand,
   MainInternalCommandActiveRun
 } from "../internal-command-authorizer";
-import type { LearningImitationConfigStore } from "../learning-imitation-config-store";
-import type { LongBookAnalysisConfigStore } from "../extras/long-book-analysis/config-store";
 import type { importLegacyLibraryArchives } from "../legacy-library-import-batch";
 import type { LegacySyncPreviewRegistry } from "../legacy-sync-preview-registry";
 import type { LibraryAgentConfigStore } from "../library-agent-config-store";
@@ -25,23 +24,20 @@ import type { LongAgentConfigStore } from "../long-agent-config-store";
 import type { exportLongManuscript } from "../long-manuscript-export";
 import type { ModelConfigStore } from "../model-config-store";
 import type { ModelUsageStore } from "../model-usage-store";
-import type { exportShortManuscript } from "../short-manuscript-export";
+import type { createRendererStateFlushCoordinator } from "../renderer-state-flush";
 import type { UtilitySupervisor } from "../supervisor";
 import type { UsageRunContext } from "../usage-observation";
-import type { WorkspaceAgentConfigStore } from "../workspace-agent-config-store";
 import type { WorkspaceDirectoryStore } from "../workspace-directory-store";
 import type {
   chooseWorkspaceDirectory,
   workspaceGroupParent,
   workspaceResourceParent
 } from "./workspace-paths";
-
 export interface ActiveRun extends MainInternalCommandActiveRun {
   correlationId: string;
   runtime: AgentRuntimeRef;
   usageContext?: UsageRunContext;
 }
-
 export interface IpcCommandContext {
   getMainWindow: () => BrowserWindow;
   supervisor: UtilitySupervisor;
@@ -54,24 +50,27 @@ export interface IpcCommandContext {
   pendingUsageContexts: Map<string, UsageRunContext>;
   terminalRuns: Set<string>;
   recordUsageObservation: (
-    event: Extract<SystemEventEnvelope, { type: "agent.usage_observed" }>
+    event: Extract<
+      SystemEventEnvelope,
+      {
+        type: "agent.usage_observed";
+      }
+    >
   ) => void;
   requireModelConfigStore: () => ModelConfigStore;
   requireModelUsageStore: () => ModelUsageStore;
   requireChatAssistantProjectConfigStore: () => ChatAssistantProjectConfigStore;
-  requireWorkspaceAgentConfigStore: () => WorkspaceAgentConfigStore;
+  requireRevisionAnalysisConfigStore: () => RevisionAnalysisConfigStore;
   requireAgentTeamConfigStore: () => AgentTeamConfigStore;
   requireLibraryAgentConfigStore: () => LibraryAgentConfigStore;
   requireLongAgentConfigStore: () => LongAgentConfigStore;
-  requireLearningImitationConfigStore: () => LearningImitationConfigStore;
-  requireShortBookAnalysisConfigStore: () => import("../extras/short-book-analysis/config-store").ShortBookAnalysisConfigStore;
-  requireLongBookAnalysisConfigStore: () => LongBookAnalysisConfigStore;
   requireWorkspaceDirectoryStore: () => WorkspaceDirectoryStore;
   requireAppearanceService: () => AppearanceService;
   requireGeneralSettingsStore: () => GeneralSettingsStore;
-  exportShortManuscript: typeof exportShortManuscript;
   exportLongManuscript: typeof exportLongManuscript;
   listRemoteModels: typeof listRemoteModels;
+  remoteFetch?: (input: string, init?: RequestInit) => Promise<Response>;
+  rendererStateFlush: ReturnType<typeof createRendererStateFlushCoordinator>;
   resolveDraftApiKey: ModelConfigStore["resolveDraftApiKey"];
   readExternalLibraryEntries: typeof readExternalLibraryEntries;
   importLegacyLibraryArchives: typeof importLegacyLibraryArchives;

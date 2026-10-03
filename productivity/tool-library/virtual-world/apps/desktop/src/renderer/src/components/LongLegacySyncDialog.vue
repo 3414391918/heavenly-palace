@@ -110,7 +110,7 @@ function total(counts: LongApplyLegacySyncResult["imported"]): number {
         <div class="dialog-content legacy-sync-content">
           <template v-if="!result">
             <p>
-              选择要追加到当前长篇的内容。现有内容不会删除或覆盖，重复同步的条目会自动跳过。
+              选择要追加到当前小说的内容。现有内容不会删除或覆盖，重复同步的条目会自动跳过。
             </p>
             <div class="legacy-sync-options">
               <button

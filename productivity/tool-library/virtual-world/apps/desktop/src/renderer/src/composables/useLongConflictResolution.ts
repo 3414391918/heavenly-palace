@@ -44,7 +44,7 @@ export function useLongConflictResolution(options: Options) {
         if (state.activeBookId.value === bookId) {
           if (!(await session.refreshActiveWorkspace(bookId))) {
             notifications.warning(
-              "文件冲突已解决，但工作区刷新失败，请重新打开这本长篇。"
+              "文件冲突已解决，但工作区刷新失败，请重新打开这本小说。"
             );
             return;
           }

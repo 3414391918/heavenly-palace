@@ -20,19 +20,9 @@ import { createTransientScrollbarController } from "../utils/transientScrollbar"
 const props = defineProps<{
   sections: ResourceTreeSection[];
   selectedId: string;
-  imitationRunning?: boolean;
-  longBookAnalysisRunning?: boolean;
-  shortBookAnalysisRunning?: boolean;
   revisionAnalysisRunning?: boolean;
   libraryEntryClipboardDomain?: "skill" | "material" | undefined;
-  activePrimaryFeature:
-    | PrimaryFeatureId
-    | "skill-marketplace"
-    | "cloud-backup"
-    | "device-sync"
-    | "zhuque-detection"
-    | undefined;
-  marketplaceDisplayName?: string | undefined;
+  activePrimaryFeature: PrimaryFeatureId | undefined;
   longTreeActionsDisabled?: boolean;
 }>();
 
@@ -41,10 +31,6 @@ const emit = defineEmits<{
   createBook: [];
   openDialog: [mode: DialogMode];
   openAgentTeams: [];
-  openMarketplace: [];
-  openCloudBackup: [];
-  openDeviceSync: [];
-  openZhuqueDetection: [];
   openSettings: [];
   selectResource: [node: ResourceTreeNode];
   bookAction: [mode: BookResourceDialogMode, node: ResourceTreeNode];
@@ -95,46 +81,13 @@ const navItems: Array<{
   icon: "directory" | "model" | "wand" | "brain";
 }> = [
   { id: "directory", label: "工作目录", icon: "directory" },
-  { id: "agent-teams", label: "智能体团队", icon: "brain" }
+  { id: "agent-teams", label: "子智能体团队", icon: "brain" }
 ];
 
 const moreExpanded = ref(false);
 
-function activateMoreFeature(
-  id:
-    | "imitation"
-    | "long-book-analysis"
-    | "revision-analysis"
-    | "short-book-analysis"
-    | "style-comparison"
-    | "skill-marketplace"
-    | "cloud-backup"
-    | "device-sync"
-    | "zhuque-detection"
-): void {
-  if (
-    id === "revision-analysis" ||
-    id === "style-comparison" ||
-    id === "imitation" ||
-    id === "short-book-analysis" ||
-    id === "long-book-analysis"
-  ) {
-    emit("openDialog", id);
-    return;
-  }
-  if (id === "skill-marketplace") {
-    emit("openMarketplace");
-    return;
-  }
-  if (id === "device-sync") {
-    emit("openDeviceSync");
-    return;
-  }
-  if (id === "cloud-backup") {
-    emit("openCloudBackup");
-    return;
-  }
-  emit("openZhuqueDetection");
+function activateMoreFeature(id: "revision-analysis"): void {
+  emit("openDialog", id);
 }
 
 function activateNav(id: "create-book" | PrimaryFeatureId): void {
@@ -241,25 +194,9 @@ function activateNav(id: "create-book" | PrimaryFeatureId): void {
               <small>{{ feature.description }}</small>
             </span>
             <span
-              v-if="
-                (feature.id === 'revision-analysis' &&
-                  props.revisionAnalysisRunning) ||
-                (feature.id === 'short-book-analysis' &&
-                  props.shortBookAnalysisRunning) ||
-                (feature.id === 'imitation' && props.imitationRunning) ||
-                (feature.id === 'long-book-analysis' &&
-                  props.longBookAnalysisRunning)
-              "
+              v-if="props.revisionAnalysisRunning"
               class="nav-background-status"
-              :title="
-                feature.id === 'imitation'
-                  ? '学习仿写正在后台运行'
-                  : feature.id === 'revision-analysis'
-                    ? '修改分析正在后台运行'
-                    : feature.id === 'short-book-analysis'
-                      ? '短篇拆书正在后台运行'
-                      : '长篇拆书正在后台运行'
-              "
+              title="修改分析正在后台运行"
             >
               <i aria-hidden="true" />后台中
             </span>
@@ -302,9 +239,6 @@ function activateNav(id: "create-book" | PrimaryFeatureId): void {
       />
     </div>
 
-    <SidebarProfileMenu
-      :marketplace-display-name="marketplaceDisplayName"
-      @open-settings="emit('openSettings')"
-    />
+    <SidebarProfileMenu @open-settings="emit('openSettings')" />
   </aside>
 </template>

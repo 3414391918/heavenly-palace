@@ -14,8 +14,6 @@ import {
   type LibraryAgentWorkspaceSnapshot
 } from "@deepwrite/contracts";
 import { buildRunTools } from "./run-tools";
-import { shortProfile, shortWorkspace } from "./short-agent-tools.test-support";
-import { scriptAgentProfile, screenplayWorkspace } from "./index.test-support";
 import { profile, workspace } from "./long-agent-tools.test-support";
 import { isSubagentToolProgressDetails } from "./subagent-runtime";
 import { toSubagentRuntimeEvents } from "./subagent-events";
@@ -39,31 +37,14 @@ const managerWorkspace: LibraryAgentWorkspaceSnapshot = {
   overviewRevision: createShortWorkspaceContentRevision("情节参考"),
   entries: []
 };
-function input(
-  kind: "short" | "script" | "long",
-  team: boolean
-): AgentRunInput {
+function input(kind: "long", team: boolean): AgentRunInput {
   return {
     sessionId: "session",
     runId: "run",
     prompt: "将刚才的情节记录为素材",
     mode: "workspace",
-    ...(kind === "short"
-      ? {
-          agentProfile: shortProfile(),
-          workspaceContext: { shortWorkspace: shortWorkspace() }
-        }
-      : kind === "script"
-        ? {
-            scriptAgentProfile: scriptAgentProfile(),
-            workspaceContext: { scriptWorkspace: screenplayWorkspace() }
-          }
-        : {
-            longAgentProfile: profile("long"),
-            workspaceContext: {
-              longWorkspace: workspace("long", "plot_design")
-            }
-          }),
+    longAgentProfile: profile("long"),
+    workspaceContext: { longWorkspace: workspace("long", "plot_design") },
     subagentDefinitions: team
       ? [
           {
@@ -116,7 +97,7 @@ function provider() {
 }
 
 describe("creative workspace management delegation", () => {
-  it.each(["short", "script", "long"] as const)(
+  it.each(["long"] as const)(
     "registers global managers and main questions in %s normal and team modes",
     (kind) => {
       const { model, streamFn } = provider();
@@ -151,7 +132,7 @@ describe("creative workspace management delegation", () => {
   );
 
   it("asks for a target, delegates, relays manager ambiguity, and proposes after the second answer", async () => {
-    const run = input("short", false);
+    const run = input("long", false);
     // Auto-save is allowed to approve proposals, but it never answers questions.
     run.writeApprovalMode = "auto-approve";
     const { faux, model, streamFn } = provider();
@@ -266,7 +247,7 @@ describe("creative workspace management delegation", () => {
       payload: {
         operation: "create",
         libraryId: "materials",
-        managementScope: { bookId: "book", bookType: "short" }
+        managementScope: { bookId: "book", bookType: "long" }
       }
     });
   });

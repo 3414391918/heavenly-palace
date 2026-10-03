@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import dialogSource from "./LongLegacySyncDialog.vue?raw";
-import appSource from "../WorkspaceShell.vue?raw";
+import appSource from "../test-support/workspaceShellSource";
 import longBookLifecycleSource from "../composables/useLongBookLifecycleCoordinator.ts?raw";
 
 describe("LongLegacySyncDialog", () => {

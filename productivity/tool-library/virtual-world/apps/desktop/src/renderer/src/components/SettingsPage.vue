@@ -4,7 +4,6 @@ import {
   type AppLanguage,
   type BodyTextFormats,
   type BodyTextFormatChange,
-  type CreativePlotStage,
   type GeneralPermissionMode,
   type LibraryAgentDomain,
   type LibraryAgentSettings,
@@ -17,9 +16,7 @@ import {
   type ModelUsageDashboard,
   type ModelUsageQueryInput,
   type TextViewMode,
-  type WorkspacePaneLayout,
-  type WorkspaceAgentSettings,
-  type WorkspaceAgentSettingsInput
+  type WorkspacePaneLayout
 } from "@deepwrite/contracts";
 import AppIcon from "./AppIcon.vue";
 import AppearanceSettingsPanel from "./AppearanceSettingsPanel.vue";
@@ -28,7 +25,7 @@ import GeneralSettingsPanel from "./GeneralSettingsPanel.vue";
 import LibraryAgentSettingsPanel from "./LibraryAgentSettingsPanel.vue";
 import ModelSettingsFeature from "./ModelSettingsFeature.vue";
 import ModelUsagePanel from "./ModelUsagePanel.vue";
-import ShortAgentSettingsPanel from "./ShortAgentSettingsPanel.vue";
+import LongAgentSettingsPanel from "./LongAgentSettingsPanel.vue";
 
 interface SettingsCategory {
   id: string;
@@ -63,11 +60,7 @@ const props = defineProps<{
   workspacePaneLayout: WorkspacePaneLayout;
   defaultTextViewMode: TextViewMode;
   bodyTextFormats: BodyTextFormats;
-  workspaceAgentSettings: readonly WorkspaceAgentSettings[];
-  creativePlotStages: readonly CreativePlotStage[];
   longAgentSettings: LongAgentSettings | null;
-  workspaceAgentLoading: boolean;
-  workspaceAgentSaving: boolean;
   longAgentLoading: boolean;
   longAgentSaving: boolean;
   longAgentError: string | null;
@@ -96,7 +89,6 @@ const emit = defineEmits<{
   updateWorkspacePaneLayout: [layout: WorkspacePaneLayout];
   updateDefaultTextViewMode: [mode: TextViewMode];
   updateBodyTextFormat: [change: BodyTextFormatChange];
-  saveWorkspaceAgents: [settings: WorkspaceAgentSettingsInput];
   retryLongAgents: [];
   saveLongAgents: [settings: LongAgentSettingsInput];
   saveLibraryAgents: [settings: LibraryAgentSettingsInput];
@@ -113,7 +105,7 @@ const sections: SettingsSection[] = [
     id: "creation",
     label: "创作",
     categories: [
-      { id: "short-agents", label: "创作空间配置", icon: "brain" },
+      { id: "main-agent", label: "主智能体配置", icon: "brain" },
       { id: "skill-library-agent", label: "技能库配置", icon: "wand" },
       { id: "material-library-agent", label: "素材库配置", icon: "archive" }
     ]
@@ -219,20 +211,15 @@ async function selectCategory(id: string): Promise<void> {
       <div class="settings-content-inner">
         <h1 class="settings-title">{{ activeLabel }}</h1>
 
-        <ShortAgentSettingsPanel
-          v-if="activeCategory === 'short-agents'"
-          :settings="workspaceAgentSettings"
-          :creative-plot-stages="creativePlotStages"
-          :long-settings="longAgentSettings"
-          :loading="workspaceAgentLoading"
-          :saving="workspaceAgentSaving"
-          :long-loading="longAgentLoading"
-          :long-saving="longAgentSaving"
-          :long-error-message="longAgentError"
+        <LongAgentSettingsPanel
+          v-if="activeCategory === 'main-agent'"
+          :settings="longAgentSettings"
+          :loading="longAgentLoading"
+          :saving="longAgentSaving"
+          :load-error="longAgentError"
           :runtime-available="runtimeAvailable"
-          @save="emit('saveWorkspaceAgents', $event)"
-          @retry-long="emit('retryLongAgents')"
-          @save-long="emit('saveLongAgents', $event)"
+          @retry="emit('retryLongAgents')"
+          @save="emit('saveLongAgents', $event)"
         />
 
         <LibraryAgentSettingsPanel

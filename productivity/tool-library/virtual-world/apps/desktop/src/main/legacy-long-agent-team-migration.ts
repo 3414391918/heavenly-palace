@@ -17,7 +17,7 @@ const LEGACY_LONG_PARENT_LABELS = {
   draft: "正文",
   expert_section_writer: "单章写手",
   continuity_ledger: "连续性账本",
-  long: "长篇"
+  long: "主智能体"
 } as const;
 
 type LegacyLongParentId = keyof typeof LEGACY_LONG_PARENT_LABELS;

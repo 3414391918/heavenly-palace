@@ -62,7 +62,7 @@ export function createLongWorldbuildingProposalLane(
     const target = proposal.longWorldbuildingTarget;
     const api = resolveLongWorkspaceApi();
     if (!target || !api) {
-      const message = "长篇世界观文件服务当前不可用。";
+      const message = "世界观文件服务当前不可用。";
       conversation.updateEditProposal(request.runId, request.proposalId, {
         status: "error",
         statusMessage: message
@@ -100,7 +100,7 @@ export function createLongWorldbuildingProposalLane(
       if (activeLongBookId.value === target.bookId) {
         await nextTick();
         if (!(await saveActiveLongEditorChanges())) {
-          throw new Error("当前长篇编辑内容尚未保存，未覆盖世界观文件。");
+          throw new Error("当前创作空间内容尚未保存，未覆盖世界观文件。");
         }
       }
       const latest = await api.getWorkspaceIndex({

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import appSource from "../WorkspaceShell.vue?raw";
+import appSource from "../test-support/workspaceShellSource";
 import conversationListSource from "./ConversationMessageList.vue?raw";
 import conversationItemSource from "./ConversationMessageItem.vue?raw";
 import processingTimelineSource from "./ConversationProcessingTimeline.vue?raw";
@@ -11,7 +11,9 @@ import characterNavigationSource from "./LongCharacterNavigation.vue?raw";
 import continuityNavigationSource from "./LongContinuityLedgerNavigation.vue?raw";
 import plotPointDialogSource from "./CreateLongPlotPointDialog.vue?raw";
 import dialogSource from "./CreateBookDialog.vue?raw";
-import editorSource from "./LongWorkspaceEditor.vue?raw";
+import editorCoreSource from "./LongWorkspaceEditor.vue?raw";
+import novelPresentationSource from "./novelWorkspacePresentation.ts?raw";
+const editorSource = editorCoreSource + novelPresentationSource;
 import editorSessionSource from "../composables/useLongEditorDocumentSession.ts?raw";
 import editorStructureSource from "../composables/useLongEditorStructureSelection.ts?raw";
 import editorDeleteSource from "../composables/useLongEditorDeleteDialogs.ts?raw";
@@ -27,7 +29,18 @@ import proposalReviewSource from "./LongProposalReview.vue?raw";
 import proposalImpactSource from "./LongProposalImpactDetails.vue?raw";
 import removalSource from "./LongBookRemovalDialog.vue?raw";
 import sectionSource from "./TreeSection.vue?raw";
-import structureSource from "./LongStructureManager.vue?raw";
+import structureManagerSource from "./LongStructureManager.vue?raw";
+import structureFeatureSource from "./LongStructureFeatureSettings.vue?raw";
+import structureAgentsSource from "./LongAgentsMdEditor.vue?raw";
+import structureFormDialogSource from "./LongStructureFormDialog.vue?raw";
+import structureFormSource from "../composables/useLongStructureForm.ts?raw";
+const structureSource = [
+  structureManagerSource,
+  structureFeatureSource,
+  structureAgentsSource,
+  structureFormDialogSource,
+  structureFormSource
+].join("\n");
 import treeNodeSource from "./TreeNodeItem.vue?raw";
 import workspaceDialogLayerSource from "./WorkspaceDialogLayer.vue?raw";
 import longWorkspaceTypeSource from "../types/longWorkspace.ts?raw";

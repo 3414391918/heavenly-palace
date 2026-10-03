@@ -10,10 +10,7 @@ import type {
   AgentEditReviewRequest,
   ProposalCoordinatorContext
 } from "../proposal-coordinator/types";
-import {
-  discardAcceptedCatalogTextEdit,
-  discardAcceptedShortStructureEdit
-} from "./short";
+import { discardAcceptedLibraryTextEdit } from "./library";
 
 function proposalUsesModificationTool(
   conversation: AgentConversationController,
@@ -69,6 +66,7 @@ export function createAcceptedEditDiscardCoordinator(
     );
     if (
       !proposal ||
+      !proposal.libraryTarget ||
       !proposalUsesModificationTool(conversation, proposal) ||
       !agentProposalSupportsDiscard(proposal) ||
       proposal.discardState?.status === "discarding"
@@ -87,9 +85,7 @@ export function createAcceptedEditDiscardCoordinator(
     );
     context.editor.setWorkspaceAccepting(proposal.workspaceId, true);
     try {
-      if (!(await discardAcceptedShortStructureEdit(context, proposal))) {
-        await discardAcceptedCatalogTextEdit(context, proposal);
-      }
+      await discardAcceptedLibraryTextEdit(context, proposal);
       updateDiscardState(
         conversation,
         proposal,

@@ -1,5 +1,4 @@
-import { assertRevisionAnalysisBudget } from "@deepwrite/contracts";
-import { resolveShortAnalysisProfile } from "../extras/short-book-analysis/run-profile";
+import { assertRevisionAnalysisRuntime } from "../extras/revision-analysis/runtime-validation";
 import { acquireConversationOperation } from "./conversation-operation-guard";
 import { resolveAgentTeamRuntime } from "../agent-team-run-mode";
 import { prepareLibraryManagementRunContext } from "../library-management-run-context";
@@ -161,22 +160,9 @@ export async function handleSessionCommands(
               }
             )
           : undefined;
-      const shortWorkspace = command.payload.workspaceContext?.shortWorkspace;
-      const scriptWorkspace = command.payload.workspaceContext?.scriptWorkspace;
       const longWorkspace = command.payload.workspaceContext?.longWorkspace;
       const libraryWorkspace =
         command.payload.workspaceContext?.libraryWorkspace;
-      const learningImitation =
-        command.payload.workspaceContext?.learningImitation;
-      const longBookAnalysis =
-        command.payload.workspaceContext?.longBookAnalysis;
-      const creativeWorkspace = shortWorkspace ?? scriptWorkspace;
-      const creativeWorkspaceType = scriptWorkspace ? "script" : "short";
-      const agentProfile = creativeWorkspace
-        ? await ctx
-            .requireWorkspaceAgentConfigStore()
-            .resolveForWorkspace(creativeWorkspace, creativeWorkspaceType)
-        : undefined;
       const longAgentProfile = longWorkspace
         ? await ctx
             .requireLongAgentConfigStore()
@@ -185,14 +171,9 @@ export async function handleSessionCommands(
       const { subagentDefinitions, subagentRuntimeConfigs } =
         await resolveAgentTeamRuntime(
           command.payload.agentTeamMode,
-          agentProfile
-            ? {
-                workspaceType: creativeWorkspaceType,
-                parentAgentId: agentProfile.id
-              }
-            : longAgentProfile
-              ? { workspaceType: "long", parentAgentId: longAgentProfile.id }
-              : undefined,
+          longAgentProfile
+            ? { workspaceType: "long", parentAgentId: longAgentProfile.id }
+            : undefined,
           {
             resolveDefinitions: (workspaceType, parentAgentId) =>
               ctx
@@ -207,29 +188,11 @@ export async function handleSessionCommands(
             .requireLibraryAgentConfigStore()
             .resolve(libraryWorkspace.domain)
         : undefined;
-      const learningImitationProfile = learningImitation
-        ? await ctx
-            .requireLearningImitationConfigStore()
-            .resolve(learningImitation.stageId)
-        : undefined;
-      if (command.payload.workspaceContext?.revisionAnalysis && runtimeConfig)
-        assertRevisionAnalysisBudget(
+      if (command.payload.workspaceContext?.revisionAnalysis)
+        assertRevisionAnalysisRuntime(
           command.payload.workspaceContext.revisionAnalysis,
           runtimeConfig
         );
-      const shortBookAnalysisProfile = command.payload.workspaceContext
-        ?.shortBookAnalysis
-        ? await resolveShortAnalysisProfile(
-            command.payload.workspaceContext.shortBookAnalysis,
-            ctx.requireShortBookAnalysisConfigStore(),
-            runtimeConfig
-          )
-        : undefined;
-      const longBookAnalysisProfile = longBookAnalysis
-        ? await ctx
-            .requireLongBookAnalysisConfigStore()
-            .resolve(longBookAnalysis.presetId)
-        : undefined;
       const { thinkingLevel, temperature } = resolveModelRunSettings(
         runtimeConfig,
         {
@@ -258,7 +221,6 @@ export async function handleSessionCommands(
       const materialWorkspaceContext = await prepareMaterialRunContext(
         {
           workspaceContext: command.payload.workspaceContext,
-          ...(agentProfile ? { agentProfile } : {}),
           ...(longAgentProfile ? { longAgentProfile } : {}),
           snapshotMode: process.env.DEEPWRITE_MATERIAL_SNAPSHOT_MODE === "1"
         },
@@ -279,20 +241,12 @@ export async function handleSessionCommands(
             ...(chatAssistantRuntimeContext
               ? { chatAssistantRuntimeContext }
               : {}),
-            ...(agentProfile
-              ? scriptWorkspace
-                ? { scriptAgentProfile: agentProfile }
-                : { agentProfile }
-              : {}),
             ...(longAgentProfile ? { longAgentProfile } : {}),
             ...(subagentDefinitions ? { subagentDefinitions } : {}),
             ...(Object.keys(subagentRuntimeConfigs).length > 0
               ? { subagentRuntimeConfigs }
               : {}),
-            ...(libraryAgentProfile ? { libraryAgentProfile } : {}),
-            ...(learningImitationProfile ? { learningImitationProfile } : {}),
-            ...(shortBookAnalysisProfile ? { shortBookAnalysisProfile } : {}),
-            ...(longBookAnalysisProfile ? { longBookAnalysisProfile } : {})
+            ...(libraryAgentProfile ? { libraryAgentProfile } : {})
           },
           { id: command.id, context: command.context }
         )

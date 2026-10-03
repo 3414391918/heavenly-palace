@@ -1,18 +1,15 @@
 import {
-  CatalogLibrarySchema,
   CatalogLibraryGroupSchema,
+  CatalogLibrarySchema,
   CatalogOpenProjectResultSchema,
-  ShortBookSchema,
-  ScriptBookSchema,
   CommandEnvelopeSchema,
   createEnvelope,
   type CommandEnvelope,
   type CommandResult
 } from "@deepwrite/contracts";
 import { LEGACY_LIBRARY_FILE_SELECTION_PROPERTIES } from "../legacy-library-import-batch";
-import { safeErrorDetails } from "./errors";
 import type { IpcCommandContext } from "./command-types";
-
+import { safeErrorDetails } from "./errors";
 export type CatalogProjectCommandContext = Pick<
   IpcCommandContext,
   | "requireSelectedWorkspaceDirectory"
@@ -22,14 +19,11 @@ export type CatalogProjectCommandContext = Pick<
   | "importLegacyLibraryArchives"
   | "supervisor"
 >;
-
 export async function handleCatalogProjectCommands(
   ctx: CatalogProjectCommandContext,
   command: CommandEnvelope
 ): Promise<CommandResult | undefined> {
   if (
-    command.type === "catalog.createShortBook" ||
-    command.type === "catalog.createScriptBook" ||
     command.type === "catalog.createLibrary" ||
     command.type === "catalog.createLibraryGroup" ||
     command.type === "catalog.openProject" ||
@@ -44,20 +38,13 @@ export async function handleCatalogProjectCommands(
           payload: null
         };
       }
-
-      const domain =
-        command.type === "catalog.createShortBook" ||
-        command.type === "catalog.createScriptBook"
-          ? "book"
-          : command.payload.domain;
+      const domain = command.payload.domain;
       const defaultPath =
         command.type === "catalog.createLibraryGroup"
           ? ctx.workspaceGroupParent(workspaceDirectory, command.payload.domain)
           : ctx.workspaceResourceParent(workspaceDirectory, domain);
       let selectedPaths: string[];
       if (
-        command.type === "catalog.createShortBook" ||
-        command.type === "catalog.createScriptBook" ||
         command.type === "catalog.createLibrary" ||
         command.type === "catalog.createLibraryGroup"
       ) {
@@ -75,10 +62,7 @@ export async function handleCatalogProjectCommands(
           defaultPath,
           ...(command.type === "catalog.importLegacyLibrary"
             ? {
-                properties:
-                  command.type === "catalog.importLegacyLibrary"
-                    ? LEGACY_LIBRARY_FILE_SELECTION_PROPERTIES
-                    : (["openFile"] as const),
+                properties: LEGACY_LIBRARY_FILE_SELECTION_PROPERTIES,
                 filters: [
                   {
                     name: `旧版${domain === "material" ? "素材" : "技能"}库压缩包`,
@@ -97,66 +81,45 @@ export async function handleCatalogProjectCommands(
         }
         selectedPaths = selection.filePaths;
       }
-
       const selectedPath = selectedPaths[0]!;
-
       const internalCommand = CommandEnvelopeSchema.parse(
-        command.type === "catalog.createShortBook"
+        command.type === "catalog.createLibrary"
           ? createEnvelope(
-              "catalog.createShortBookAtPath",
+              "catalog.createLibraryAtPath",
               {
-                parentDirectory: selectedPath,
-                input: command.payload
+                ...command.payload,
+                parentDirectory: selectedPath
               },
               { id: command.id, context: command.context }
             )
-          : command.type === "catalog.createScriptBook"
+          : command.type === "catalog.createLibraryGroup"
             ? createEnvelope(
-                "catalog.createScriptBookAtPath",
+                "catalog.createLibraryGroupAtPath",
                 {
                   parentDirectory: selectedPath,
                   input: command.payload
                 },
                 { id: command.id, context: command.context }
               )
-            : command.type === "catalog.createLibrary"
+            : command.type === "catalog.openProject"
               ? createEnvelope(
-                  "catalog.createLibraryAtPath",
+                  "catalog.openProjectAtPath",
                   {
-                    ...command.payload,
-                    parentDirectory: selectedPath
+                    projectDirectory: selectedPath,
+                    domain: command.payload.domain
                   },
                   { id: command.id, context: command.context }
                 )
-              : command.type === "catalog.createLibraryGroup"
-                ? createEnvelope(
-                    "catalog.createLibraryGroupAtPath",
-                    {
-                      parentDirectory: selectedPath,
-                      input: command.payload
-                    },
-                    { id: command.id, context: command.context }
-                  )
-                : command.type === "catalog.openProject"
-                  ? createEnvelope(
-                      "catalog.openProjectAtPath",
-                      {
-                        projectDirectory: selectedPath,
-                        domain: command.payload.domain
-                      },
-                      { id: command.id, context: command.context }
-                    )
-                  : createEnvelope(
-                      "catalog.importLegacyLibraryAtPath",
-                      {
-                        domain: command.payload.domain,
-                        archivePath: selectedPath,
-                        parentDirectory: defaultPath
-                      },
-                      { id: command.id, context: command.context }
-                    )
+              : createEnvelope(
+                  "catalog.importLegacyLibraryAtPath",
+                  {
+                    domain: command.payload.domain,
+                    archivePath: selectedPath,
+                    parentDirectory: defaultPath
+                  },
+                  { id: command.id, context: command.context }
+                )
       );
-
       if (command.type === "catalog.importLegacyLibrary") {
         const payload = await ctx.importLegacyLibraryArchives(
           selectedPaths,
@@ -189,7 +152,6 @@ export async function handleCatalogProjectCommands(
           payload
         };
       }
-
       const result = await ctx.supervisor.requestCommand(
         "core",
         internalCommand,
@@ -199,17 +161,13 @@ export async function handleCatalogProjectCommands(
         return result;
       }
       const payload =
-        command.type === "catalog.createShortBook"
-          ? ShortBookSchema.parse(result.payload)
-          : command.type === "catalog.createScriptBook"
-            ? ScriptBookSchema.parse(result.payload)
-            : command.type === "catalog.createLibrary"
-              ? CatalogLibrarySchema.parse(result.payload)
-              : command.type === "catalog.createLibraryGroup"
-                ? CatalogLibraryGroupSchema.parse(result.payload)
-                : command.type === "catalog.openProject"
-                  ? CatalogOpenProjectResultSchema.parse(result.payload)
-                  : CatalogLibrarySchema.parse(result.payload);
+        command.type === "catalog.createLibrary"
+          ? CatalogLibrarySchema.parse(result.payload)
+          : command.type === "catalog.createLibraryGroup"
+            ? CatalogLibraryGroupSchema.parse(result.payload)
+            : command.type === "catalog.openProject"
+              ? CatalogOpenProjectResultSchema.parse(result.payload)
+              : CatalogLibrarySchema.parse(result.payload);
       return { status: "accepted", requestId: command.id, payload };
     } catch (error: unknown) {
       return {

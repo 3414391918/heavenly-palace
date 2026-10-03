@@ -45,7 +45,7 @@ export function longSkillReferences(
         references.push({
           id: catalogAttachmentId("skill", library.id, entry.id),
           label: `${library.title} · ${entry.title}`,
-          detail: `${SKILL_KIND_LABELS[library.skillKind]} · 当前长篇已绑定`
+          detail: `${SKILL_KIND_LABELS[library.skillKind]} · 当前小说已绑定`
         });
         if (references.length >= ATTACHED_CONTEXT_MAX_ITEMS) {
           return references;
@@ -81,7 +81,7 @@ export function longMaterialReferences(
         references.push({
           id: catalogAttachmentId("material", library.id, entry.id),
           label: `${library.title} · ${entry.title}`,
-          detail: `${MATERIAL_KIND_LABELS[entryKind]} · 当前长篇已绑定`
+          detail: `${MATERIAL_KIND_LABELS[entryKind]} · 当前小说已绑定`
         });
         if (references.length >= ATTACHED_CONTEXT_MAX_ITEMS) {
           return references;

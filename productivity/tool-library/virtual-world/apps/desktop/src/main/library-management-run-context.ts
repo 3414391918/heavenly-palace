@@ -20,11 +20,7 @@ export async function prepareLibraryManagementRunContext(
 ): Promise<LibraryManagementRuntimeContext | undefined> {
   const scope = workspace?.longWorkspace
     ? { bookType: "long" as const, bookId: workspace.longWorkspace.bookId }
-    : workspace?.scriptWorkspace
-      ? { bookType: "script" as const, bookId: workspace.scriptWorkspace.id }
-      : workspace?.shortWorkspace
-        ? { bookType: "short" as const, bookId: workspace.shortWorkspace.id }
-        : undefined;
+    : undefined;
   if (!scope) return undefined;
   const settings = (await teams.list()).builtinSubagents;
   const managers = [];

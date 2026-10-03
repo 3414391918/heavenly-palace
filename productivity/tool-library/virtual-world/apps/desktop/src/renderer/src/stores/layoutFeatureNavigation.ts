@@ -1,33 +1,10 @@
 export type AppView = "workspace" | "settings";
 
 export type WorkspaceMainView =
-  | "conversation"
-  | "directory"
-  | "models"
-  | "imitation"
-  | "long-book-analysis"
-  | "revision-analysis"
-  | "short-book-analysis"
-  | "style-comparison"
-  | "agent-team"
-  | "marketplace"
-  | "cloud-backup"
-  | "device-sync"
-  | "zhuque-detection";
+  "conversation" | "directory" | "models" | "revision-analysis" | "agent-team";
 
 export type PrimaryFeature =
-  | "directory"
-  | "models"
-  | "imitation"
-  | "long-book-analysis"
-  | "revision-analysis"
-  | "short-book-analysis"
-  | "style-comparison"
-  | "agent-teams"
-  | "skill-marketplace"
-  | "cloud-backup"
-  | "device-sync"
-  | "zhuque-detection";
+  "directory" | "models" | "revision-analysis" | "agent-teams";
 
 export function primaryFeatureForView(
   view: WorkspaceMainView
@@ -35,18 +12,9 @@ export function primaryFeatureForView(
   switch (view) {
     case "agent-team":
       return "agent-teams";
-    case "marketplace":
-      return "skill-marketplace";
-    case "device-sync":
-    case "cloud-backup":
-    case "zhuque-detection":
     case "directory":
     case "models":
-    case "imitation":
-    case "long-book-analysis":
     case "revision-analysis":
-    case "short-book-analysis":
-    case "style-comparison":
       return view;
     default:
       return undefined;

@@ -1,21 +1,15 @@
 <script setup lang="ts">
-import CreateBookFromTemplateDialog from "./CreateBookFromTemplateDialog.vue";
 import DialogHost from "./DialogHost.vue";
 import {
-  BookResourceDialog,
   BookTransferDialog,
-  CharacterItemDialog,
   CreateBookDialog,
-  CreateExpertSectionDialog,
   CreateLongChapterCardDialog,
   CreateLongCharacterDialog,
   CreateLongPlotPointDialog,
   CreateLongWorldbuildingItemDialog,
   CreateLongVolumeDialog,
-  DeleteExpertSectionDialog,
   DeleteLongDraftSectionDialog,
   ExportLongManuscriptDialog,
-  ExportShortManuscriptDialog,
   ExternalSkillImportDialog,
   LibraryEntryMoveDialog,
   LibraryGroupDialog,
@@ -27,7 +21,6 @@ import {
   LongContinuationImportDialog,
   LongLegacySyncDialog,
   LongStructureDialog,
-  PlotStructureDialog,
   SaveConflictDialog,
   StartupAlertDialog
 } from "./lazyAppComponents";
@@ -45,67 +38,8 @@ const emit = defineEmits<WorkspaceDialogLayerEmits>();
 
 <template>
   <DialogHost v-if="module" :active-dialog="module.kind">
-    <BookResourceDialog
-      v-if="module.kind === 'book-resource'"
-      :mode="module.mode"
-      :book="module.book"
-      :skill-libraries="module.skillLibraries"
-      :material-libraries="module.materialLibraries"
-      :material-groups="module.materialGroups"
-      :skill-groups="module.skillGroups"
-      :loading="module.loading"
-      :submitting="module.submitting"
-      @close="emit('closeBookResource')"
-      @rename="emit('renameBook', $event)"
-      @remove="emit('removeBook', $event)"
-      @delete="emit('deleteBook', $event)"
-      @update-bindings="emit('updateBookBindings', $event)"
-    />
-
-    <PlotStructureDialog
-      v-else-if="module.kind === 'plot-structure'"
-      open
-      :book="module.book"
-      :pending="module.pending"
-      :writing-context="module.writingContext"
-      :writing-context-loading="module.writingContextLoading"
-      :writing-context-pending="module.writingContextPending"
-      @close="emit('closePlotStructure')"
-      @mutation="
-        (mutation, completion) =>
-          emit('plotStructureMutation', mutation, completion)
-      "
-      @character-mutation="
-        (mutation, completion) =>
-          emit('characterStructureMutation', mutation, completion)
-      "
-      @save-writing-context="
-        (content, completion) => emit('saveWritingContext', content, completion)
-      "
-    />
-
-    <CharacterItemDialog
-      v-else-if="module.kind === 'character-item'"
-      open
-      :mode="module.mode"
-      :title="module.title"
-      :pending="module.pending"
-      @close="emit('closeCharacterItem')"
-      @submit="emit('submitCharacterItem', $event)"
-    />
-
-    <ExportShortManuscriptDialog
-      v-else-if="module.kind === 'export-short'"
-      open
-      :book-title="module.bookTitle"
-      :workspace-type="module.workspaceType"
-      :submitting="module.submitting"
-      @close="emit('closeExportShort')"
-      @export="emit('exportShort', $event)"
-    />
-
     <ExportLongManuscriptDialog
-      v-else-if="module.kind === 'export-long'"
+      v-if="module.kind === 'export-long'"
       open
       :book-title="module.bookTitle"
       :book-id="module.bookId"
@@ -125,13 +59,6 @@ const emit = defineEmits<WorkspaceDialogLayerEmits>();
       @confirm="emit('confirmLibraryRemoval')"
     />
 
-    <CreateBookFromTemplateDialog
-      v-else-if="module.kind === 'create-book' && module.fromTemplate"
-      :submitting="module.submitting"
-      @close="emit('closeCreateBook')"
-      @submit="emit('submitCreateBook', $event)"
-      @settings="emit('openTemplateSettings')"
-    />
     <CreateBookDialog
       v-else-if="module.kind === 'create-book'"
       open
@@ -245,7 +172,7 @@ const emit = defineEmits<WorkspaceDialogLayerEmits>();
       v-else-if="module.kind === 'delete-long-tree'"
       open
       :section-title="module.sectionTitle"
-      eyebrow="长篇结构"
+      eyebrow="小说结构"
       :item-label="module.itemLabel"
       :description="module.description"
       :pending="module.pending"
@@ -382,26 +309,6 @@ const emit = defineEmits<WorkspaceDialogLayerEmits>();
       @keep="emit('keepSaveConflict')"
       @reload="emit('reloadSaveConflict')"
       @overwrite="emit('overwriteSaveConflict')"
-    />
-
-    <CreateExpertSectionDialog
-      v-else-if="module.kind === 'create-expert-section'"
-      open
-      :suggested-title="module.suggestedTitle"
-      :workspace-type="module.workspaceType"
-      :pending="module.pending"
-      @close="emit('closeCreateExpertSection')"
-      @submit="emit('submitCreateExpertSection', $event)"
-    />
-
-    <DeleteExpertSectionDialog
-      v-else-if="module.kind === 'delete-expert-section'"
-      open
-      :section-title="module.sectionTitle"
-      :has-content="module.hasContent"
-      :workspace-type="module.workspaceType"
-      @close="emit('closeDeleteExpertSection')"
-      @confirm="emit('confirmDeleteExpertSection')"
     />
 
     <StartupAlertDialog

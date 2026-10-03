@@ -389,7 +389,7 @@ export function useLongConversationCoordinator(
     if (sendTargetIsCurrent(target)) return true;
     if (!disposed) {
       options.notifications.info(
-        "长篇上下文、会话、模型设置或输入内容已切换，本次发送已取消。"
+        "小说上下文、会话、模型设置或输入内容已切换，本次发送已取消。"
       );
     }
     return false;
@@ -415,7 +415,7 @@ export function useLongConversationCoordinator(
     const conversation = activeConversation.value;
     if (!conversation) return;
     if (conversation.isBusy.value) {
-      options.notifications.warning("请先停止当前长篇回复，再新建对话。");
+      options.notifications.warning("请先停止当前小说回复，再新建对话。");
       return;
     }
     invalidateSendTarget();
@@ -432,7 +432,7 @@ export function useLongConversationCoordinator(
     current: () => activeConversation.value,
     warning: (message) => options.notifications.warning(message),
     busyMessage: "请先停止当前回复，再切换历史对话。",
-    unavailableMessage: "这条长篇历史对话已不可用。"
+    unavailableMessage: "这条小说历史对话已不可用。"
   });
 
   function useSuggestion(value: string): void {
@@ -457,17 +457,17 @@ export function useLongConversationCoordinator(
     const promptAttachments = request;
     if (disposed) return Promise.resolve();
     if (activeSend || options.state.sendPreflightPending.value) {
-      options.notifications.info("正在准备上一条长篇消息，请稍候。");
+      options.notifications.info("正在准备上一条小说消息，请稍候。");
       return Promise.resolve();
     }
     const target = captureSendTarget();
     if (!target) {
-      options.notifications.warning("长篇工作区上下文尚未就绪，请稍后重试。");
+      options.notifications.warning("小说工作区上下文尚未就绪，请稍后重试。");
       return Promise.resolve();
     }
     if (rewriteRequest && !target.conversation.canRewriteHistory.value) {
       options.notifications.info(
-        "请先等待当前回复、审批和长篇修改保存全部完成。"
+        "请先等待当前回复、审批和小说修改保存全部完成。"
       );
       return Promise.resolve();
     }
@@ -483,7 +483,7 @@ export function useLongConversationCoordinator(
         if (!settingsLoaded) {
           options.notifications.warning(
             options.state.agentLoadError.value ??
-              "长篇智能体设置尚未加载，请重试。"
+              "小说智能体设置尚未加载，请重试。"
           );
           return;
         }
@@ -508,7 +508,7 @@ export function useLongConversationCoordinator(
             target.chapterCardId ||
           (baseRuntimeContext.activeFileId ?? null) !== target.fileId
         ) {
-          options.notifications.info("长篇上下文已切换，本次发送已取消。");
+          options.notifications.info("小说上下文已切换，本次发送已取消。");
           return;
         }
 
@@ -516,7 +516,7 @@ export function useLongConversationCoordinator(
         if (target.activeRoot === "worldbuilding" && target.fileId) {
           const api = options.workspace.api();
           if (!api) {
-            options.notifications.warning("当前环境未连接长篇工作区。");
+            options.notifications.warning("当前环境未连接小说工作区。");
             return;
           }
           try {
@@ -548,7 +548,7 @@ export function useLongConversationCoordinator(
         if (target.activeRoot === "character_design" && target.fileId) {
           const api = options.workspace.api();
           if (!api) {
-            options.notifications.warning("当前环境未连接长篇工作区。");
+            options.notifications.warning("当前环境未连接小说工作区。");
             return;
           }
           try {
@@ -605,15 +605,15 @@ export function useLongConversationCoordinator(
             }
             if (agentsMd.truncated) {
               options.notifications.warning(
-                "长篇上下文过长，本轮只注入了截断后的 AGENTS.md。"
+                "小说上下文过长，本轮只注入了截断后的 AGENTS.md。"
               );
             }
           } catch (error: unknown) {
             if (!confirmSendTarget(target)) return;
             options.notifications.warning(
               error instanceof Error
-                ? `长篇上下文未注入：${error.message}`
-                : "长篇上下文未注入，本轮仍会发送。"
+                ? `小说上下文未注入：${error.message}`
+                : "小说上下文未注入，本轮仍会发送。"
             );
           }
         }
@@ -621,7 +621,7 @@ export function useLongConversationCoordinator(
         const summary = options.state.activeBookSummary.value;
         const profile = options.state.activeAgentProfile.value;
         if (!summary || summary.id !== target.bookId || !profile) {
-          options.notifications.info("长篇资源上下文已切换，本次发送已取消。");
+          options.notifications.info("小说资源上下文已切换，本次发送已取消。");
           return;
         }
         const documentsLoaded = await options.catalog.ensureDocumentsLoaded(
@@ -652,7 +652,7 @@ export function useLongConversationCoordinator(
           options.notifications.warning(
             attachmentResult.diagnostics.length === 1
               ? first.message
-              : `${first.message}（另有 ${attachmentResult.diagnostics.length - 1} 项长篇资源提示）`
+              : `${first.message}（另有 ${attachmentResult.diagnostics.length - 1} 项小说资源提示）`
           );
         }
         if (!confirmSendTarget(target)) return;
@@ -678,7 +678,7 @@ export function useLongConversationCoordinator(
         options.notifications.error(
           error instanceof Error
             ? error.message
-            : "发送长篇消息失败，请稍后重试。"
+            : "发送小说消息失败，请稍后重试。"
         );
       }
     })().finally(() => {

@@ -8,32 +8,32 @@ function controller(): AgentConversationController {
 }
 
 describe("useCurrentAgentActivityView", () => {
-  it("keeps a short activity target independent from a transient long selection", () => {
-    const shortConversation = controller();
+  it("keeps a library activity target independent from a transient novel selection", () => {
+    const libraryConversation = controller();
     const longConversation = controller();
     const activeFeature = ref("conversation");
-    const shortResourceId = ref("short-book:section-two");
+    const libraryResourceId = ref("material-library:entry-two");
     const longResourceId = ref("long-book:chapter-two");
     const view = useCurrentAgentActivityView({
       activeFeature,
-      shortResourceId,
+      libraryResourceId,
       longResourceId,
-      shortConversation: shallowRef(shortConversation),
-      shortContext: ref({
-        agentLabel: "正文智能体",
-        bookTitle: "短篇作品",
-        contextTitle: "第二节"
+      libraryConversation: shallowRef(libraryConversation),
+      libraryContext: ref({
+        agentLabel: "素材管理子智能体",
+        bookTitle: "素材库",
+        contextTitle: "人物素材"
       }),
       longConversation: shallowRef(longConversation),
-      longProfile: ref({ label: "长篇智能体" }),
-      longBook: ref({ title: "长篇作品" }),
+      longProfile: ref({ label: "主智能体" }),
+      longBook: ref({ title: "小说作品" }),
       longSelection: ref({ title: "第二章", chapterCardId: "chapter-two" }),
       longRoot: ref("draft")
     });
 
     expect(view.value).toMatchObject({
-      controller: shortConversation,
-      targetResourceId: "short-book:section-two"
+      controller: libraryConversation,
+      targetResourceId: "material-library:entry-two"
     });
 
     activeFeature.value = "long-workspace";

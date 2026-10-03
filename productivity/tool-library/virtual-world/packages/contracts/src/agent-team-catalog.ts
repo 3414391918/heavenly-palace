@@ -3,17 +3,12 @@ import {
   defaultBuiltinSubagentSettings
 } from "./builtin-subagents";
 import { z } from "zod";
-import {
-  AgentTeamSettingsSchema,
-  ScriptAgentTeamSettingsSchema,
-  WorkspaceAgentTeamSettingsInputSchema
-} from "./agent-team";
 import { EnvelopeBaseSchema } from "./envelope";
 import { LongAgentTeamSettingsSchema } from "./long-agent-team";
 
 export const AGENT_TEAM_PROFILE_NAME_MAX_LENGTH = 80;
 
-export const AgentTeamWorkspaceTypeSchema = z.enum(["short", "script", "long"]);
+export const AgentTeamWorkspaceTypeSchema = z.enum(["long"]);
 export type AgentTeamWorkspaceType = z.infer<
   typeof AgentTeamWorkspaceTypeSchema
 >;
@@ -36,26 +31,14 @@ const AgentTeamProfileBaseSchema = z.object({
   name: AgentTeamProfileNameSchema
 });
 
-export const AgentTeamProfileSchema = z.discriminatedUnion("workspaceType", [
-  AgentTeamProfileBaseSchema.extend({
-    workspaceType: z.literal("short"),
-    settings: AgentTeamSettingsSchema
-  }).strict(),
-  AgentTeamProfileBaseSchema.extend({
-    workspaceType: z.literal("script"),
-    settings: ScriptAgentTeamSettingsSchema
-  }).strict(),
-  AgentTeamProfileBaseSchema.extend({
-    workspaceType: z.literal("long"),
-    settings: LongAgentTeamSettingsSchema
-  }).strict()
-]);
+export const AgentTeamProfileSchema = AgentTeamProfileBaseSchema.extend({
+  workspaceType: z.literal("long"),
+  settings: LongAgentTeamSettingsSchema
+}).strict();
 export type AgentTeamProfile = z.infer<typeof AgentTeamProfileSchema>;
 
 export const EnabledAgentTeamIdsSchema = z
   .object({
-    short: AgentTeamProfileIdSchema.optional(),
-    script: AgentTeamProfileIdSchema.optional(),
     long: AgentTeamProfileIdSchema.optional()
   })
   .strict();
@@ -111,8 +94,7 @@ export type AgentTeamCatalogSnapshot = z.infer<
 
 export const AgentTeamProfileCreateInputSchema = z
   .object({
-    name: AgentTeamProfileNameSchema,
-    workspaceType: AgentTeamWorkspaceTypeSchema
+    name: AgentTeamProfileNameSchema
   })
   .strict();
 export type AgentTeamProfileCreateInput = z.infer<
@@ -149,10 +131,7 @@ export type AgentTeamProfileSetEnabledInput = z.infer<
 export const AgentTeamProfileSaveInputSchema = z
   .object({
     teamId: AgentTeamProfileIdSchema,
-    settings: z.discriminatedUnion("workspaceType", [
-      ...WorkspaceAgentTeamSettingsInputSchema.options,
-      LongAgentTeamSettingsSchema
-    ])
+    settings: LongAgentTeamSettingsSchema
   })
   .strict();
 export type AgentTeamProfileSaveInput = z.infer<

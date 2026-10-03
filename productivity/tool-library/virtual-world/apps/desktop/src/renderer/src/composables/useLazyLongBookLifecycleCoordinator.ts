@@ -103,7 +103,7 @@ export function useLazyLongBookLifecycleCoordinator(
     context.notifications.error(
       error instanceof Error
         ? error.message
-        : "加载长篇作品生命周期协调器失败。"
+        : "加载小说作品生命周期协调器失败。"
     );
   }
 

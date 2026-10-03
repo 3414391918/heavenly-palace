@@ -16,17 +16,8 @@ function lazyFeature<T extends Component>(
 export const AuthorSupportDialog = lazyFeature((features) =>
   features.loadAuthorSupportDialog()
 );
-export const AgentTeamSettingsPanel = lazyFeature((features) =>
-  features.loadAgentTeamSettingsPanel()
-);
-export const LearningImitationDialog = lazyFeature((features) =>
-  features.loadLearningImitationDialog()
-);
-export const ShortBookAnalysisPage = lazyFeature((features) =>
-  features.loadShortBookAnalysisPage()
-);
-export const LongBookAnalysisPage = lazyFeature((features) =>
-  features.loadLongBookAnalysisPage()
+export const AgentTeamCatalogFeature = lazyFeature((features) =>
+  features.loadAgentTeamCatalogFeature()
 );
 export const LongWorkspaceModule = lazyFeature(
   (features) => features.loadLongWorkspaceModule(),
@@ -34,15 +25,6 @@ export const LongWorkspaceModule = lazyFeature(
 );
 export const SettingsPage = lazyFeature((features) =>
   features.loadSettingsPage()
-);
-export const SkillMarketplacePage = lazyFeature((features) =>
-  features.loadSkillMarketplacePage()
-);
-export const CloudBackupPage = lazyFeature((features) =>
-  features.loadCloudBackupPage()
-);
-export const ZhuqueDetectionPage = lazyFeature((features) =>
-  features.loadZhuqueDetectionPage()
 );
 export const ModelSettingsFeature = lazyFeature((features) =>
   features.loadModelSettingsFeature()
@@ -59,20 +41,11 @@ export const WorkspaceDialogLayer = lazyFeature((features) =>
 export const AgentConversation = lazyFeature((features) =>
   features.loadAgentConversation()
 );
-export const BookResourceDialog = lazyFeature((features) =>
-  features.loadBookResourceDialog()
-);
 export const BookTransferDialog = lazyFeature((features) =>
   features.loadBookTransferDialog()
 );
-export const CharacterItemDialog = lazyFeature((features) =>
-  features.loadCharacterItemDialog()
-);
 export const CreateBookDialog = lazyFeature((features) =>
   features.loadCreateBookDialog()
-);
-export const CreateExpertSectionDialog = lazyFeature((features) =>
-  features.loadCreateExpertSectionDialog()
 );
 export const CreateLongChapterCardDialog = lazyFeature((features) =>
   features.loadCreateLongChapterCardDialog()
@@ -89,17 +62,11 @@ export const CreateLongVolumeDialog = lazyFeature((features) =>
 export const CreateLongWorldbuildingItemDialog = lazyFeature((features) =>
   features.loadCreateLongWorldbuildingItemDialog()
 );
-export const DeleteExpertSectionDialog = lazyFeature((features) =>
-  features.loadDeleteExpertSectionDialog()
-);
 export const DeleteLongDraftSectionDialog = lazyFeature((features) =>
   features.loadDeleteLongDraftSectionDialog()
 );
 export const ExportLongManuscriptDialog = lazyFeature((features) =>
   features.loadExportLongManuscriptDialog()
-);
-export const ExportShortManuscriptDialog = lazyFeature((features) =>
-  features.loadExportShortManuscriptDialog()
 );
 export const ExternalSkillImportDialog = lazyFeature((features) =>
   features.loadExternalSkillImportDialog()
@@ -134,20 +101,11 @@ export const LongLegacySyncDialog = lazyFeature((features) =>
 export const LongStructureDialog = lazyFeature((features) =>
   features.loadLongStructureDialog()
 );
-export const PlotStructureDialog = lazyFeature((features) =>
-  features.loadPlotStructureDialog()
-);
 export const SaveConflictDialog = lazyFeature((features) =>
   features.loadSaveConflictDialog()
 );
 export const StartupAlertDialog = lazyFeature((features) =>
   features.loadStartupAlertDialog()
-);
-export const DeviceSyncPage = lazyFeature((features) =>
-  features.loadDeviceSyncPage()
-);
-export const StyleComparisonPage = lazyFeature((features) =>
-  features.loadStyleComparisonPage()
 );
 export const RevisionAnalysisPage = lazyFeature((features) =>
   features.loadRevisionAnalysisPage()

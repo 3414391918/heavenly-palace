@@ -5,7 +5,12 @@ function summary() {
   return {
     health: { status: "ok", workers: ["core", "agent", "tool"] },
     agent: { status: "ok", runtime: { mode: "local-faux" }, completed: true },
-    bookTemplates: { status: "ok", created: 4 },
+    unifiedCreation: {
+      status: "ok",
+      created: true,
+      team: true,
+      retiredApisAbsent: true
+    },
     conversation: {
       status: "ok",
       staged: true,
@@ -26,13 +31,18 @@ describe("packaged persistence smoke acceptance", () => {
     );
     expect(() => validateSmokeSummary(summary(), false)).not.toThrow();
   });
-  it("requires template creation to cross the real application IPC routes", () => {
-    const { bookTemplates: _templates, ...missing } = summary();
+  it("requires unified novel and team creation to cross the real application IPC routes", () => {
+    const { unifiedCreation: _creation, ...missing } = summary();
     expect(() => validateSmokeSummary(missing, false)).toThrow(
       "invalid smoke summary"
     );
     const incomplete = summary();
-    incomplete.bookTemplates.created = 2;
+    incomplete.unifiedCreation.team = false;
+    expect(() => validateSmokeSummary(incomplete, false)).toThrow(
+      "invalid smoke summary"
+    );
+    incomplete.unifiedCreation.team = true;
+    incomplete.unifiedCreation.retiredApisAbsent = false;
     expect(() => validateSmokeSummary(incomplete, false)).toThrow(
       "invalid smoke summary"
     );

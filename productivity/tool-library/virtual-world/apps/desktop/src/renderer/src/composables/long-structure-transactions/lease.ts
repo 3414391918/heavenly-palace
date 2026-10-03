@@ -54,7 +54,7 @@ export function createLongStructureLease(
   function assertCurrentLongStructureMutationTarget(
     target: LongStructureMutationTargetSnapshot,
     lease: LongStructureMutationLease,
-    message = "活动长篇或结构已切换，本次修改未保存。"
+    message = "活动小说或结构已切换，本次修改未保存。"
   ): void {
     const current = captureLongStructureMutationTarget(target.bookId);
     if (
@@ -70,9 +70,9 @@ export function createLongStructureLease(
   ): { lease: LongStructureMutationLease } | { message: string } | null {
     if (disposed) return null;
     const target = captureLongStructureMutationTarget(expectedBookId);
-    if (!target) return { message: "当前长篇结构尚未就绪。" };
+    if (!target) return { message: "当前小说结构尚未就绪。" };
     if (activeMutation || longBookActionPending.value) {
-      return { message: "另一项长篇结构修改仍在处理中。" };
+      return { message: "另一项小说结构修改仍在处理中。" };
     }
     const lease: LongStructureMutationLease = {
       requestId: ++mutationRequestEpoch,

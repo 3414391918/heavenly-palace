@@ -160,7 +160,7 @@ export function createLongManuscriptExportFlow(
           context.leaseIsCurrent(exportLease) &&
           context.dialogRequestIsCurrent(requestId)
         ) {
-          uiMessage.error(context.errorMessage(error, "导出长篇失败。"));
+          uiMessage.error(context.errorMessage(error, "导出小说失败。"));
         }
       }
     });

@@ -188,7 +188,7 @@ export function useLongEditorRecovery(options: {
       removeStoredRecovery(state.bookId, state.file.id);
       warnRecoveryWriteFailure(
         key,
-        "当前长篇文件过大，无法写入本机崩溃恢复副本；请立即手动保存。"
+        "当前小说文件过大，无法写入本机崩溃恢复副本；请立即手动保存。"
       );
       return;
     }
@@ -197,7 +197,7 @@ export function useLongEditorRecovery(options: {
       removeStoredRecovery(state.bookId, state.file.id);
       warnRecoveryWriteFailure(
         key,
-        "当前长篇文件过大，无法写入本机崩溃恢复副本；请立即手动保存。"
+        "当前小说文件过大，无法写入本机崩溃恢复副本；请立即手动保存。"
       );
       return;
     }
@@ -206,7 +206,7 @@ export function useLongEditorRecovery(options: {
     if (!storage) {
       warnRecoveryWriteFailure(
         key,
-        "本机存储当前不可用，无法保存长篇崩溃恢复副本；请立即手动保存。"
+        "本机存储当前不可用，无法保存小说崩溃恢复副本；请立即手动保存。"
       );
       return;
     }
@@ -222,7 +222,7 @@ export function useLongEditorRecovery(options: {
       removeStoredRecovery(state.bookId, state.file.id);
       warnRecoveryWriteFailure(
         key,
-        "长篇崩溃恢复副本写入失败，请立即手动保存当前文件。"
+        "小说崩溃恢复副本写入失败，请立即手动保存当前文件。"
       );
     }
   }

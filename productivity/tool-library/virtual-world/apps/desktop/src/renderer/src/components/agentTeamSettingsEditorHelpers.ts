@@ -4,8 +4,8 @@ import {
   type ModelConfig,
   type ShortAgentSubagentDefinition,
   type ThinkingLevel,
-  type WorkspaceAgentTeamSettingsInput
-} from "@deepwrite/contracts";
+  type LongAgentTeamSettingsInput
+} from "@deepwrite/contracts/renderer";
 import { BUILT_IN_THINKING_LABELS } from "./agentTeamSettingsMeta";
 
 export function agentTeamThinkingLabel(level: ThinkingLevel): string {
@@ -72,7 +72,7 @@ export function createCopiedSubagent(
 }
 
 export function validateAgentTeamDraft(
-  teams: WorkspaceAgentTeamSettingsInput["teams"],
+  teams: LongAgentTeamSettingsInput["teams"],
   models: readonly ModelConfig[]
 ): string | null {
   for (const team of teams) {

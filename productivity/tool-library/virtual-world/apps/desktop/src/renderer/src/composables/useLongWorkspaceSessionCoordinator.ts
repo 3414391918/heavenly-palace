@@ -164,7 +164,7 @@ export function useLongWorkspaceSessionCoordinator<TimerHandle>(
         }
         const first = unseen[0]!;
         notifications.warning(
-          `长篇项目暂时无法读取：${first.message}${
+          `小说项目暂时无法读取：${first.message}${
             unseen.length > 1 ? `（另有 ${unseen.length - 1} 个项目）` : ""
           }`
         );
@@ -172,7 +172,7 @@ export function useLongWorkspaceSessionCoordinator<TimerHandle>(
     } catch (error: unknown) {
       if (disposed) return;
       const message =
-        error instanceof Error ? error.message : "加载长篇创作空间失败。";
+        error instanceof Error ? error.message : "加载小说创作空间失败。";
       if (notify) {
         notifications.error(message);
       } else if (catalogRetryAttempts < 2 && catalogRetryTimer === undefined) {
@@ -190,7 +190,7 @@ export function useLongWorkspaceSessionCoordinator<TimerHandle>(
     const currentEditor = editor.value;
     if (!currentEditor) return true;
     if (!isLongWorkspaceEditorPort(currentEditor)) {
-      notifications.error("长篇编辑器尚未准备好，已取消当前操作，请重试。");
+      notifications.error("小说编辑器尚未准备好，已取消当前操作，请重试。");
       return false;
     }
     try {
@@ -199,7 +199,7 @@ export function useLongWorkspaceSessionCoordinator<TimerHandle>(
       notifications.error(
         error instanceof Error
           ? error.message
-          : "保存长篇修改失败，已取消切换。"
+          : "保存小说修改失败，已取消切换。"
       );
       return false;
     }
@@ -220,7 +220,7 @@ export function useLongWorkspaceSessionCoordinator<TimerHandle>(
     if (disposed) return;
     const api = context.api();
     if (!api) {
-      notifications.warning("浏览器预览不能打开长篇项目，请使用桌面客户端。");
+      notifications.warning("浏览器预览不能打开小说项目，请使用桌面客户端。");
       return;
     }
     if (!(await saveActiveEditorBeforeLeaving(bookId)) || disposed) return;
@@ -244,7 +244,7 @@ export function useLongWorkspaceSessionCoordinator<TimerHandle>(
     } catch (error: unknown) {
       if (disposed) return;
       notifications.error(
-        error instanceof Error ? error.message : "打开长篇项目失败。"
+        error instanceof Error ? error.message : "打开小说项目失败。"
       );
     }
   }

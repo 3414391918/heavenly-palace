@@ -1,12 +1,11 @@
 import {
   createShortWorkspaceContentRevision,
-  type Book,
   type CatalogLibrary,
   type CatalogLibraryEntry,
   type DeepWriteApi,
   type SaveDocumentResult
 } from "@deepwrite/contracts";
-import { ref, shallowRef } from "vue";
+import { shallowRef } from "vue";
 import { describe, expect, it, vi } from "vitest";
 import type { EditorDraftState, WorkspaceDocument } from "../types/workspace";
 import type {
@@ -36,17 +35,14 @@ function workspaceDocument(
 ): WorkspaceDocument {
   return {
     id: "body-1",
-    domain: "creation",
+    domain: "material",
     title: "第一节",
-    eyebrow: "短篇 · 小节正文",
+    eyebrow: "素材 · 条目",
     path: ["测试作品", "正文", "第一节", "正文"],
     content,
-    workspaceId: "book-1",
-    workspaceType: "short",
-    workspaceTitle: "测试作品",
-    stageId: "draft",
-    draftFileKind: "body",
-    catalogDocumentId: "draft-section:section-1:body",
+    libraryId: "library-1",
+    stageId: "character",
+    catalogEntryId: "entry-1",
     catalogProjectRevision: 1,
     catalogContentLoaded: true,
     ...patch
@@ -116,7 +112,6 @@ function createHarness(
       document: string | WorkspaceDocument
     ) => Promise<CatalogDocumentLoadResult>;
     refreshIndex?: () => Promise<boolean>;
-    findBook?: (bookId: string) => Book | undefined;
   } = {}
 ) {
   const documents = shallowRef<WorkspaceDocument[]>([workspaceDocument()]);
@@ -138,7 +133,34 @@ function createHarness(
         savedDocument(input.content, (input.baseProjectRevision ?? 1) + 1))
   );
   const catalogApi = {
-    saveDocument
+    saveLibraryEntry: async (input: {
+      content: string;
+      title: string;
+      baseProjectRevision?: number;
+      baseRevision: string;
+      force?: boolean;
+    }) => {
+      const result = await saveDocument({
+        bookId: "library-1",
+        documentId: "entry-1",
+        content: input.content,
+        title: input.title,
+        baseRevision: input.baseRevision,
+        ...(input.baseProjectRevision === undefined
+          ? {}
+          : { baseProjectRevision: input.baseProjectRevision }),
+        ...(input.force ? { force: true } : {})
+      });
+      projectRevision = result.projectRevision ?? projectRevision + 1;
+      return {
+        id: "entry-1",
+        stageId: "character",
+        title: result.title,
+        body: result.content,
+        createdAt: NOW,
+        updatedAt: NOW
+      };
+    }
   } as unknown as DeepWriteApi["catalog"];
   const ensureOne = vi.fn(
     options.ensureOne ??
@@ -169,7 +191,6 @@ function createHarness(
   const refreshIndex = vi.fn(
     options.refreshIndex ??
       (async () => {
-        projectRevision += 1;
         return true;
       })
   );
@@ -177,14 +198,15 @@ function createHarness(
     api: () => catalogApi,
     documents,
     drafts,
-    acceptingWorkspaceIds: ref(new Set<string>()),
     loader,
     catalog: {
       refreshIndex,
-      findBook:
-        options.findBook ??
-        ((bookId) => ({ id: bookId, projectRevision }) as unknown as Book),
-      findLibrary: () => undefined
+      findLibrary: () =>
+        ({
+          id: "library-1",
+          projectRevision,
+          entries: []
+        }) as unknown as CatalogLibrary
     },
     nextRecoveryTimestamp: () => `${NOW}:${++timestamp}`,
     scheduleAutoSave,
@@ -206,82 +228,6 @@ function createHarness(
 }
 
 describe("catalog document persistence", () => {
-  it("saves a recovered character overview with its canonical title", async () => {
-    const harness = createHarness({
-      saveDocument: async (input) => ({
-        ...savedDocument(input.content),
-        title: input.title ?? "概览"
-      })
-    });
-    const overviewDocument = workspaceDocument("磁盘人物正文", {
-      title: "概览",
-      stageId: "character_design",
-      characterFileKind: "overview"
-    });
-    delete overviewDocument.draftFileKind;
-    harness.documents.value = [overviewDocument];
-    harness.drafts.value = {
-      "body-1": {
-        ...editorDraft("未保存的人物正文"),
-        title: ""
-      }
-    };
-
-    await expect(
-      harness.persistence.persistEditorDocumentWithOutcome(
-        { id: "body-1", title: "", content: "未保存的人物正文" },
-        false
-      )
-    ).resolves.toBe("saved");
-    expect(harness.saveDocument).toHaveBeenCalledWith(
-      expect.objectContaining({
-        title: "概览",
-        content: "未保存的人物正文"
-      })
-    );
-    expect(
-      harness.preserveAuthoritativeBodyForNextProjection
-    ).toHaveBeenCalledWith("body-1", "未保存的人物正文", 2);
-    expect(
-      harness.preserveAuthoritativeBodyForNextProjection.mock
-        .invocationCallOrder[0]
-    ).toBeLessThan(harness.refreshIndex.mock.invocationCallOrder[0]!);
-    expect(harness.drafts.value["body-1"]).toBeUndefined();
-  });
-
-  it("keeps a canonical title when a recovered character overview save fails", async () => {
-    const harness = createHarness({
-      saveDocument: async () => {
-        throw new Error("测试写入失败");
-      }
-    });
-    const overviewDocument = workspaceDocument("磁盘人物正文", {
-      title: "概览",
-      stageId: "character_design",
-      characterFileKind: "overview"
-    });
-    delete overviewDocument.draftFileKind;
-    harness.documents.value = [overviewDocument];
-    harness.drafts.value = {
-      "body-1": {
-        ...editorDraft("未保存的人物正文"),
-        title: ""
-      }
-    };
-
-    await expect(
-      harness.persistence.persistEditorDocumentWithOutcome(
-        { id: "body-1", title: "", content: "未保存的人物正文" },
-        false
-      )
-    ).resolves.toBe("retry");
-    expect(harness.drafts.value["body-1"]).toMatchObject({
-      title: "概览",
-      content: "未保存的人物正文",
-      dirty: true
-    });
-  });
-
   it("pauses an editable empty title without entering the retry lane", async () => {
     const harness = createHarness();
 
@@ -325,374 +271,6 @@ describe("catalog document persistence", () => {
       baseProjectRevision: 2
     });
     expect(harness.persistence.savingDocumentIds.value.size).toBe(0);
-  });
-
-  it("re-hydrates only saved, dirty, or previously loaded files after an index refresh", async () => {
-    const harness = createHarness();
-    harness.documents.value = [
-      workspaceDocument("磁盘初始正文"),
-      workspaceDocument("", {
-        id: "metadata-only",
-        catalogDocumentId: "metadata-only",
-        catalogContentLoaded: false
-      }),
-      workspaceDocument("", {
-        id: "dirty-file",
-        catalogDocumentId: "dirty-file",
-        catalogContentLoaded: false
-      }),
-      workspaceDocument("此前加载", {
-        id: "previously-loaded",
-        catalogDocumentId: "previously-loaded",
-        catalogContentLoaded: true
-      }),
-      workspaceDocument("其他作品", {
-        id: "other-book",
-        workspaceId: "book-2",
-        catalogDocumentId: "other-book",
-        catalogContentLoaded: true
-      })
-    ];
-    harness.drafts.value = {
-      "body-1": editorDraft("提交 A"),
-      "dirty-file": editorDraft("未保存的另一份草稿")
-    };
-
-    await harness.persistence.persistEditorDocument(
-      { id: "body-1", title: "第一节", content: "提交 A" },
-      true
-    );
-
-    const targets = harness.ensureLoaded.mock.calls[0]?.[0] ?? [];
-    expect(
-      targets.map((target) => (typeof target === "string" ? target : target.id))
-    ).toEqual(["body-1", "dirty-file", "previously-loaded"]);
-  });
-
-  it("retries a failed post-save draft rebase on the next catalog refresh", async () => {
-    let revision = 1;
-    let refreshAttempt = 0;
-    const harness = createHarness({
-      refreshIndex: async () => {
-        refreshAttempt += 1;
-        if (refreshAttempt === 1) return false;
-        revision = 2;
-        return true;
-      },
-      findBook: (bookId) =>
-        ({ id: bookId, projectRevision: revision }) as unknown as Book
-    });
-    harness.documents.value = [
-      workspaceDocument("磁盘初始正文"),
-      workspaceDocument("第二份磁盘正文", {
-        id: "body-2",
-        title: "第二节",
-        catalogDocumentId: "draft-section:section-2:body"
-      })
-    ];
-    harness.drafts.value = {
-      "body-1": editorDraft("提交 A"),
-      "body-2": {
-        title: "第二节",
-        content: "第二份未保存草稿 B",
-        dirty: true,
-        recoveryUpdatedAt: NOW,
-        baseRevision: createShortWorkspaceContentRevision("第二份磁盘正文"),
-        baseProjectRevision: 1
-      }
-    };
-
-    await harness.persistence.persistEditorDocument(
-      { id: "body-1", title: "第一节", content: "提交 A" },
-      true
-    );
-    // The successful disk write advances the local optimistic base even when
-    // the follow-up index verification is temporarily unavailable.
-    expect(harness.drafts.value["body-2"]?.baseProjectRevision).toBe(2);
-    expect(harness.ensureLoaded).not.toHaveBeenCalled();
-    expect(harness.notifications.warning).toHaveBeenCalledWith(
-      "文稿已保存，但最新目录版本暂未同步；下次聚焦窗口时会自动重试"
-    );
-
-    await expect(
-      harness.persistence.retryPendingBookReconciliations()
-    ).resolves.toBe(true);
-    expect(harness.refreshIndex).toHaveBeenCalledTimes(2);
-    expect(harness.ensureLoaded).toHaveBeenCalledOnce();
-    expect(harness.drafts.value["body-2"]).toMatchObject({
-      content: "第二份未保存草稿 B",
-      dirty: true,
-      baseProjectRevision: 2
-    });
-  });
-
-  it("keeps reconciliation pending when a refreshed index revision regresses", async () => {
-    let revision = 5;
-    let refreshAttempt = 0;
-    const harness = createHarness({
-      refreshIndex: async () => {
-        refreshAttempt += 1;
-        revision = refreshAttempt === 1 ? 4 : 6;
-        return true;
-      },
-      findBook: (bookId) =>
-        ({ id: bookId, projectRevision: revision }) as unknown as Book
-    });
-    harness.documents.value = [
-      workspaceDocument("磁盘初始正文", { catalogProjectRevision: 5 }),
-      workspaceDocument("第二份磁盘正文", {
-        id: "body-2",
-        title: "第二节",
-        catalogDocumentId: "draft-section:section-2:body",
-        catalogProjectRevision: 5
-      })
-    ];
-    harness.drafts.value = {
-      "body-1": { ...editorDraft("提交 A"), baseProjectRevision: 5 },
-      "body-2": {
-        title: "第二节",
-        content: "第二份未保存草稿 B",
-        dirty: true,
-        recoveryUpdatedAt: NOW,
-        baseRevision: createShortWorkspaceContentRevision("第二份磁盘正文"),
-        baseProjectRevision: 5
-      }
-    };
-
-    await harness.persistence.persistEditorDocument(
-      { id: "body-1", title: "第一节", content: "提交 A" },
-      true
-    );
-    expect(harness.drafts.value["body-2"]?.baseProjectRevision).toBe(6);
-    expect(harness.ensureLoaded).not.toHaveBeenCalled();
-
-    await expect(
-      harness.persistence.retryPendingBookReconciliations()
-    ).resolves.toBe(true);
-    expect(harness.refreshIndex).toHaveBeenCalledTimes(2);
-    expect(harness.ensureLoaded).toHaveBeenCalledOnce();
-    expect(harness.drafts.value["body-2"]?.baseProjectRevision).toBe(6);
-  });
-
-  it("requires the refreshed index to include the just-completed write", async () => {
-    let revision = 5;
-    let refreshAttempt = 0;
-    const harness = createHarness({
-      refreshIndex: async () => {
-        refreshAttempt += 1;
-        revision = refreshAttempt === 1 ? 5 : 6;
-        return true;
-      },
-      findBook: (bookId) =>
-        ({ id: bookId, projectRevision: revision }) as unknown as Book
-    });
-    harness.documents.value = [
-      workspaceDocument("磁盘初始正文", { catalogProjectRevision: 5 }),
-      workspaceDocument("第二份磁盘正文", {
-        id: "body-2",
-        title: "第二节",
-        catalogDocumentId: "draft-section:section-2:body",
-        catalogProjectRevision: 5
-      })
-    ];
-    harness.drafts.value = {
-      "body-1": { ...editorDraft("提交 A"), baseProjectRevision: 5 },
-      "body-2": {
-        title: "第二节",
-        content: "第二份未保存草稿 B",
-        dirty: true,
-        recoveryUpdatedAt: NOW,
-        baseRevision: createShortWorkspaceContentRevision("第二份磁盘正文"),
-        baseProjectRevision: 5
-      }
-    };
-
-    await harness.persistence.persistEditorDocument(
-      { id: "body-1", title: "第一节", content: "提交 A" },
-      true
-    );
-    expect(harness.drafts.value["body-2"]?.baseProjectRevision).toBe(6);
-    expect(harness.ensureLoaded).not.toHaveBeenCalled();
-
-    await expect(
-      harness.persistence.retryPendingBookReconciliations()
-    ).resolves.toBe(true);
-    expect(harness.refreshIndex).toHaveBeenCalledTimes(2);
-    expect(harness.ensureLoaded).toHaveBeenCalledOnce();
-    expect(harness.drafts.value["body-2"]?.baseProjectRevision).toBe(6);
-  });
-
-  it("never lets a later weak reconciliation replace a stronger in-flight barrier", async () => {
-    const firstRefresh = deferred<boolean>();
-    const secondRefresh = deferred<boolean>();
-    let refreshAttempt = 0;
-    let revision = 6;
-    const harness = createHarness({
-      refreshIndex: async () => {
-        refreshAttempt += 1;
-        if (refreshAttempt === 1) return firstRefresh.promise;
-        if (refreshAttempt === 2) return secondRefresh.promise;
-        revision = 10;
-        return true;
-      },
-      findBook: (bookId) =>
-        ({ id: bookId, projectRevision: revision }) as unknown as Book
-    });
-    const strongExpected = new Map([
-      ["body-1", { title: "第一节", content: "磁盘初始正文" }]
-    ]);
-    const latestExpected = new Map([
-      ["body-1", { title: "第一节", content: "磁盘初始正文" }]
-    ]);
-
-    const strong = harness.persistence.refreshBookAfterSuccessfulDocumentSave(
-      "book-1",
-      strongExpected,
-      10
-    );
-    await vi.waitFor(() => expect(harness.refreshIndex).toHaveBeenCalledOnce());
-    const weak = harness.persistence.refreshBookAfterSuccessfulDocumentSave(
-      "book-1",
-      latestExpected,
-      6
-    );
-    await vi.waitFor(() =>
-      expect(harness.refreshIndex).toHaveBeenCalledTimes(2)
-    );
-
-    secondRefresh.resolve(true);
-    await expect(weak).resolves.toBe(false);
-    firstRefresh.resolve(true);
-    await expect(strong).resolves.toBe(false);
-    expect(harness.ensureLoaded).not.toHaveBeenCalled();
-
-    await expect(
-      harness.persistence.retryPendingBookReconciliations()
-    ).resolves.toBe(true);
-    expect(harness.refreshIndex).toHaveBeenCalledTimes(3);
-    expect(harness.ensureLoaded).toHaveBeenCalledOnce();
-  });
-
-  it("coalesces a same-book auto-save burst into one catalog index refresh", async () => {
-    let diskRevision = 1;
-    const harness = createHarness({
-      saveDocument: async (input) => {
-        diskRevision += 1;
-        return {
-          id: input.documentId,
-          title: input.title ?? "未命名",
-          content: input.content,
-          createdAt: NOW,
-          updatedAt: NOW,
-          projectRevision: diskRevision
-        };
-      },
-      refreshIndex: async () => true,
-      findBook: (bookId) =>
-        ({ id: bookId, projectRevision: diskRevision }) as unknown as Book
-    });
-    harness.documents.value = [
-      workspaceDocument("第一份磁盘正文"),
-      workspaceDocument("第二份磁盘正文", {
-        id: "body-2",
-        title: "第二节",
-        catalogDocumentId: "draft-section:section-2:body"
-      })
-    ];
-    harness.drafts.value = {
-      "body-1": editorDraft("第一份自动保存 A"),
-      "body-2": {
-        title: "第二节",
-        content: "第二份自动保存 B",
-        dirty: true,
-        recoveryUpdatedAt: NOW,
-        baseRevision: createShortWorkspaceContentRevision("第二份磁盘正文"),
-        baseProjectRevision: 1
-      }
-    };
-
-    await expect(
-      harness.persistence.persistEditorDocument(
-        { id: "body-1", title: "第一节", content: "第一份自动保存 A" },
-        false
-      )
-    ).resolves.toBe(true);
-    expect(harness.refreshIndex).not.toHaveBeenCalled();
-    expect(harness.drafts.value["body-2"]?.baseProjectRevision).toBe(2);
-
-    await expect(
-      harness.persistence.persistEditorDocument(
-        { id: "body-2", title: "第二节", content: "第二份自动保存 B" },
-        false
-      )
-    ).resolves.toBe(true);
-    expect(harness.saveDocument).toHaveBeenCalledTimes(2);
-    expect(harness.refreshIndex).toHaveBeenCalledOnce();
-    expect(harness.drafts.value).toEqual({});
-    expect(
-      harness.documents.value.every(
-        (document) => document.catalogProjectRevision === 3
-      )
-    ).toBe(true);
-  });
-
-  it("uses the committed server revision when a content-only save accepts a stale base", async () => {
-    let diskRevision = 10;
-    const harness = createHarness({
-      saveDocument: async (input) => {
-        if (
-          input.documentId === "draft-section:section-2:body" &&
-          input.baseProjectRevision !== diskRevision
-        ) {
-          throw new Error("catalog.conflict: stale project revision");
-        }
-        diskRevision += 1;
-        return savedDocument(input.content, diskRevision);
-      },
-      refreshIndex: async () => true,
-      findBook: (bookId) =>
-        ({ id: bookId, projectRevision: diskRevision }) as unknown as Book
-    });
-    harness.documents.value = [
-      workspaceDocument("第一份磁盘正文", { catalogProjectRevision: 5 }),
-      workspaceDocument("第二份磁盘正文", {
-        id: "body-2",
-        title: "第二节",
-        catalogDocumentId: "draft-section:section-2:body",
-        catalogProjectRevision: 5
-      })
-    ];
-    harness.drafts.value = {
-      "body-1": { ...editorDraft("第一份自动保存 A"), baseProjectRevision: 5 },
-      "body-2": {
-        title: "第二节",
-        content: "第二份自动保存 B",
-        dirty: true,
-        recoveryUpdatedAt: NOW,
-        baseRevision: createShortWorkspaceContentRevision("第二份磁盘正文"),
-        baseProjectRevision: 5
-      }
-    };
-
-    await harness.persistence.persistEditorDocument(
-      { id: "body-1", title: "第一节", content: "第一份自动保存 A" },
-      false
-    );
-    expect(harness.drafts.value["body-2"]?.baseProjectRevision).toBe(11);
-
-    await harness.persistence.persistEditorDocument(
-      { id: "body-2", title: "第二节", content: "第二份自动保存 B" },
-      false
-    );
-    expect(harness.saveDocument.mock.calls[1]?.[0].baseProjectRevision).toBe(
-      11
-    );
-    expect(
-      harness.documents.value.every(
-        (document) => document.catalogProjectRevision === 12
-      )
-    ).toBe(true);
-    expect(harness.refreshIndex).toHaveBeenCalledOnce();
   });
 
   it("re-arms auto-save when disk already contains A but a newer draft B survived", async () => {
@@ -861,8 +439,8 @@ describe("catalog document persistence", () => {
     expect(harness.ensureOne).toHaveBeenCalledTimes(2);
     expect(harness.saveDocument).toHaveBeenCalledTimes(2);
     expect(harness.saveDocument.mock.calls[1]?.[0]).toMatchObject({
-      bookId: "book-1",
-      documentId: "draft-section:section-1:body",
+      bookId: "library-1",
+      documentId: "entry-1",
       content: "提交 A",
       baseProjectRevision: 3,
       force: true
@@ -983,7 +561,6 @@ describe("catalog document persistence", () => {
       api: () => catalogApi,
       documents,
       drafts,
-      acceptingWorkspaceIds: ref(new Set<string>()),
       loader: {
         preserveAuthoritativeBodyForNextProjection: vi.fn(),
         ensureOne: vi.fn(async () => oneResult(diskDocument)),
@@ -995,7 +572,6 @@ describe("catalog document persistence", () => {
           refreshCount += 1;
           return true;
         }),
-        findBook: () => undefined,
         findLibrary: () =>
           ({
             id: "library-1",

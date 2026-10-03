@@ -25,9 +25,9 @@ describe("TreeSection resource actions", () => {
     expect(source).toContain('"打开已有作品"');
     expect(source).toContain('id: "choose-import-book"');
     expect(source).toContain('label: "导入已有作品"');
-    expect(source).not.toContain('label: "打开已存在长篇"');
-    expect(source).not.toContain('label: "导入 DeepWrite 长篇工程"');
-    expect(source).not.toContain('label: "迁移 Write Claw 长篇"');
+    expect(source).not.toContain('label: "打开已存在小说"');
+    expect(source).not.toContain('label: "导入 DeepWrite 小说工程"');
+    expect(source).not.toContain('label: "迁移 Write Claw 小说"');
     expect(source).not.toContain('label: "导入旧版书籍"');
   });
 

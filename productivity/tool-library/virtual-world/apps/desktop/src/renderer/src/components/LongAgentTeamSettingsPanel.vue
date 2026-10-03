@@ -8,7 +8,6 @@ import {
   LONG_AGENT_SUBAGENT_MAX_COUNT,
   SHORT_AGENT_SUBAGENT_NAME_MAX_LENGTH,
   SHORT_AGENT_SUBAGENT_SYSTEM_PROMPT_MAX_LENGTH,
-  type BuiltInReasoningLevel,
   type LongAgentId,
   type LongAgentTeamSettings,
   type LongAgentTeamSettingsInput,
@@ -25,7 +24,12 @@ import { uiMessage } from "../ui-feedback";
 import AppIcon from "./AppIcon.vue";
 import LoadSubagentFromSkillDialog from "./LoadSubagentFromSkillDialog.vue";
 import PopupSelect, { type PopupSelectOption } from "./PopupSelect.vue";
-import { createCopiedSubagent } from "./agentTeamSettingsEditorHelpers";
+import {
+  agentTeamThinkingLabel as thinkingLabel,
+  agentTeamModelDefaults,
+  createCopiedSubagent,
+  validateAgentTeamDraft
+} from "./agentTeamSettingsEditorHelpers";
 
 const props = defineProps<{
   settings: LongAgentTeamSettings | null;
@@ -56,7 +60,7 @@ const emit = defineEmits<{
 }>();
 
 const PARENT_AGENT_DESCRIPTION =
-  "配置世界观、人物、剧情、正文与连续性等专项助手，由长篇智能体按需调用。";
+  "配置世界观、人物、剧情、正文与连续性等专项助手，由主智能体按需调用。";
 
 const parentAgentId: LongAgentId = LONG_AGENT_IDS[0];
 const draftTeams = ref<LongAgentTeamSettingsInput["teams"]>([]);
@@ -79,15 +83,6 @@ const modelById = computed(
 const modelOptions = computed<PopupSelectOption[]>(() =>
   props.models.map((model) => ({ value: model.id, label: model.label }))
 );
-
-const THINKING_LABELS: Record<BuiltInReasoningLevel, string> = {
-  minimal: "最低",
-  low: "较低",
-  medium: "标准",
-  high: "深度",
-  xhigh: "极高",
-  max: "最高"
-};
 
 watch(
   () => props.settings,
@@ -112,13 +107,6 @@ watch(
   },
   { immediate: true, deep: true }
 );
-
-function thinkingLabel(level: ThinkingLevel): string {
-  if (level === "off") return "关闭";
-  return BUILT_IN_REASONING_LEVELS.includes(level as BuiltInReasoningLevel)
-    ? THINKING_LABELS[level as BuiltInReasoningLevel]
-    : `自定义（${level}）`;
-}
 
 function thinkingOptionsFor(
   definition: ShortAgentSubagentDefinition
@@ -154,8 +142,7 @@ function applyModelDefaults(
   modelId: string | undefined
 ): void {
   const model = modelId ? modelById.value.get(modelId) : undefined;
-  definition.thinkingLevel = model?.defaultThinkingLevel ?? "medium";
-  definition.temperature = model?.temperatureOptions[1] ?? 0.7;
+  Object.assign(definition, agentTeamModelDefaults(model));
 }
 
 function setModelMode(
@@ -228,7 +215,7 @@ function addSubagent(
   if (!team || formDisabled.value) return;
   if (team.subagents.length >= LONG_AGENT_SUBAGENT_MAX_COUNT) {
     uiMessage.warning(
-      `每个长篇主智能体最多配置 ${LONG_AGENT_SUBAGENT_MAX_COUNT} 个子智能体`
+      `每个主智能体最多配置 ${LONG_AGENT_SUBAGENT_MAX_COUNT} 个子智能体`
     );
     return;
   }
@@ -252,7 +239,7 @@ function duplicateSubagent(index: number): void {
   if (!source) return;
   if (team.subagents.length >= LONG_AGENT_SUBAGENT_MAX_COUNT) {
     uiMessage.warning(
-      `每个长篇主智能体最多配置 ${LONG_AGENT_SUBAGENT_MAX_COUNT} 个子智能体`
+      `每个主智能体最多配置 ${LONG_AGENT_SUBAGENT_MAX_COUNT} 个子智能体`
     );
     return;
   }
@@ -263,7 +250,7 @@ function duplicateSubagent(index: number): void {
     SHORT_AGENT_SUBAGENT_NAME_MAX_LENGTH
   );
   team.subagents.splice(index + 1, 0, copied);
-  uiMessage.info("已复制到当前草稿；保存智能体团队后生效");
+  uiMessage.info("已复制到当前草稿；保存子智能体团队后生效");
 }
 
 function openLoadFromSkill(): void {
@@ -271,7 +258,7 @@ function openLoadFromSkill(): void {
   if (!team || formDisabled.value) return;
   if (team.subagents.length >= LONG_AGENT_SUBAGENT_MAX_COUNT) {
     uiMessage.warning(
-      `每个长篇主智能体最多配置 ${LONG_AGENT_SUBAGENT_MAX_COUNT} 个子智能体`
+      `每个主智能体最多配置 ${LONG_AGENT_SUBAGENT_MAX_COUNT} 个子智能体`
     );
     return;
   }
@@ -292,7 +279,7 @@ function confirmLoadFromSkill(draft: SubagentAuthoringDraft): void {
   addSubagent(draft);
   loadFromSkillOpen.value = false;
   emit("authoringReset");
-  uiMessage.success("已加入当前主智能体草稿；保存智能体团队后生效");
+  uiMessage.success("已加入当前主智能体草稿；保存子智能体团队后生效");
 }
 
 function subagentModelSummary(
@@ -332,7 +319,7 @@ function removeSubagent(index: number): void {
     editingSubagentId.value = null;
   }
   if (removed) {
-    uiMessage.info("已从当前草稿移除；保存智能体团队后生效");
+    uiMessage.info("已从当前草稿移除；保存子智能体团队后生效");
   }
 }
 
@@ -344,56 +331,9 @@ function toggleSubagent(
   definition.enabled = (event.target as HTMLInputElement).checked;
 }
 
-function validationMessage(): string | null {
-  for (const team of draftTeams.value) {
-    const ids = new Set<string>();
-    const names = new Set<string>();
-    for (const definition of team.subagents) {
-      if (!definition.name.trim()) return "子智能体名称不能为空";
-      if (!definition.description.trim()) return "子智能体能力说明不能为空";
-      if (!definition.systemPrompt.trim()) return "子智能体系统提示词不能为空";
-      if (definition.modelMode === "custom") {
-        if (!definition.modelId?.trim()) return "单独配置模型时必须选择模型";
-        const model = modelById.value.get(definition.modelId);
-        if (!model) {
-          return `子智能体「${definition.name.trim() || "未命名"}」所选模型不存在，请重新选择`;
-        }
-        if (definition.thinkingLevel === undefined) {
-          return "单独配置模型时必须选择思考等级";
-        }
-        if (
-          definition.thinkingLevel !== "off" &&
-          !model.thinkingLevelOptions.includes(definition.thinkingLevel)
-        ) {
-          return `子智能体「${definition.name.trim() || "未命名"}」的思考等级不在所选模型配置中`;
-        }
-        if (definition.thinkingLevel === "off") {
-          if (definition.temperature === undefined) {
-            return "思考等级关闭时必须选择温度";
-          }
-          if (!model.temperatureOptions.includes(definition.temperature)) {
-            return `子智能体「${definition.name.trim() || "未命名"}」的温度不在所选模型配置中`;
-          }
-        }
-      }
-      const normalizedId = definition.id.toLocaleLowerCase();
-      const normalizedName = definition.name.trim().toLocaleLowerCase();
-      if (ids.has(normalizedId)) {
-        return "同一主智能体下的子智能体 ID 不能重复";
-      }
-      if (names.has(normalizedName)) {
-        return "同一主智能体下的子智能体名称不能重复";
-      }
-      ids.add(normalizedId);
-      names.add(normalizedName);
-    }
-  }
-  return null;
-}
-
 function saveSettings(): void {
   if (formDisabled.value) return;
-  const message = validationMessage();
+  const message = validateAgentTeamDraft(draftTeams.value, props.models);
   if (message) {
     uiMessage.warning(message);
     return;
@@ -431,7 +371,7 @@ function saveSettings(): void {
   });
   if (!parsed.success) {
     uiMessage.warning(
-      parsed.error.issues[0]?.message ?? "长篇智能体团队配置不完整"
+      parsed.error.issues[0]?.message ?? "主智能体团队配置不完整"
     );
     return;
   }

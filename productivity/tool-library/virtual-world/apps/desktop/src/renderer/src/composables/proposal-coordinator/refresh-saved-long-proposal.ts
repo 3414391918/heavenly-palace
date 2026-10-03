@@ -9,6 +9,6 @@ export async function refreshSavedLongProposal(options: {
     await options.refresh();
   } catch {
     // The write already succeeded. Never relabel or replay it because a read failed.
-    options.warn("世界观文件已保存，但界面刷新失败；请手动刷新长篇工作区。");
+    options.warn("世界观文件已保存，但界面刷新失败；请手动刷新小说工作区。");
   }
 }

@@ -1,25 +1,6 @@
-import { useLazyModelFeature } from "./useLazyModelFeature";
-import { shallowRef, type ComputedRef, type ShallowRef } from "vue";
-import type {
-  DeepWriteApi,
-  ModelConfig,
-  SystemEventEnvelope
-} from "@deepwrite/contracts";
-import type { LearningImitationController } from "./useLearningImitation";
-import type { LongBookAnalysisController } from "../extras/long-book-analysis/useLongBookAnalysis";
+import { shallowRef, type ShallowRef } from "vue";
+import type { DeepWriteApi, SystemEventEnvelope } from "@deepwrite/contracts";
 import type { SubagentAuthoringController } from "./useSubagentAuthoring";
-
-export interface LazyLearningImitationController {
-  controller: ShallowRef<LearningImitationController | null>;
-  isBusy: ComputedRef<boolean>;
-  ensureLoaded(): Promise<LearningImitationController>;
-  setConfiguredModels(
-    models: readonly ModelConfig[],
-    defaultModelId?: string
-  ): void;
-  handleEvent(event: SystemEventEnvelope): void;
-  dispose(): void;
-}
 
 export interface LazySubagentAuthoringController {
   controller: ShallowRef<SubagentAuthoringController | null>;
@@ -28,46 +9,13 @@ export interface LazySubagentAuthoringController {
   dispose(): void;
 }
 
-export interface LazyLongBookAnalysisController {
-  controller: ShallowRef<LongBookAnalysisController | null>;
-  isBusy: ComputedRef<boolean>;
-  ensureLoaded(): Promise<LongBookAnalysisController>;
-  setConfiguredModels(
-    models: readonly ModelConfig[],
-    defaultModelId?: string
-  ): void;
-  handleEvent(event: SystemEventEnvelope): void;
-  dispose(): void;
-}
-
-type LearningImitationModule = Pick<
-  typeof import("./useLearningImitation"),
-  "useLearningImitation"
->;
-
 type SubagentAuthoringModule = Pick<
   typeof import("./useSubagentAuthoring"),
   "useSubagentAuthoring"
 >;
 
-type LongBookAnalysisModule = Pick<
-  typeof import("../extras/long-book-analysis/useLongBookAnalysis"),
-  "useLongBookAnalysis"
->;
-
 function cancelledLoadError(feature: string): Error {
   return new Error(`${feature} controller load was cancelled.`);
-}
-
-export function useLazyLearningImitationController(options: {
-  api: () => DeepWriteApi | undefined;
-  loadModule?: () => Promise<LearningImitationModule>;
-}): LazyLearningImitationController {
-  return useLazyModelFeature("Learning imitation", async () => {
-    const module = await (options.loadModule?.() ??
-      import("./useLearningImitation"));
-    return module.useLearningImitation({ api: options.api });
-  });
 }
 
 export function useLazySubagentAuthoringController(options: {
@@ -115,15 +63,4 @@ export function useLazySubagentAuthoringController(options: {
       controller.value = null;
     }
   };
-}
-
-export function useLazyLongBookAnalysisController(options: {
-  api: () => DeepWriteApi | undefined;
-  loadModule?: () => Promise<LongBookAnalysisModule>;
-}): LazyLongBookAnalysisController {
-  return useLazyModelFeature("Long book analysis", async () => {
-    const module = await (options.loadModule?.() ??
-      (await import("../extras/long-book-analysis/loader")).loadController());
-    return module.useLongBookAnalysis({ api: options.api });
-  });
 }

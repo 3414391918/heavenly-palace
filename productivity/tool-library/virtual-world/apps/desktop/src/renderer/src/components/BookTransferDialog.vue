@@ -4,7 +4,7 @@ import AppIcon from "./AppIcon.vue";
 
 export type BookTransferDialogMode = "open" | "import";
 export type BookTransferAction =
-  "open-book" | "open-long-book" | "import-continuation-long-book";
+  "open-long-book" | "import-continuation-long-book";
 
 const props = defineProps<{
   mode: BookTransferDialogMode | null;
@@ -20,16 +20,10 @@ const options = computed(() =>
   props.mode === "open"
     ? [
         {
-          action: "open-book" as const,
-          icon: "folder" as const,
-          title: "普通书籍或剧本",
-          description: "打开 DeepWrite 短篇或剧本项目文件夹"
-        },
-        {
           action: "open-long-book" as const,
           icon: "book" as const,
-          title: "长篇作品",
-          description: "打开 DeepWrite 长篇作品文件夹"
+          title: "小说",
+          description: "打开 DeepWrite 小说文件夹"
         }
       ]
     : [
@@ -37,7 +31,7 @@ const options = computed(() =>
           action: "import-continuation-long-book" as const,
           icon: "edit" as const,
           title: "续写导入（TXT 章节）",
-          description: "从章节文件夹新建长篇，并封存除最后一章外的历史正文"
+          description: "从章节文件夹新建小说，并封存除最后一章外的历史正文"
         }
       ]
 );
@@ -84,7 +78,7 @@ onBeforeUnmount(() => document.removeEventListener("keydown", handleKeydown));
         <div class="dialog-content book-transfer-content">
           <p>
             请选择{{
-              mode === "open" ? "作品类型" : "来源格式"
+              mode === "open" ? "作品文件夹" : "来源格式"
             }}，随后将在系统窗口中选择对应文件。
           </p>
           <div class="book-transfer-options">

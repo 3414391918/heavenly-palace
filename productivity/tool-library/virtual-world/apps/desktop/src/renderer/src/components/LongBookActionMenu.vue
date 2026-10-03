@@ -105,7 +105,7 @@ function activateLongBookAction(action: LongBookResourceNodeAction): void {
     @click.stop="activateLongBookAction('delete')"
   >
     <AppIcon name="trash" :size="16" />
-    <span>删除本地长篇</span>
+    <span>删除本地小说</span>
   </button>
 </template>
 <style scoped>

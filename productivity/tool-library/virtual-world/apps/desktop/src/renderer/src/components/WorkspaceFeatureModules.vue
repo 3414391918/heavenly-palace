@@ -8,33 +8,20 @@ import type {
   AppLanguage,
   BodyTextFormatChange,
   GeneralPermissionMode,
-  LearningImitationSettingsInput,
-  LearningImitationStageId,
   LibraryAgentDomain,
   LibraryAgentSettingsInput,
   LongAgentSettingsInput,
-  MarketplaceSession,
   ModelConfigInput,
   ModelSettingsInput,
   ModelUsageQueryInput,
   TextViewMode,
-  WorkspacePaneLayout,
-  WorkspaceAgentSettingsInput
+  WorkspacePaneLayout
 } from "@deepwrite/contracts";
-import AppIcon from "./AppIcon.vue";
 import {
-  AgentTeamSettingsPanel,
-  CloudBackupPage,
-  DeviceSyncPage,
-  LearningImitationDialog,
-  LongBookAnalysisPage,
-  ShortBookAnalysisPage,
+  AgentTeamCatalogFeature,
   RevisionAnalysisPage,
-  StyleComparisonPage,
   ModelSettingsFeature,
   SettingsPage,
-  SkillMarketplacePage,
-  ZhuqueDetectionPage,
   WorkspaceDirectoryFeature
 } from "./lazyAppComponents";
 import type { WorkspaceFeatureModule } from "./WorkspaceFeatureModules.types";
@@ -63,13 +50,10 @@ const emit = defineEmits<{
   updateWorkspacePaneLayout: [layout: WorkspacePaneLayout];
   updateDefaultTextViewMode: [mode: TextViewMode];
   updateBodyTextFormat: [change: BodyTextFormatChange];
-  saveWorkspaceAgents: [settings: WorkspaceAgentSettingsInput];
   retryLongAgents: [];
   saveLongAgents: [settings: LongAgentSettingsInput];
   saveLibraryAgents: [settings: LibraryAgentSettingsInput];
   resetLibraryAgent: [domain: LibraryAgentDomain];
-  saveLearningImitation: [settings: LearningImitationSettingsInput];
-  resetLearningImitation: [stageId: LearningImitationStageId];
   loadModelUsage: [input?: ModelUsageQueryInput];
   loadModels: [];
   saveModels: [settings: ModelSettingsInput];
@@ -96,7 +80,6 @@ const emit = defineEmits<{
   refreshFreeModels: [];
   openOfficialModels: [];
   refreshCatalog: [];
-  marketplaceSessionChange: [session: MarketplaceSession];
 }>();
 </script>
 
@@ -115,11 +98,7 @@ const emit = defineEmits<{
     :workspace-pane-layout="module.workspacePaneLayout"
     :default-text-view-mode="module.defaultTextViewMode"
     :body-text-formats="module.bodyTextFormats"
-    :workspace-agent-settings="module.workspaceAgentSettings"
-    :creative-plot-stages="module.creativePlotStages"
     :long-agent-settings="module.longAgentSettings"
-    :workspace-agent-loading="module.workspaceAgentLoading"
-    :workspace-agent-saving="module.workspaceAgentSaving"
     :long-agent-loading="module.longAgentLoading"
     :long-agent-saving="module.longAgentSaving"
     :long-agent-error="module.longAgentError"
@@ -147,7 +126,6 @@ const emit = defineEmits<{
     @update-workspace-pane-layout="emit('updateWorkspacePaneLayout', $event)"
     @update-default-text-view-mode="emit('updateDefaultTextViewMode', $event)"
     @update-body-text-format="emit('updateBodyTextFormat', $event)"
-    @save-workspace-agents="emit('saveWorkspaceAgents', $event)"
     @retry-long-agents="emit('retryLongAgents')"
     @save-long-agents="emit('saveLongAgents', $event)"
     @save-library-agents="emit('saveLibraryAgents', $event)"
@@ -163,10 +141,10 @@ const emit = defineEmits<{
     class="agent-team-main-view"
     :left-collapsed="leftCollapsed"
     expand-button-class="agent-team-expand-sidebar"
-    label="智能体团队"
+    label="子智能体团队"
     @expand-left="emit('expandLeft')"
   >
-    <AgentTeamSettingsPanel
+    <AgentTeamCatalogFeature
       v-if="module.authoring"
       :catalog="module.catalog"
       :navigation-epoch="module.navigationEpoch"
@@ -234,35 +212,10 @@ const emit = defineEmits<{
   </WorkspaceFeatureFrame>
 
   <WorkspaceFeatureFrame
-    v-else-if="module.kind === 'imitation'"
-    class="learning-imitation-main-view"
-    :left-collapsed="leftCollapsed"
-    expand-button-class="learning-imitation-expand-sidebar"
-    label="短篇学习仿写"
-    @expand-left="emit('expandLeft')"
-  >
-    <LearningImitationDialog
-      v-if="module.controller"
-      active
-      :controller="module.controller"
-      :models="module.models"
-      :catalog-snapshot="module.catalogSnapshot"
-      :approval-mode="module.approvalMode"
-      :learning-imitation-settings="module.learningImitationSettings"
-      :learning-imitation-loading="module.learningImitationLoading"
-      :learning-imitation-saving="module.learningImitationSaving"
-      :runtime-available="module.runtimeAvailable"
-      @refresh-catalog="emit('refreshCatalog')"
-      @save-learning-imitation="emit('saveLearningImitation', $event)"
-      @reset-learning-imitation="emit('resetLearningImitation', $event)"
-    />
-  </WorkspaceFeatureFrame>
-
-  <WorkspaceFeatureFrame
     v-else-if="module.kind === 'revision-analysis'"
-    class="long-book-analysis-main-view"
+    class="revision-analysis-main-view"
     :left-collapsed="leftCollapsed"
-    expand-button-class="long-book-analysis-expand-sidebar"
+    expand-button-class="revision-analysis-expand-sidebar"
     label="修改分析"
     @expand-left="emit('expandLeft')"
   >
@@ -274,129 +227,4 @@ const emit = defineEmits<{
       @refresh-catalog="emit('refreshCatalog')"
     />
   </WorkspaceFeatureFrame>
-
-  <WorkspaceFeatureFrame
-    v-else-if="module.kind === 'short-book-analysis'"
-    class="long-book-analysis-main-view"
-    :left-collapsed="leftCollapsed"
-    expand-button-class="long-book-analysis-expand-sidebar"
-    label="短篇拆书分析"
-    @expand-left="emit('expandLeft')"
-  >
-    <ShortBookAnalysisPage
-      v-if="module.controller"
-      :controller="module.controller"
-      :models="module.models"
-      :catalog-snapshot="module.catalogSnapshot"
-      @refresh-catalog="emit('refreshCatalog')"
-    />
-  </WorkspaceFeatureFrame>
-
-  <WorkspaceFeatureFrame
-    v-else-if="module.kind === 'long-book-analysis'"
-    class="long-book-analysis-main-view"
-    :left-collapsed="leftCollapsed"
-    expand-button-class="long-book-analysis-expand-sidebar"
-    label="长篇拆书分析"
-    @expand-left="emit('expandLeft')"
-  >
-    <LongBookAnalysisPage
-      v-if="module.controller"
-      :controller="module.controller"
-      :models="module.models"
-      :catalog-snapshot="module.catalogSnapshot"
-      @refresh-catalog="emit('refreshCatalog')"
-    />
-  </WorkspaceFeatureFrame>
-
-  <WorkspaceFeatureFrame
-    v-else-if="module.kind === 'style-comparison'"
-    class="style-comparison-main-view"
-    :left-collapsed="leftCollapsed"
-    expand-button-class="marketplace-expand-sidebar"
-    label="文风比对"
-    @expand-left="emit('expandLeft')"
-  >
-    <StyleComparisonPage
-      :models="module.models"
-      :preferred-model-id="module.preferredModelId"
-    />
-  </WorkspaceFeatureFrame>
-
-  <main
-    v-else-if="module.kind === 'marketplace'"
-    class="marketplace-main-view"
-    aria-label="技能广场"
-  >
-    <button
-      v-if="leftCollapsed"
-      class="icon-button marketplace-expand-sidebar"
-      type="button"
-      aria-label="展开左侧栏"
-      @click="emit('expandLeft')"
-    >
-      <AppIcon name="panel-left" :size="18" />
-    </button>
-    <SkillMarketplacePage
-      active
-      :catalog-snapshot="module.catalogSnapshot"
-      :initial-session="module.session"
-      @refresh-catalog="emit('refreshCatalog')"
-      @session-change="emit('marketplaceSessionChange', $event)"
-    />
-  </main>
-
-  <main
-    v-else-if="module.kind === 'device-sync'"
-    class="marketplace-main-view"
-    aria-label="双端同步"
-  >
-    <button
-      v-if="leftCollapsed"
-      class="pane-toggle-button"
-      aria-label="展开侧栏"
-      @click="emit('expandLeft')"
-    >
-      <AppIcon name="panel-left" :size="18" />
-    </button>
-    <DeviceSyncPage
-      :prepare-sync="module.prepareSync"
-      :refresh-sync="module.refreshSync"
-      @refresh-catalog="emit('refreshCatalog')"
-    />
-  </main>
-
-  <main
-    v-else-if="module.kind === 'cloud-backup'"
-    class="marketplace-main-view"
-    aria-label="云端备份"
-  >
-    <button
-      v-if="leftCollapsed"
-      class="icon-button marketplace-expand-sidebar"
-      type="button"
-      aria-label="展开左侧栏"
-      @click="emit('expandLeft')"
-    >
-      <AppIcon name="panel-left" :size="18" />
-    </button>
-    <CloudBackupPage active @refresh-catalog="emit('refreshCatalog')" />
-  </main>
-
-  <main
-    v-else-if="module.kind === 'zhuque-detection'"
-    class="zhuque-detection-main-view"
-    aria-label="朱雀检测"
-  >
-    <button
-      v-if="leftCollapsed"
-      class="icon-button zhuque-detection-expand-sidebar"
-      type="button"
-      aria-label="展开左侧栏"
-      @click="emit('expandLeft')"
-    >
-      <AppIcon name="panel-left" :size="18" />
-    </button>
-    <ZhuqueDetectionPage />
-  </main>
 </template>

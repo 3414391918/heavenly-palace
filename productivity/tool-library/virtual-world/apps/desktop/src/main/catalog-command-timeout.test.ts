@@ -14,14 +14,6 @@ describe("catalog command timeout", () => {
     expect(catalogCommandTimeoutMs("catalog.readDocument")).toBe(60_000);
     expect(catalogCommandTimeoutMs("catalog.readWritingContext")).toBe(60_000);
     expect(catalogCommandTimeoutMs("catalog.writeWritingContext")).toBe(60_000);
-    expect(catalogCommandTimeoutMs("catalog.createDraftSection")).toBe(60_000);
-    expect(catalogCommandTimeoutMs("catalog.createDraftSections")).toBe(60_000);
-    expect(catalogCommandTimeoutMs("catalog.deleteDraftSection")).toBe(60_000);
-    expect(catalogCommandTimeoutMs("catalog.moveDraftSection")).toBe(60_000);
-    expect(catalogCommandTimeoutMs("catalog.mutatePlotStructure")).toBe(60_000);
-    expect(catalogCommandTimeoutMs("catalog.mutateCharacterStructure")).toBe(
-      60_000
-    );
     expect(catalogCommandTimeoutMs("catalog.createLibraryEntry")).toBe(60_000);
     expect(catalogCommandTimeoutMs("catalog.saveLibraryEntry")).toBe(60_000);
     expect(catalogCommandTimeoutMs("catalog.updateLibrary")).toBe(60_000);
@@ -38,12 +30,6 @@ describe("catalog command timeout", () => {
     );
     expect(
       catalogCommandTimeoutMessage("catalog.writeWritingContext")
-    ).toContain("保存结果尚未确认");
-    expect(
-      catalogCommandTimeoutMessage("catalog.createDraftSections")
-    ).toContain("保存结果尚未确认");
-    expect(
-      catalogCommandTimeoutMessage("catalog.mutateCharacterStructure")
     ).toContain("保存结果尚未确认");
     expect(catalogCommandTimeoutMessage("catalog.snapshot")).toContain(
       "检查项目所在磁盘"

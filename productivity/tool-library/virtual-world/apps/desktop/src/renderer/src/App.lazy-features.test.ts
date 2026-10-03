@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { expectSourceToContain } from "../../test-utils/sourceText";
-import source from "./WorkspaceShell.vue?raw";
-import learningSource from "./components/LearningImitationDialog.vue?raw";
+import source from "./test-support/workspaceShellSource";
 import dialogLayerSource from "./components/WorkspaceDialogLayer.vue?raw";
 import featureModulesSource from "./components/WorkspaceFeatureModules.vue?raw";
 import asyncComponentsSource from "./components/lazyAppComponents.ts?raw";
@@ -11,7 +10,7 @@ import featureHostSource from "./composables/useWorkspaceFeatureHostCoordinator.
 
 describe("App lazy feature mounting", () => {
   it("keeps only the default writing surface in the eager component imports", () => {
-    expect(source).toContain('from "./components/lazyAppComponents"');
+    expect(source).toContain('from "./lazyAppComponents"');
     expectSourceToContain(lazyComponentsSource, "defineAsyncComponent");
     expect(lazyComponentsSource).toContain(
       '() => import("./SettingsPage.vue")'
@@ -24,10 +23,7 @@ describe("App lazy feature mounting", () => {
       lazyComponentsSource,
       '() => import("./AgentTeamCatalogFeature.vue")'
     );
-    expectSourceToContain(
-      lazyComponentsSource,
-      '() => import("../extras/cloud-backup/CloudBackupPage.vue")'
-    );
+    expect(lazyComponentsSource).not.toContain("CloudBackupPage.vue");
     expectSourceToContain(
       lazyComponentsSource,
       '() => import("./ModelSettingsFeature.vue")'
@@ -60,11 +56,9 @@ describe("App lazy feature mounting", () => {
     expect(featureHostSource).toContain(
       "const workspaceFeatureModule = computed"
     );
-    expect(featureModulesSource).toContain(
-      "v-else-if=\"module.kind === 'marketplace'\""
-    );
-    expect(featureModulesSource).toContain(
-      "v-else-if=\"module.kind === 'cloud-backup'\""
+    expect(featureModulesSource).not.toContain("module.kind === 'marketplace'");
+    expect(featureModulesSource).not.toContain(
+      "module.kind === 'cloud-backup'"
     );
     expect(source).toContain("v-if=\"activeFeature === 'long-workspace'\"");
     expect(source).not.toContain("<KeepAlive>");
@@ -73,23 +67,13 @@ describe("App lazy feature mounting", () => {
     );
     expectSourceToContain(dialogLayerSource, '<DialogHost v-if="module"');
     expect(dialogLayerSource).toContain(':active-dialog="module.kind"');
-    expect(dialogLayerSource).toContain(
-      "<BookResourceDialog\n      v-if=\"module.kind === 'book-resource'\""
-    );
-    expect(dialogLayerSource).toContain(
-      "<CreateBookDialog\n      v-else-if=\"module.kind === 'create-book'\""
-    );
+
+    expectSourceToContain(dialogLayerSource, "<CreateBookDialog");
+    expect(dialogLayerSource).toContain("module.kind === 'create-book'");
     expect(dialogLayerSource).toContain(
       "<SaveConflictDialog\n      v-else-if=\"module.kind === 'save-conflict'\""
     );
     expect(source).not.toContain("<BookResourceDialog\n");
     expect(source).not.toContain('v-show="workspaceMainView');
-  });
-
-  it("keeps learning-page keyboard work lifecycle-safe", () => {
-    expect(learningSource).toContain("onActivated(startKeydownListener)");
-    expect(learningSource).toContain("onDeactivated(stopKeydownListener)");
-    expect(learningSource).toContain("lastCompletedStage.value");
-    expect(learningSource).toContain("{ immediate: true }");
   });
 });

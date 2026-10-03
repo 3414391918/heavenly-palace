@@ -24,7 +24,7 @@ function safePackageFileName(name: string): string {
     .replaceAll(/[. ]+$/g, "")
     .trim()
     .slice(0, 80);
-  return `${sanitized || "智能体团队"}.deepwrite-team.zip`;
+  return `${sanitized || "子智能体团队"}.deepwrite-team.zip`;
 }
 
 export async function downloadAgentTeamPackage(
@@ -37,10 +37,10 @@ export async function downloadAgentTeamPackage(
   const input = AgentTeamProfileTargetInputSchema.parse(rawInput);
   const team = await store.exportProfile(input);
   const selection = await dialog.showSaveDialog(window, {
-    title: `下载智能体团队“${team.name}”`,
+    title: `下载子智能体团队“${team.name}”`,
     buttonLabel: "下载团队",
     defaultPath: join(defaultDirectory, safePackageFileName(team.name)),
-    filters: [{ name: "DeepWrite 智能体团队压缩包", extensions: ["zip"] }]
+    filters: [{ name: "虚拟世界子智能体团队压缩包", extensions: ["zip"] }]
   });
   if (selection.canceled || !selection.filePath) {
     return AgentTeamPackageExportResultSchema.parse({ status: "canceled" });
@@ -61,10 +61,10 @@ export async function installAgentTeamPackage(
   defaultDirectory: string
 ): Promise<AgentTeamPackageInstallResult> {
   const selection = await dialog.showOpenDialog(window, {
-    title: "安装智能体团队",
+    title: "安装子智能体团队",
     buttonLabel: "安装团队",
     defaultPath: defaultDirectory,
-    filters: [{ name: "DeepWrite 智能体团队压缩包", extensions: ["zip"] }],
+    filters: [{ name: "虚拟世界子智能体团队压缩包", extensions: ["zip"] }],
     properties: ["openFile"]
   });
   const sourcePath = selection.filePaths[0];
@@ -73,7 +73,7 @@ export async function installAgentTeamPackage(
   }
   const metadata = await stat(sourcePath);
   if (!metadata.isFile() || metadata.size > AGENT_TEAM_PACKAGE_MAX_BYTES) {
-    throw new Error("智能体团队压缩包无效或超过 5 MB 上限。");
+    throw new Error("子智能体团队压缩包无效或超过 5 MB 上限。");
   }
   const installed = await store.installProfile(
     readAgentTeamPackage(await readFile(sourcePath))

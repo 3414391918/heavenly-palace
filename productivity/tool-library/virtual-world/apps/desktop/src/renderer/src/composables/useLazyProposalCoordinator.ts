@@ -83,10 +83,6 @@ export function useLazyProposalCoordinator(
     (...args) => {
       enqueueVoid((loaded) => loaded.scheduleQueuedAgentEdits(...args));
     };
-  const stageAgentEditProposal: ProposalCoordinator["stageAgentEditProposal"] =
-    (...args) => {
-      enqueueVoid((loaded) => loaded.stageAgentEditProposal(...args));
-    };
   const stageLibraryEditProposal: ProposalCoordinator["stageLibraryEditProposal"] =
     (...args) => {
       enqueueVoid((loaded) => loaded.stageLibraryEditProposal(...args));
@@ -142,7 +138,6 @@ export function useLazyProposalCoordinator(
     reviewLongAgentEdit,
     discardAgentEdit,
     scheduleQueuedAgentEdits,
-    stageAgentEditProposal,
     stageLibraryEditProposal,
     stageLongCharacterEditProposal,
     stageLongDraftEditProposal,

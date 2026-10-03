@@ -23,7 +23,7 @@ virtual-world/
 │   ├── src/preload/              # 预加载：白名单暴露 window.deepwrite
 │   ├── src/utilities/            # Utility 进程：core / agent / tool 入口与本地存储
 │   ├── src/renderer/             # 渲染进程：工作台 UI
-│   ├── src/extras/               # 主进程侧可选能力（如云备份），由 Main 注册 IPC
+│   ├── src/extras/               # 主进程侧可选能力（如修改分析），由 Main 注册 IPC
 │   └── scripts/                  # 冒烟、安装包校验、electron-builder 钩子
 ├── packages/contracts/           # 命令、事件、领域模型的 Zod 契约
 ├── packages/pi-runtime-adapter/  # Agent Runtime 与受控工具适配
@@ -33,10 +33,10 @@ virtual-world/
 ```
 
 - DeepWrite 采用 Electron 多进程架构，职责不可混用：Renderer 只负责界面与会话编排；Preload 只做 `window.deepwrite` 白名单与双向 Zod 校验；Main 管理窗口、密钥、配置存储，并通过 `UtilitySupervisor` 监管 Utility；Core Utility 是本地项目与路径注册表的唯一写入者；Agent Utility 运行模型与智能体；Tool Utility 只提供受控工具执行边界。跨进程通信走 `@deepwrite/contracts` 中的 Envelope 命令/事件，不得另开未校验通道。
-- 进程依赖单向、收口明确。Renderer 只能从 `@deepwrite/contracts/renderer` 取运行时值，禁止引入 `electron`、`node:`、Pi SDK 或 `@deepwrite/pi-runtime-adapter`；该边界由 `pnpm lint:boundary` 强制检查。模型密钥与 Provider 凭据只存在于 Main / Agent，不得下发到 Renderer。Agent 需要读本地作品时，只能经 Main 授权的内部命令桥访问 Core 的只查询令（当前限于长篇 `long.getWorkspaceIndex` / `long.readDocument` / `long.search`），不得让 Agent 直接写盘。
+- 进程依赖单向、收口明确。Renderer 只能从 `@deepwrite/contracts/renderer` 取运行时值，禁止引入 `electron`、`node:`、Pi SDK 或 `@deepwrite/pi-runtime-adapter`；该边界由 `pnpm lint:boundary` 强制检查。模型密钥与 Provider 凭据只存在于 Main / Agent，不得下发到 Renderer。Agent 需要读本地作品时，只能经 Main 授权的内部命令桥访问 Core 的只查询令（当前限于小说 `long.getWorkspaceIndex` / `long.readDocument` / `long.search`），不得让 Agent 直接写盘。
 - `packages/contracts` 是协议与领域模型的唯一来源。新增命令、事件、清单字段或 Preload API 时，先改契约与对应 Schema，再改 Preload、Main 路由和 Utility 实现；Renderer 新增从 `@deepwrite/contracts` 导入的运行时值，必须同步导出到 `packages/contracts/src/renderer.ts`。`packages/shared` 只放 `createId` 一类无业务语义的工具，不得把领域逻辑塞进去。Pi / 工具 schema / 子智能体运行时留在 `packages/pi-runtime-adapter`；桌面进程编排留在 `apps/desktop`。
-- 本地作品以文件夹为单位，清单文件固定为 `deepwrite.json`，正文与设定使用 UTF-8 Markdown。短篇/剧本/素材库/技能库走 `folder-catalog-store`；长篇走 `long-project-store` 与 `long-workspace-service`。Core 必须原子写入，智能体对文稿的修改先以 proposal 事件展示差异，用户接受后才由 Core 落盘；不得让 Agent 或 Renderer 静默覆盖较新版本。
-- Renderer 以 `WorkspaceShell.vue` 为工作台壳：默认三栏写作面留在入口 chunk，设置、长篇、市场、云备份等用 `lazyAppComponents` 按需加载。界面状态放 `stores/`，跨组件编排放 `composables/`，领域页面可放 `features/` 或 `extras/`。主进程可选能力（如云备份）放 `apps/desktop/src/extras/`，对应界面放 `renderer/src/extras/`，由 Main 注册专用 IPC，并复用同一套 contracts。新增功能先扩现有 coordinator / store / Utility handler；只有新的可选能力才新增 extras，不得把业务写入逻辑放进组件或 Preload。
+- 本地作品以文件夹为单位，清单文件固定为 `deepwrite.json`，正文与设定使用 UTF-8 Markdown。小说统一走 `long-project-store` 与 `long-workspace-service`；素材库/技能库走 `folder-catalog-store`。已有小说的 `deepwrite.json`、`long/` 路径和技术标识保持兼容；不再创建短篇或剧本工作区。Core 必须原子写入，智能体对文稿的修改先以 proposal 事件展示差异，用户接受后才由 Core 落盘；不得让 Agent 或 Renderer 静默覆盖较新版本。
+- Renderer 以 `WorkspaceShell.vue` 为工作台壳：默认三栏写作面留在入口 chunk，设置、小说工作区、修改分析等用 `lazyAppComponents` 按需加载。界面状态放 `stores/`，跨组件编排放 `composables/`，领域页面可放 `features/` 或 `extras/`。主进程可选能力（如修改分析）放 `apps/desktop/src/extras/`，对应界面放 `renderer/src/extras/`，由 Main 注册专用 IPC，并复用同一套 contracts。新增功能先扩现有 coordinator / store / Utility handler；只有新的可选能力才新增 extras，不得把业务写入逻辑放进组件或 Preload。
 - electron-vite 的打包入口固定为 Main `src/main/index.ts`、三个 Utility（`core-entry` / `agent-entry` / `tool-entry`）、Preload 与 Renderer。改进程边界、新增 Utility 或调整 `files` 时，必须同步 `apps/desktop/electron.vite.config.ts`、supervisor 启动路径、冒烟脚本和边界检查；不得把运行时依赖改回塞进 ASAR 的 pnpm 树，除非同时更新 before-build 钩子并补安装包内验证。
 
 ## 代码体量、拆分与耦合

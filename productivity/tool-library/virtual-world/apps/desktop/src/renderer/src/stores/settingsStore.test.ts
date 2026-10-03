@@ -2,9 +2,7 @@ import { createPinia, setActivePinia, storeToRefs } from "pinia";
 import { isReactive } from "vue";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type {
-  CloudBackupStatus,
   AgentTeamCatalogSnapshot,
-  LearningImitationSettings,
   LibraryAgentSettings,
   LongAgentSettings,
   ModelSettings,
@@ -135,52 +133,18 @@ describe("settings store", () => {
       DEFAULT_LONG_AGENT_SETTINGS
     ) as LongAgentSettings;
     const libraryAgents = { agents: [] } as unknown as LibraryAgentSettings;
-    const learningImitation = {
-      stages: []
-    } as unknown as LearningImitationSettings;
-
     await Promise.all([
       store.ensureLongAgentsLoaded(async () => longAgents),
       store.ensureAgentTeamsLoaded(async () => agentTeams),
-      store.ensureLibraryAgentsLoaded(async () => libraryAgents),
-      store.ensureLearningImitationLoaded(async () => learningImitation)
+      store.ensureLibraryAgentsLoaded(async () => libraryAgents)
     ]);
 
     expect(store.longAgentLoaded).toBe(true);
     expect(store.agentTeamLoaded).toBe(true);
     expect(store.libraryAgentsLoaded).toBe(true);
-    expect(store.learningImitationLoaded).toBe(true);
     expect(store.longAgentSettings).toBe(longAgents);
     expect(store.agentTeamCatalog).toBe(agentTeams);
     expect(store.libraryAgentSettings).toBe(libraryAgents);
-    expect(store.learningImitationSettings).toBe(learningImitation);
-  });
-
-  it("retains and coalesces cloud backup status across feature remounts", async () => {
-    const store = useSettingsStore();
-    const pending = deferred<CloudBackupStatus>();
-    const loader = vi.fn(() => pending.promise);
-    const status = {
-      configured: true,
-      machineKey: "DW-ABCD-2345-EFGH-WXYZ",
-      quotaBytes: 100_000_000,
-      usedBytes: 12,
-      localItemCount: 3,
-      remoteItemCount: 2,
-      lastBackupAt: "2026-08-13T00:00:00.000Z"
-    } as CloudBackupStatus;
-
-    const first = store.ensureCloudBackupLoaded(loader);
-    const remountedFeature = store.ensureCloudBackupLoaded(loader);
-    expect(loader).toHaveBeenCalledOnce();
-    pending.resolve(status);
-
-    await expect(first).resolves.toBe(status);
-    await expect(remountedFeature).resolves.toBe(status);
-    await expect(store.ensureCloudBackupLoaded(loader)).resolves.toBe(status);
-    expect(loader).toHaveBeenCalledOnce();
-    expect(store.cloudBackupStatus).toBe(status);
-    expect(store.cloudBackupLoaded).toBe(true);
   });
 
   it("loads official-model state as one snapshot and marks models available", async () => {

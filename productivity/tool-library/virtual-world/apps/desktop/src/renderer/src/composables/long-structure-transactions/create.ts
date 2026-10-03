@@ -259,7 +259,7 @@ export function createLongStructureCreate(
       !activeLongWorkspaceIndex.value ||
       !captureLongStructureMutationTarget(target.bookId)
     ) {
-      uiMessage.warning("当前长篇工作区尚未准备好新建分卷。");
+      uiMessage.warning("当前小说工作区尚未准备好新建分卷。");
       return;
     }
     longVolumeCreate.value = {
@@ -290,7 +290,7 @@ export function createLongStructureCreate(
         activeLongSelection.value?.key !== "plot-design:book-line"
       ) {
         longVolumeCreate.value = null;
-        uiMessage.warning("活动长篇已切换，本次新建分卷已取消。");
+        uiMessage.warning("活动小说已切换，本次新建分卷已取消。");
       }
     });
   }
@@ -360,7 +360,7 @@ export function createLongStructureCreate(
   }): Promise<void> {
     const target = longVolumeCreate.value;
     if (!target) {
-      uiMessage.warning("当前长篇工作区尚未准备好新建分卷。");
+      uiMessage.warning("当前小说工作区尚未准备好新建分卷。");
       return;
     }
     await withMutation(

@@ -5,19 +5,17 @@ describe("AgentTeamCatalogFeature", () => {
   it("opens with a catalog and keeps the existing editor behind team selection", () => {
     expect(source).toContain('class="team-catalog"');
     expect(source).toContain('v-if="selectedTeam"');
-    expect(source).toContain("<AgentTeamSettingsPanel");
+    expect(source).toContain("<LongAgentTeamSettingsPanel");
     expect(source).toContain("selectedTeamId = team.id");
     expect(source).toContain("返回团队列表");
   });
 
-  it("supports per-type selection toggles and protected deletion", () => {
+  it("supports single-team selection toggles and protected deletion", () => {
     expect(source).toContain('class="enable-selector"');
     expect(source).toContain(
       "emit('setEnabled', { teamId: team.id, enabled: !isEnabled(team) })"
     );
-    expect(source).toContain(
-      "catalog?.enabledTeamIds[team.workspaceType] === team.id"
-    );
+    expect(source).toContain("catalog?.enabledTeamIds.long === team.id");
     expect(source).toContain("确认删除");
     expect(source).toContain('class="danger-button"');
   });
@@ -31,13 +29,12 @@ describe("AgentTeamCatalogFeature", () => {
   });
 
   it("creates blank named profiles through the catalog API without auto activation", () => {
-    expect(source).toContain(
-      'emit("create", { name, workspaceType: createWorkspaceType.value })'
-    );
+    expect(source).toContain('emit("create", { name })');
     expect(source).not.toContain('emit("setEnabled"');
     expect(source).toContain("pendingExistingTeamIds");
-    expect(source).toContain("<PopupSelect");
-    expect(source).toContain(':menu-z-index="2200"');
+    expect(source).not.toContain("创作类型");
+    expect(source).not.toContain("type-badge");
+    expect(source).toContain("子智能体团队");
   });
 
   it("resets detail state whenever the primary navigation is activated", () => {

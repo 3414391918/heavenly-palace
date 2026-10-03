@@ -15,7 +15,7 @@ describe("creation book drag", () => {
     };
     const longBook: ResourceTreeNode = {
       id: "long-book:one",
-      label: "长篇",
+      label: "小说",
       catalogNodeType: "long-book"
     };
     expect(canDragCreationBook("creation", shortBook)).toBe(true);

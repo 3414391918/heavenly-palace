@@ -201,9 +201,15 @@ function resultText(result: {
 }
 
 describe("chat assistant read-only runtime", () => {
+  it("uses the current brand even when software metadata has the legacy identifier", () => {
+    const prompt = buildChatAssistantSystemPrompt(normalContext());
+    expect(prompt).not.toMatch(/deepwrite/i);
+    expect(prompt).toContain("当前软件：虚拟世界 1.0.0");
+  });
+
   it("keeps the prompt order and appends immutable boundaries after custom text", () => {
     const prompt = buildChatAssistantSystemPrompt(projectContext());
-    expect(prompt.indexOf("DeepWrite 软件基础情况")).toBeLessThan(
+    expect(prompt.indexOf("虚拟世界软件基础情况")).toBeLessThan(
       prompt.indexOf("项目聊天模式")
     );
     expect(prompt.indexOf("优先核对人物动机")).toBeLessThan(

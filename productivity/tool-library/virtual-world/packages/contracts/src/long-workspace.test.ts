@@ -295,7 +295,7 @@ function longBook() {
 describe("independent long-form workspace contracts", () => {
   it("ships a default AGENTS.md that explains the five long-form stages", () => {
     expect(LONG_AGENTS_MD_PATH).toBe("AGENTS.md");
-    expect(DEFAULT_LONG_AGENTS_MD).toContain("# 长篇上下文");
+    expect(DEFAULT_LONG_AGENTS_MD).toContain("# 创作上下文");
     expect(DEFAULT_LONG_AGENTS_MD).toContain("## 写作思路");
     expect(DEFAULT_LONG_AGENTS_MD).toContain("## 世界观阶段");
     expect(DEFAULT_LONG_AGENTS_MD).toContain("## 人物阶段");
@@ -922,7 +922,7 @@ describe("independent long-form workspace contracts", () => {
     expect(rendererResolveLongAgentIdForRoot).toBe(resolveLongAgentIdForRoot);
 
     const profile = DEFAULT_LONG_AGENT_PROFILES[0]!;
-    expect(profile.label).toBe("长篇智能体");
+    expect(profile.label).toBe("主智能体");
     expect(profile.readAccess.workspaceRoots).toEqual([
       "worldbuilding",
       "character_design",
@@ -973,7 +973,7 @@ describe("independent long-form workspace contracts", () => {
     expect(systemPrompt).toContain("meta.document=current_state or history");
     expect(systemPrompt).not.toContain("continuity_character_current_state");
     expect(systemPrompt).toContain(
-      "You are DeepWrite's local creative collaboration agent"
+      "You are the local creative collaboration agent for 虚拟世界"
     );
     expect(systemPrompt).toContain("list requires both stage and scope_id");
     expect(systemPrompt).toContain("Do not list leaf objects");

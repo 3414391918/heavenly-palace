@@ -1,75 +1,29 @@
 import {
   ExportLongManuscriptInputSchema,
   ExportLongManuscriptResultSchema,
-  ExportShortManuscriptInputSchema,
-  ExportShortManuscriptResultSchema,
   GeneralSettingsSchema,
   GeneralSettingsSnapshotSchema,
-  LearningImitationSettingsInputSchema,
-  LearningImitationSettingsSchema,
-  LearningImitationStageIdSchema,
   LibraryAgentDomainSchema,
   LibraryAgentSettingsInputSchema,
   LibraryAgentSettingsSchema,
   LongAgentIdSchema,
   LongAgentSettingsInputSchema,
   LongAgentSettingsSchema,
-  ScriptWorkspaceAgentIdSchema,
-  ShortWorkspaceAgentIdSchema,
-  WorkspaceAgentSettingsInputSchema,
-  WorkspaceAgentSettingsSchema,
   WorkspaceDirectorySettingsSchema,
-  WorkspaceTypeSchema,
   createEnvelope,
   type ExportLongManuscriptInput,
   type ExportLongManuscriptResult,
-  type ExportShortManuscriptInput,
-  type ExportShortManuscriptResult,
   type GeneralSettings,
   type GeneralSettingsSnapshot,
-  type LearningImitationSettings,
-  type LearningImitationSettingsInput,
-  type LearningImitationStageId,
   type LibraryAgentDomain,
   type LibraryAgentSettings,
   type LibraryAgentSettingsInput,
   type LongAgentId,
   type LongAgentSettings,
   type LongAgentSettingsInput,
-  type ScriptWorkspaceAgentId,
-  type ShortWorkspaceAgentId,
-  type WorkspaceAgentSettings,
-  type WorkspaceAgentSettingsInput,
-  type WorkspaceDirectorySettings,
-  type WorkspaceType
+  type WorkspaceDirectorySettings
 } from "@deepwrite/contracts";
-
 import { browserId, invokeCommand } from "./invoke";
-
-export {
-  appearance,
-  installAppearanceFonts,
-  listAppearance,
-  listAppearanceFonts,
-  removeAppearanceFont,
-  saveAppearance
-} from "./appearance-api";
-
-export async function listWorkspaceAgents(
-  rawWorkspaceType: WorkspaceType
-): Promise<WorkspaceAgentSettings> {
-  const workspaceType = WorkspaceTypeSchema.parse(rawWorkspaceType);
-  const id = browserId("cmd_workspace_agents_list");
-  return WorkspaceAgentSettingsSchema.parse(
-    await invokeCommand<WorkspaceAgentSettings>(
-      createEnvelope(
-        "workspaceAgents.list",
-        { workspaceType },
-        { id, correlationId: id }
-      )
-    )
-  );
-}
 export async function listLongAgents(): Promise<LongAgentSettings> {
   const id = browserId("cmd_long_agents_list");
   return LongAgentSettingsSchema.parse(
@@ -78,6 +32,7 @@ export async function listLongAgents(): Promise<LongAgentSettings> {
     )
   );
 }
+
 export async function saveLongAgents(
   rawSettings: LongAgentSettingsInput
 ): Promise<LongAgentSettings> {
@@ -92,6 +47,7 @@ export async function saveLongAgents(
     )
   );
 }
+
 export async function resetLongAgents(
   rawAgentId?: LongAgentId
 ): Promise<LongAgentSettings> {
@@ -104,55 +60,6 @@ export async function resetLongAgents(
         { ...(agentId ? { agentId } : {}) },
         { id, correlationId: id }
       )
-    )
-  );
-}
-export async function saveWorkspaceAgents(
-  rawSettings: WorkspaceAgentSettingsInput
-): Promise<WorkspaceAgentSettings> {
-  const settings = WorkspaceAgentSettingsInputSchema.parse(rawSettings);
-  const id = browserId("cmd_workspace_agents_save");
-  return WorkspaceAgentSettingsSchema.parse(
-    await invokeCommand<WorkspaceAgentSettings>(
-      createEnvelope("workspaceAgents.save", settings, {
-        id,
-        correlationId: id
-      })
-    )
-  );
-}
-
-export async function resetWorkspaceAgents(
-  rawWorkspaceType: WorkspaceType,
-  rawAgentId?: ShortWorkspaceAgentId | ScriptWorkspaceAgentId
-): Promise<WorkspaceAgentSettings> {
-  const workspaceType = WorkspaceTypeSchema.parse(rawWorkspaceType);
-  const agentId = rawAgentId
-    ? workspaceType === "script"
-      ? ScriptWorkspaceAgentIdSchema.parse(rawAgentId)
-      : ShortWorkspaceAgentIdSchema.parse(rawAgentId)
-    : undefined;
-  const id = browserId("cmd_workspace_agents_reset");
-  const payload =
-    workspaceType === "script"
-      ? {
-          workspaceType,
-          ...(agentId
-            ? { agentId: ScriptWorkspaceAgentIdSchema.parse(agentId) }
-            : {})
-        }
-      : {
-          workspaceType,
-          ...(agentId
-            ? { agentId: ShortWorkspaceAgentIdSchema.parse(agentId) }
-            : {})
-        };
-  return WorkspaceAgentSettingsSchema.parse(
-    await invokeCommand<WorkspaceAgentSettings>(
-      createEnvelope("workspaceAgents.reset", payload, {
-        id,
-        correlationId: id
-      })
     )
   );
 }
@@ -190,52 +97,6 @@ export async function resetLibraryAgents(
       createEnvelope(
         "libraryAgents.reset",
         { ...(domain ? { domain } : {}) },
-        { id, correlationId: id }
-      )
-    )
-  );
-}
-
-export async function listLearningImitationSettings(): Promise<LearningImitationSettings> {
-  const id = browserId("cmd_learning_imitation_settings_list");
-  return LearningImitationSettingsSchema.parse(
-    await invokeCommand<LearningImitationSettings>(
-      createEnvelope(
-        "learningImitationSettings.list",
-        {},
-        { id, correlationId: id }
-      )
-    )
-  );
-}
-
-export async function saveLearningImitationSettings(
-  rawSettings: LearningImitationSettingsInput
-): Promise<LearningImitationSettings> {
-  const settings = LearningImitationSettingsInputSchema.parse(rawSettings);
-  const id = browserId("cmd_learning_imitation_settings_save");
-  return LearningImitationSettingsSchema.parse(
-    await invokeCommand<LearningImitationSettings>(
-      createEnvelope("learningImitationSettings.save", settings, {
-        id,
-        correlationId: id
-      })
-    )
-  );
-}
-
-export async function resetLearningImitationSettings(
-  rawStageId?: LearningImitationStageId
-): Promise<LearningImitationSettings> {
-  const stageId = rawStageId
-    ? LearningImitationStageIdSchema.parse(rawStageId)
-    : undefined;
-  const id = browserId("cmd_learning_imitation_settings_reset");
-  return LearningImitationSettingsSchema.parse(
-    await invokeCommand<LearningImitationSettings>(
-      createEnvelope(
-        "learningImitationSettings.reset",
-        { ...(stageId ? { stageId } : {}) },
         { id, correlationId: id }
       )
     )
@@ -284,21 +145,6 @@ export async function saveGeneralSettings(
   );
 }
 
-export async function exportShortManuscript(
-  rawInput: ExportShortManuscriptInput
-): Promise<ExportShortManuscriptResult> {
-  const input = ExportShortManuscriptInputSchema.parse(rawInput);
-  const id = browserId("cmd_manuscript_export_short");
-  return ExportShortManuscriptResultSchema.parse(
-    await invokeCommand<ExportShortManuscriptResult>(
-      createEnvelope("manuscript.exportShort", input, {
-        id,
-        correlationId: id
-      })
-    )
-  );
-}
-
 export async function exportLongManuscript(
   rawInput: ExportLongManuscriptInput
 ): Promise<ExportLongManuscriptResult> {
@@ -313,15 +159,4 @@ export async function exportLongManuscript(
     )
   );
 }
-
-export {
-  listAgentTeams,
-  createAgentTeam,
-  renameAgentTeam,
-  deleteAgentTeam,
-  setAgentTeamEnabled,
-  saveAgentTeams,
-  downloadAgentTeam,
-  installAgentTeam,
-  saveBuiltinSubagents
-} from "./agent-teams-api";
+export { appearance } from "./appearance-api";

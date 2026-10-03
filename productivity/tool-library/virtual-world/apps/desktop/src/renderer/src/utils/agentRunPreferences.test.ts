@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import type { WorkspaceDocument } from "../types/workspace";
 import {
   AGENT_MODEL_SELECTION_STORAGE_KEY,
-  activeAgentDocumentForSelection,
   agentConversationKeyForDocument,
   agentRunScopeForDocument,
   parseAgentModelSelection,
@@ -62,80 +61,10 @@ describe("agent run preferences", () => {
     expect(parseAgentModelSelection("not-json")).toBeUndefined();
   });
 
-  it("shares one conversation across all stages and sections of each book", () => {
-    const firstOther = workspaceDocument("book-one");
-    const secondOther = workspaceDocument("book-two");
-    const firstPlot = workspaceDocument("book-one", "plot_design");
-    const shortDraftRoot = {
-      ...workspaceDocument("book-one", "draft"),
-      shortAgentId: "short" as const
-    };
-    const scriptDraftRoot = {
-      ...workspaceDocument("script-one", "draft", "script"),
-      shortAgentId: "script" as const
-    };
-
-    expect(agentConversationKeyForDocument(firstOther)).toBe("book-one:chat");
-    expect(agentConversationKeyForDocument(secondOther)).toBe("book-two:chat");
-    expect(agentConversationKeyForDocument(firstPlot)).toBe("book-one:chat");
+  it("does not create a library conversation key from a retired creation document", () => {
     expect(
-      agentConversationKeyForDocument(
-        workspaceDocument("script-one", "plot_design", "script")
-      )
-    ).toBe("script-one:chat");
-    expect(
-      agentConversationKeyForDocument({
-        ...shortDraftRoot,
-        expertSectionId: "section-1"
-      })
-    ).toBe(agentConversationKeyForDocument(shortDraftRoot));
-    expect(
-      agentConversationKeyForDocument({
-        ...shortDraftRoot,
-        expertSectionId: "section-2"
-      })
-    ).toBe("book-one:chat");
-    expect(
-      agentConversationKeyForDocument({
-        ...scriptDraftRoot,
-        expertSectionId: "episode-1"
-      })
-    ).toBe(agentConversationKeyForDocument(scriptDraftRoot));
-    expect(
-      agentConversationKeyForDocument({
-        ...scriptDraftRoot,
-        expertSectionId: "episode-2"
-      })
-    ).toBe("script-one:chat");
-    expect(
-      agentConversationKeyForDocument({
-        ...shortDraftRoot,
-        workspaceId: "book-two",
-        expertSectionId: "section-1"
-      })
-    ).toBe("book-two:chat");
-    for (const stage of [
-      "character_design",
-      "plot_design",
-      "intro_design",
-      "plot_refine",
-      "outline",
-      "draft"
-    ]) {
-      expect(
-        agentConversationKeyForDocument(workspaceDocument("book-one", stage))
-      ).toBe("book-one:chat");
-      expect(
-        agentConversationKeyForDocument(
-          workspaceDocument("script-one", stage, "script")
-        )
-      ).toBe("script-one:chat");
-    }
-    expect(agentRunScopeForDocument(firstOther)).toBe("book:book-one");
-    expect(agentRunScopeForDocument(secondOther)).toBe("book:book-two");
-    expect(agentConversationKeyForDocument(workspaceDocument(undefined))).toBe(
-      "general"
-    );
+      agentConversationKeyForDocument(workspaceDocument("book-one", "draft"))
+    ).toBe("general");
   });
 
   it("shares one management conversation inside a library and isolates domains", () => {
@@ -172,16 +101,6 @@ describe("agent run preferences", () => {
     expect(agentRunScopeForDocument(materialEntry)).toBe(
       "library:material:shared-library"
     );
-    const activeBookDocument = workspaceDocument("book-one", "outline");
-    expect(
-      activeAgentDocumentForSelection(materialEntry, activeBookDocument)
-    ).toBe(materialEntry);
-    expect(
-      activeAgentDocumentForSelection(
-        workspaceDocument("book-two", "plot_design"),
-        activeBookDocument
-      )
-    ).toBe(activeBookDocument);
   });
 
   it("accepts the longest valid book-scoped preference key", () => {

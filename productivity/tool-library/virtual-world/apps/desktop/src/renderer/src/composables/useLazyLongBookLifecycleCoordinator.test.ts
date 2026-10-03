@@ -135,7 +135,7 @@ function action(action: "rename" | "duplicate") {
     action,
     node: {
       id: `long-book:${BOOK_ID}`,
-      label: "懒加载长篇",
+      label: "懒加载小说",
       catalogNodeType: "long-book",
       longBookId: BOOK_ID,
       workspaceType: "long"

@@ -18,7 +18,7 @@ function summary(
 ): LongBookSummary {
   return {
     id: bookId,
-    title: `长篇 ${bookId}`,
+    title: `小说 ${bookId}`,
     updatedAt: NOW,
     navigation: {
       worldbuilding: [],
@@ -69,7 +69,7 @@ function selection(bookId: string): LongWorkspaceSelection {
     key: `selection:${bookId}`,
     root: "worldbuilding",
     title: `选择 ${bookId}`,
-    breadcrumbs: [`长篇 ${bookId}`],
+    breadcrumbs: [`小说 ${bookId}`],
     files: [],
     preferredRole: "content"
   };
@@ -308,7 +308,7 @@ describe("long workspace store", () => {
     const store = useLongWorkspaceStore();
     store.bookRenameTarget = { bookId: "book-a", title: "待改名" };
     store.structureDialogOpen = true;
-    store.structureAgentsMd = "# 长篇上下文";
+    store.structureAgentsMd = "# 小说上下文";
     store.structureAgentsMdPending = true;
     store.mutationPending = true;
     store.proposalApprovalPending = true;

@@ -1,23 +1,18 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   CommandEnvelopeSchema,
-  DEFAULT_SCRIPT_WORKSPACE_AGENT_PROFILES,
   DEFAULT_LONG_AGENT_PROFILES,
   LongGetWorkspaceIndexCommandEnvelopeSchema,
   SystemEventEnvelopeSchema,
   createEnvelope,
-  createDefaultCreativePlotStages,
-  createExpertDraftDirectoryRevision,
-  createShortWorkspaceContentRevision,
   longChapterBodyFileId,
   longChapterFilePath,
-  type CommandResult,
   type SystemEventEnvelope
 } from "@deepwrite/contracts";
 import type {
   AgentRunInput,
   AgentRuntimeEvent
 } from "@deepwrite/pi-runtime-adapter";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type {
   UtilityCommandHandlerContext,
   UtilityRuntimeOptions
@@ -179,127 +174,6 @@ describe("Agent Utility prompt forwarding", () => {
     });
   });
 
-  it("forwards scriptAgentProfile from the command payload into streamPrompt", async () => {
-    await import("./agent-entry");
-
-    const scriptAgentProfile = DEFAULT_SCRIPT_WORKSPACE_AGENT_PROFILES[0]!;
-    const emptyRevision = createShortWorkspaceContentRevision("");
-    const characterContent = "人物设定快照";
-    const plotStages = createDefaultCreativePlotStages();
-    const command = CommandEnvelopeSchema.parse(
-      createEnvelope(
-        "agent.prompt",
-        {
-          sessionId: "session-script-forwarding",
-          message: "请检查人物设定",
-          scriptAgentProfile,
-          workspaceContext: {
-            activeResource: {
-              id: "script-1:character_design",
-              domain: "creation",
-              title: "人物设计",
-              path: ["测试剧本", "人物设计"],
-              source: "live-editor",
-              content: characterContent
-            },
-            scriptWorkspace: {
-              id: "script-1",
-              title: "测试剧本",
-              categories: ["悬疑"],
-              activeStageId: "character_design",
-              activeAgentId: "script",
-              plotStages,
-              expertDraft: {
-                id: "draft",
-                title: "剧集",
-                revision: createExpertDraftDirectoryRevision([
-                  {
-                    id: "episode-1",
-                    title: "第一集",
-                    wordCountRequirement: ""
-                  }
-                ]),
-                sections: [
-                  {
-                    id: "episode-1",
-                    title: "第一集",
-                    wordCountRequirement: "",
-                    body: {
-                      documentId: "draft-section:episode-1:body",
-                      title: "第一集",
-                      content: "",
-                      revision: emptyRevision
-                    },
-                    characterState: {
-                      documentId: "draft-section:episode-1:character-state",
-                      title: "第一集 · 人物状态",
-                      content: "",
-                      revision: emptyRevision
-                    }
-                  }
-                ]
-              },
-              stages: [
-                {
-                  stageId: "character_design",
-                  title: "人物设计",
-                  content: characterContent,
-                  revision:
-                    createShortWorkspaceContentRevision(characterContent)
-                },
-                ...plotStages.map((stage) => ({
-                  stageId: stage.id,
-                  title: stage.title,
-                  content: "",
-                  revision: emptyRevision
-                }))
-              ]
-            }
-          }
-        },
-        {
-          id: "command-script-forwarding",
-          context: {
-            correlationId: "correlation-script-forwarding",
-            sessionId: "session-script-forwarding",
-            resourceId: "script-1:character_design"
-          }
-        }
-      )
-    );
-    const emittedEvents: SystemEventEnvelope[] = [];
-
-    const handler = captured.commandHandler;
-    expect(handler).toBeTypeOf("function");
-    const result = (await handler!(command, (event) =>
-      emittedEvents.push(event)
-    )) as CommandResult;
-
-    expect(result).toMatchObject({
-      status: "accepted",
-      requestId: "command-script-forwarding",
-      payload: {
-        sessionId: "session-script-forwarding"
-      }
-    });
-    await vi.waitFor(() => {
-      expect(captured.startInputs).toHaveLength(1);
-    });
-    expect(captured.startInputs[0]).toMatchObject({
-      sessionId: "session-script-forwarding",
-      prompt: "请检查人物设定",
-      scriptAgentProfile,
-      workspaceContext: {
-        scriptWorkspace: {
-          id: "script-1",
-          activeAgentId: "script"
-        }
-      }
-    });
-    expect(captured.startInputs[0]?.agentProfile).toBeUndefined();
-    expect(emittedEvents).toEqual([]);
-  });
-
   it("forwards the isolated longAgentProfile and navigation context", async () => {
     await import("./agent-entry");
     const longAgentProfile = DEFAULT_LONG_AGENT_PROFILES.find(
@@ -381,8 +255,8 @@ describe("Agent Utility prompt forwarding", () => {
         }
       }
     });
-    expect(captured.startInputs[0]?.agentProfile).toBeUndefined();
-    expect(captured.startInputs[0]?.scriptAgentProfile).toBeUndefined();
+    expect(captured.startInputs[0]).not.toHaveProperty("agentProfile");
+    expect(captured.startInputs[0]).not.toHaveProperty("scriptAgentProfile");
     expect(captured.startInputs[0]?.longCommandExecutor).toBeTypeOf("function");
 
     const queryCommand = LongGetWorkspaceIndexCommandEnvelopeSchema.parse(

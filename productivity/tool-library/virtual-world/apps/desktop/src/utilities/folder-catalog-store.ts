@@ -61,8 +61,6 @@ import {
   MaterialLibraryGroupSchema,
   MaterialLibrarySchema,
   MaterialLibraryProjectManifestSchema,
-  MarketplaceInstallPackageSchema,
-  CatalogInstallMarketplaceSkillContentResultSchema,
   ImportLibraryEntriesInputSchema,
   SaveLibraryEntryInputSchema,
   MoveLibraryEntryInputSchema,
@@ -122,8 +120,6 @@ import {
   type MaterialLibraryGroup,
   type MaterialEntry,
   type MaterialStageId,
-  type MarketplaceInstallPackage,
-  type CatalogInstallMarketplaceSkillContentResult,
   type ImportLibraryEntriesInput,
   type ImportLibraryEntriesResult,
   type MutateCharacterStructureInput,
@@ -158,7 +154,6 @@ import type { ImportedLegacyBook } from "./legacy-book-import";
 import type { ImportedLegacyLibrary } from "./legacy-library-import";
 import { nextCopyTitle } from "./copy-title";
 import { projectTransactionFileIdentity } from "./project-transaction";
-
 const MANIFEST_FILE = "deepwrite.json";
 const REGISTRY_FILE = "catalog-registry.json";
 const REGISTRY_BACKUP_FILE = "catalog-registry.json.bak";
@@ -168,7 +163,6 @@ const DEFAULT_MAX_MARKDOWN_BYTES = 32 * 1024 * 1024;
 const DEFAULT_MAX_PROJECT_CONTENT_BYTES = 128 * 1024 * 1024;
 const DEFAULT_MAX_SNAPSHOT_CONTENT_BYTES = 256 * 1024 * 1024;
 const DEFAULT_MAX_DRAFT_RECOVERY_BYTES = 128 * 1024 * 1024;
-
 export const FolderBookProjectManifestSchema = BookProjectManifestSchema;
 export const FolderCurrentBookProjectManifestSchema =
   CurrentBookProjectManifestSchema;
@@ -183,14 +177,12 @@ export const FolderMaterialGroupProjectManifestSchema =
 export const FolderSkillGroupProjectManifestSchema =
   SkillGroupProjectManifestSchema;
 export const FolderCatalogProjectManifestSchema = CatalogProjectManifestSchema;
-
 export type FolderBookProjectManifest = BookProjectManifest;
 export type FolderCurrentBookProjectManifest = CurrentBookProjectManifest;
 export type FolderLegacyBookProjectManifest = LegacyBookProjectManifest;
 export type FolderMaterialProjectManifest = MaterialLibraryProjectManifest;
 export type FolderSkillProjectManifest = SkillLibraryProjectManifest;
 export type FolderCatalogProjectManifest = CatalogProjectManifest;
-
 export const CATALOG_PROJECT_DOMAINS = [
   "book",
   "material-library",
@@ -200,14 +192,12 @@ export const CATALOG_PROJECT_DOMAINS = [
 ] as const;
 export type FolderCatalogProjectDomain =
   (typeof CATALOG_PROJECT_DOMAINS)[number];
-
 interface RegistryProject {
   id: string;
   domain: FolderCatalogProjectDomain;
   projectDirectory: string;
   registeredAt: string;
 }
-
 interface FolderCatalogRegistry {
   schemaVersion: 1;
   revision: number;
@@ -218,24 +208,20 @@ interface FolderCatalogRegistry {
   creativePlotStages: CreativePlotStage[];
   projects: RegistryProject[];
 }
-
 interface WriteMissingSnapshotProjectsResult {
   registry: FolderCatalogRegistry;
   createdProjectDirectories: string[];
 }
-
 export type FolderCatalogResource =
   | Book
   | MaterialLibrary
   | MaterialLibraryGroup
   | SkillLibrary
   | SkillLibraryGroup;
-
 interface CatalogContentMetadata {
   contentBytes: number;
   contentStamp: string;
 }
-
 export interface OpenFolderCatalogProjectResult<
   Resource extends FolderCatalogResource = FolderCatalogResource
 > {
@@ -244,7 +230,6 @@ export interface OpenFolderCatalogProjectResult<
   revision: number;
   resource: Resource;
 }
-
 export interface FolderCatalogStoreOptions {
   userDataPath: string;
   initialSnapshot?: CatalogSnapshot;
@@ -255,27 +240,21 @@ export interface FolderCatalogStoreOptions {
   maxSnapshotContentBytes?: number;
   maxDraftRecoveryBytes?: number;
 }
-
 export interface CreateShortBookAtDirectoryInput {
   parentDirectory?: string;
   input: CreateShortBookInput;
 }
-
 export interface CreateScriptBookAtDirectoryInput {
   parentDirectory?: string;
   input: CreateScriptBookInput;
 }
-
 export type FolderCatalogLibraryDomain = "material" | "skill";
-
 export type CreateFolderLibraryInput = CreateLibraryInput & {
   parentDirectory?: string | undefined;
 };
-
 export type CreateFolderLibraryGroupInput = CreateLibraryGroupInput & {
   parentDirectory?: string | undefined;
 };
-
 interface CreateFolderLibraryEntryInputBase {
   libraryId: string;
   title: string;
@@ -283,7 +262,6 @@ interface CreateFolderLibraryEntryInputBase {
   baseProjectRevision?: number | undefined;
   force?: boolean | undefined;
 }
-
 export type CreateFolderLibraryEntryInput =
   | (CreateFolderLibraryEntryInputBase & {
       domain: "material";
@@ -293,7 +271,6 @@ export type CreateFolderLibraryEntryInput =
       domain: "skill";
       stageId?: SkillStageId | undefined;
     });
-
 function nextImportedEntryTitle(
   sourceTitle: string,
   occupiedTitles: Set<string>
@@ -305,7 +282,7 @@ function nextImportedEntryTitle(
     occupiedTitles.add(comparable(base));
     return base;
   }
-  for (let index = 2; index < 100_000; index += 1) {
+  for (let index = 2; index < 100000; index += 1) {
     const suffix = ` (${index})`;
     const shortened = [...base]
       .slice(0, Math.max(1, 256 - [...suffix].length))
@@ -318,7 +295,6 @@ function nextImportedEntryTitle(
   }
   throw new Error("无法为导入条目生成不重复的标题。");
 }
-
 export interface RemoveFolderLibraryEntryInput {
   domain: FolderCatalogLibraryDomain;
   libraryId: string;
@@ -327,13 +303,11 @@ export interface RemoveFolderLibraryEntryInput {
   baseProjectRevision?: number | undefined;
   force?: boolean | undefined;
 }
-
 export interface RemoveFolderLibraryEntryResult {
   libraryId: string;
   entryId: string;
   deleted: boolean;
 }
-
 export type FolderCatalogUnregisterDomain =
   | "book"
   | FolderCatalogLibraryDomain
@@ -341,44 +315,35 @@ export type FolderCatalogUnregisterDomain =
   | "material-group"
   | "skill-library"
   | "skill-group";
-
 export interface UnregisterFolderCatalogProjectInput {
   projectId: string;
   domain: FolderCatalogUnregisterDomain;
 }
-
 export interface UnregisterFolderCatalogProjectResult {
   projectId: string;
   domain: FolderCatalogUnregisterDomain;
   unregistered: boolean;
 }
-
 export interface DeleteFolderCatalogProjectInput {
   projectId: string;
   domain: "book" | FolderCatalogLibraryDomain;
 }
-
 export interface DeleteFolderCatalogProjectResult {
   projectId: string;
   domain: "book" | FolderCatalogLibraryDomain;
   deleted: boolean;
 }
-
 interface DuplicateProjectWritePlan {
   domain: FolderCatalogProjectDomain;
   parentDirectory: string;
   resource: FolderCatalogResource;
   writingContext?: string;
 }
-
 export type SaveFolderDocumentInput = SaveDocumentInput;
-
 export type UpdateFolderBookInput = UpdateBookInput;
-
 export class FolderCatalogConflictError extends Error {
   readonly expectedRevision: string | number;
   readonly actualRevision: string | number;
-
   constructor(
     expectedRevision: string | number,
     actualRevision: string | number
@@ -391,7 +356,6 @@ export class FolderCatalogConflictError extends Error {
     this.actualRevision = actualRevision;
   }
 }
-
 export class FolderCatalogStore {
   readonly registryPath: string;
   readonly registryBackupPath: string;
@@ -400,7 +364,6 @@ export class FolderCatalogStore {
   readonly defaultProjectParents: Readonly<
     Record<FolderCatalogProjectDomain, string>
   >;
-
   private readonly initialSnapshot: CatalogSnapshot | undefined;
   private readonly now: () => string;
   private readonly maxManifestBytes: number;
@@ -409,7 +372,6 @@ export class FolderCatalogStore {
   private readonly maxSnapshotContentBytes: number;
   private readonly maxDraftRecoveryBytes: number;
   private writeChain: Promise<void> = Promise.resolve();
-
   constructor(options: FolderCatalogStoreOptions) {
     const userDataPath = options.userDataPath.trim();
     if (!userDataPath) {
@@ -456,21 +418,18 @@ export class FolderCatalogStore {
       "draft recovery"
     );
   }
-
   async snapshot(): Promise<CatalogSnapshot> {
     return await this.readAfterWrites(async () => {
       const registry = await this.ensureRegistry();
       return await this.aggregateSnapshot(registry);
     });
   }
-
   async indexSnapshot(): Promise<CatalogIndexSnapshot> {
     return await this.readAfterWrites(async () => {
       const registry = await this.ensureRegistry();
       return await this.aggregateIndexSnapshot(registry);
     });
   }
-
   async readDocument(
     rawInput: CatalogReadDocumentInput
   ): Promise<CatalogReadDocumentResult> {
@@ -487,7 +446,6 @@ export class FolderCatalogStore {
           kindForDomain(registration.domain),
           input.projectId
         );
-
       if (input.target === "overview") {
         if (
           manifest.kind !== "deepwrite.material-library" &&
@@ -511,7 +469,6 @@ export class FolderCatalogStore {
           updatedAt: manifest.updatedAt
         });
       }
-
       const document = findManifestDocument(manifest, input.documentId);
       if (!document) {
         throw new Error("文档不存在或不属于指定项目。");
@@ -534,7 +491,6 @@ export class FolderCatalogStore {
       });
     });
   }
-
   async readWritingContext(
     rawInput: ReadWritingContextInput
   ): Promise<ReadWritingContextResult> {
@@ -560,7 +516,6 @@ export class FolderCatalogStore {
       });
     });
   }
-
   async writeWritingContext(
     rawInput: WriteWritingContextInput
   ): Promise<WriteWritingContextResult> {
@@ -582,7 +537,6 @@ export class FolderCatalogStore {
       });
     });
   }
-
   async loadDraftRecovery(): Promise<CatalogDraftRecovery> {
     return await this.readAfterWrites(async () => {
       const text = await readOptionalUtf8File(
@@ -597,7 +551,6 @@ export class FolderCatalogStore {
           );
     });
   }
-
   async saveDraftRecovery(rawDrafts: CatalogDraftRecovery): Promise<void> {
     const drafts = CatalogDraftRecoverySchema.parse(rawDrafts);
     await this.mutate(async () => {
@@ -608,7 +561,6 @@ export class FolderCatalogStore {
       );
     });
   }
-
   async migrateSnapshot(
     rawSnapshot: CatalogSnapshot
   ): Promise<CatalogSnapshot> {
@@ -640,7 +592,6 @@ export class FolderCatalogStore {
       return await this.aggregateSnapshot(next);
     });
   }
-
   async syncSnapshot(rawSnapshot: CatalogSnapshot): Promise<CatalogSnapshot> {
     const snapshot = CatalogSnapshotSchema.parse(structuredClone(rawSnapshot));
     return await this.mutate(async () => {
@@ -678,7 +629,6 @@ export class FolderCatalogStore {
       return await this.aggregateSnapshot(next);
     });
   }
-
   async createShortBook(
     rawInput: CreateShortBookInput,
     parentDirectory?: string
@@ -703,7 +653,6 @@ export class FolderCatalogStore {
       input.defaultPlotStageIds
     );
   }
-
   async createScriptBook(
     rawInput: CreateScriptBookInput,
     parentDirectory?: string
@@ -728,7 +677,6 @@ export class FolderCatalogStore {
       input.defaultPlotStageIds
     );
   }
-
   private async createBookProject<Resource extends Book>(
     parentDirectory: string,
     createBook: (now: string) => Resource,
@@ -770,12 +718,15 @@ export class FolderCatalogStore {
       )) as OpenFolderCatalogProjectResult<Resource>;
     });
   }
-
   async createLibrary(
-    rawInput: CreateFolderLibraryInput & { domain: "material" }
+    rawInput: CreateFolderLibraryInput & {
+      domain: "material";
+    }
   ): Promise<OpenFolderCatalogProjectResult<MaterialLibrary>>;
   async createLibrary(
-    rawInput: CreateFolderLibraryInput & { domain: "skill" }
+    rawInput: CreateFolderLibraryInput & {
+      domain: "skill";
+    }
   ): Promise<OpenFolderCatalogProjectResult<SkillLibrary>>;
   async createLibrary(
     rawInput: CreateFolderLibraryInput
@@ -840,7 +791,6 @@ export class FolderCatalogStore {
       )) as OpenFolderCatalogProjectResult<MaterialLibrary | SkillLibrary>;
     });
   }
-
   async updateLibrary(
     rawInput: UpdateLibraryInput
   ): Promise<MaterialLibrary | SkillLibrary> {
@@ -897,7 +847,6 @@ export class FolderCatalogStore {
       ).resource as MaterialLibrary | SkillLibrary;
     });
   }
-
   async createLibraryGroup(
     rawInput: CreateFolderLibraryGroupInput
   ): Promise<
@@ -956,7 +905,6 @@ export class FolderCatalogStore {
           );
         }
       }
-
       const now = this.now();
       const resource: MaterialLibraryGroup | SkillLibraryGroup =
         input.domain === "material"
@@ -998,7 +946,6 @@ export class FolderCatalogStore {
       >;
     });
   }
-
   async importLegacyBook(
     input: ImportedLegacyBook,
     parentDirectory?: string
@@ -1045,13 +992,22 @@ export class FolderCatalogStore {
       )) as OpenFolderCatalogProjectResult<ShortBook>;
     });
   }
-
   async importLegacyLibrary(
-    input: Extract<ImportedLegacyLibrary, { domain: "material" }>,
+    input: Extract<
+      ImportedLegacyLibrary,
+      {
+        domain: "material";
+      }
+    >,
     parentDirectory?: string
   ): Promise<OpenFolderCatalogProjectResult<MaterialLibrary>>;
   async importLegacyLibrary(
-    input: Extract<ImportedLegacyLibrary, { domain: "skill" }>,
+    input: Extract<
+      ImportedLegacyLibrary,
+      {
+        domain: "skill";
+      }
+    >,
     parentDirectory?: string
   ): Promise<OpenFolderCatalogProjectResult<SkillLibrary>>;
   async importLegacyLibrary(
@@ -1117,7 +1073,6 @@ export class FolderCatalogStore {
       )) as OpenFolderCatalogProjectResult<MaterialLibrary | SkillLibrary>;
     });
   }
-
   async openCatalogProject(
     projectDirectory: string,
     expectedDomain?: FolderCatalogProjectDomain,
@@ -1140,7 +1095,6 @@ export class FolderCatalogStore {
       return opened;
     });
   }
-
   async openBookProject(
     projectDirectory: string,
     register = true
@@ -1151,7 +1105,6 @@ export class FolderCatalogStore {
       register
     )) as OpenFolderCatalogProjectResult<Book>;
   }
-
   async openMaterialProject(
     projectDirectory: string,
     register = true
@@ -1162,7 +1115,6 @@ export class FolderCatalogStore {
       register
     )) as OpenFolderCatalogProjectResult<MaterialLibrary>;
   }
-
   async openSkillProject(
     projectDirectory: string,
     register = true
@@ -1173,7 +1125,6 @@ export class FolderCatalogStore {
       register
     )) as OpenFolderCatalogProjectResult<SkillLibrary>;
   }
-
   async updateBook(rawInput: UpdateFolderBookInput): Promise<Book> {
     const input = UpdateBookInputSchema.parse(rawInput);
     if (input.baseProjectRevision !== undefined) {
@@ -1235,7 +1186,6 @@ export class FolderCatalogStore {
         .resource as Book;
     });
   }
-
   async mutatePlotStructure(rawInput: MutatePlotStructureInput): Promise<Book> {
     const input = MutatePlotStructureInputSchema.parse(rawInput);
     if (input.baseProjectRevision !== undefined) {
@@ -1254,10 +1204,8 @@ export class FolderCatalogStore {
       if (!input.force) {
         assertBaseRevision(input.baseProjectRevision, manifest.revision);
       }
-
       const now = this.now();
       const mutation = input.mutation;
-
       if (mutation.type === "move") {
         const plotStages = manifest.plotStages.map((stage) => ({ ...stage }));
         const stageIndex = plotStages.findIndex(
@@ -1293,7 +1241,6 @@ export class FolderCatalogStore {
         return (await this.readProject(projectDirectory, "book", input.bookId))
           .resource as Book;
       }
-
       if (mutation.type === "setEnabled") {
         const plotStages = manifest.plotStages.map((stage) => ({ ...stage }));
         const stageIndex = plotStages.findIndex(
@@ -1329,7 +1276,6 @@ export class FolderCatalogStore {
         return (await this.readProject(projectDirectory, "book", input.bookId))
           .resource as Book;
       }
-
       const globalStages = registry.creativePlotStages.map((stage) => ({
         ...stage
       }));
@@ -1348,7 +1294,6 @@ export class FolderCatalogStore {
           throw new Error(`剧情结构名称“${title.trim()}”已存在。`);
         }
       };
-
       if (mutation.type === "create") {
         const title = mutation.title.trim();
         const description = mutation.description.trim();
@@ -1465,13 +1410,11 @@ export class FolderCatalogStore {
           CreativePlotStagesSchema.parse(globalStages);
         await this.applyGlobalPlotStageDelete(registry, mutation.stageId, now);
       }
-
       await this.bumpRegistry(registry, now);
       return (await this.readProject(projectDirectory, "book", input.bookId))
         .resource as Book;
     });
   }
-
   async mutateCharacterStructure(
     rawInput: MutateCharacterStructureInput
   ): Promise<Book> {
@@ -1503,7 +1446,6 @@ export class FolderCatalogStore {
         overview.path,
         false
       );
-
       if (mutation.type === "setFormat") {
         if (mutation.format === manifest.characterStructure.format) {
           return (
@@ -1801,7 +1743,6 @@ export class FolderCatalogStore {
         .resource as Book;
     });
   }
-
   private async applyGlobalPlotStageCreate(
     registry: FolderCatalogRegistry,
     definition: CreativePlotStage,
@@ -1869,7 +1810,6 @@ export class FolderCatalogStore {
       );
     }
   }
-
   private async applyGlobalPlotStageUpdate(
     registry: FolderCatalogRegistry,
     definition: CreativePlotStage,
@@ -1922,7 +1862,6 @@ export class FolderCatalogStore {
       );
     }
   }
-
   private async applyGlobalPlotStageOrder(
     registry: FolderCatalogRegistry,
     now: string
@@ -1965,7 +1904,6 @@ export class FolderCatalogStore {
       );
     }
   }
-
   private async applyGlobalPlotStageDelete(
     registry: FolderCatalogRegistry,
     stageId: string,
@@ -2053,7 +1991,6 @@ export class FolderCatalogStore {
       }
     }
   }
-
   async updateLibraryGroup(
     rawInput: UpdateLibraryGroupInput
   ): Promise<MaterialLibraryGroup | SkillLibraryGroup> {
@@ -2082,7 +2019,6 @@ export class FolderCatalogStore {
       if (!input.force) {
         assertBaseRevision(input.baseProjectRevision, manifest.revision);
       }
-
       const snapshot = await this.aggregateSnapshot(registry);
       assertUniqueGroupMembers(Object.values(input.members));
       if (input.domain === "material") {
@@ -2129,7 +2065,6 @@ export class FolderCatalogStore {
           );
         }
       }
-
       const now = this.now();
       const next = {
         ...manifest,
@@ -2152,7 +2087,6 @@ export class FolderCatalogStore {
         .resource as MaterialLibraryGroup | SkillLibraryGroup;
     });
   }
-
   async saveDocument(
     rawInput: SaveFolderDocumentInput
   ): Promise<SaveDocumentResult> {
@@ -2291,9 +2225,7 @@ export class FolderCatalogStore {
               )
             ) {
               throw new Error(
-                `正文目录已存在同名${
-                  manifest.bookType === "script" ? "剧集" : "章节"
-                }「${sectionTitle}」。`
+                `正文目录已存在同名${manifest.bookType === "script" ? "剧集" : "章节"}「${sectionTitle}」。`
               );
             }
             documentManifest = {
@@ -2403,7 +2335,6 @@ export class FolderCatalogStore {
       });
     });
   }
-
   async createDraftSection(
     rawInput: CreateDraftSectionInput
   ): Promise<CatalogDraftSection> {
@@ -2426,7 +2357,6 @@ export class FolderCatalogStore {
           `正文最多支持 100 个${manifest.bookType === "script" ? "剧集" : "小节"}。`
         );
       }
-
       let insertionIndex = manifest.draft.sections.length;
       if (input.afterSectionId !== undefined) {
         const afterIndex = manifest.draft.sections.findIndex(
@@ -2434,14 +2364,11 @@ export class FolderCatalogStore {
         );
         if (afterIndex < 0) {
           throw new Error(
-            `找不到插入位置对应的${
-              manifest.bookType === "script" ? "剧集" : "小节"
-            }：${input.afterSectionId}`
+            `找不到插入位置对应的${manifest.bookType === "script" ? "剧集" : "小节"}：${input.afterSectionId}`
           );
         }
         insertionIndex = afterIndex + 1;
       }
-
       const usedDocumentIds = new Set(
         manifestContentItems(manifest).map(({ id }) => id)
       );
@@ -2549,7 +2476,6 @@ export class FolderCatalogStore {
       });
     });
   }
-
   async createDraftSections(
     rawInput: CreateDraftSectionsInput
   ): Promise<CreateDraftSectionsResult> {
@@ -2583,7 +2509,6 @@ export class FolderCatalogStore {
           this.maxProjectContentBytes
         );
       }
-
       if (!input.force) {
         assertBaseRevision(input.baseProjectRevision, manifest.revision);
       }
@@ -2592,7 +2517,6 @@ export class FolderCatalogStore {
           `正文最多支持 100 个${manifest.bookType === "script" ? "剧集" : "小节"}。`
         );
       }
-
       let insertionIndex = manifest.draft.sections.length;
       if (input.afterSectionId !== undefined) {
         const afterIndex = manifest.draft.sections.findIndex(
@@ -2600,14 +2524,11 @@ export class FolderCatalogStore {
         );
         if (afterIndex < 0) {
           throw new Error(
-            `找不到插入位置对应的${
-              manifest.bookType === "script" ? "剧集" : "小节"
-            }：${input.afterSectionId}`
+            `找不到插入位置对应的${manifest.bookType === "script" ? "剧集" : "小节"}：${input.afterSectionId}`
           );
         }
         insertionIndex = afterIndex + 1;
       }
-
       const sections = [...manifest.draft.sections];
       const usedDocumentIds = new Set(
         manifestContentItems(manifest).map(({ id }) => id)
@@ -2675,21 +2596,17 @@ export class FolderCatalogStore {
           updatedAt: now
         });
       }
-
       const seenDraftSectionTitles = new Set(
         manifest.draft.sections.map(({ title }) => title)
       );
       for (const section of createdSections) {
         if (seenDraftSectionTitles.has(section.title)) {
           throw new Error(
-            `正文目录已存在同名${
-              manifest.bookType === "script" ? "剧集" : "小节"
-            }“${section.title}”。`
+            `正文目录已存在同名${manifest.bookType === "script" ? "剧集" : "小节"}“${section.title}”。`
           );
         }
         seenDraftSectionTitles.add(section.title);
       }
-
       sections.splice(insertionIndex, 0, ...createdSections);
       const operationSections = input.sections.map(
         ({ clientSectionId }, index) => ({
@@ -2748,7 +2665,6 @@ export class FolderCatalogStore {
       );
     });
   }
-
   async deleteDraftSection(
     rawInput: DeleteDraftSectionInput
   ): Promise<DeleteDraftSectionResult> {
@@ -2820,7 +2736,6 @@ export class FolderCatalogStore {
       };
     });
   }
-
   async moveDraftSection(
     rawInput: MoveDraftSectionInput
   ): Promise<MoveDraftSectionResult> {
@@ -2886,7 +2801,6 @@ export class FolderCatalogStore {
       };
     });
   }
-
   async saveLibraryEntry(
     rawInput: SaveLibraryEntryInput
   ): Promise<MaterialEntry | SkillEntry> {
@@ -3020,12 +2934,15 @@ export class FolderCatalogStore {
       };
     });
   }
-
   async createLibraryEntry(
-    rawInput: CreateFolderLibraryEntryInput & { domain: "material" }
+    rawInput: CreateFolderLibraryEntryInput & {
+      domain: "material";
+    }
   ): Promise<MaterialEntry>;
   async createLibraryEntry(
-    rawInput: CreateFolderLibraryEntryInput & { domain: "skill" }
+    rawInput: CreateFolderLibraryEntryInput & {
+      domain: "skill";
+    }
   ): Promise<SkillEntry>;
   async createLibraryEntry(
     rawInput: CreateFolderLibraryEntryInput
@@ -3147,7 +3064,6 @@ export class FolderCatalogStore {
       };
     });
   }
-
   async importLibraryEntries(
     rawInput: ImportLibraryEntriesInput
   ): Promise<ImportLibraryEntriesResult> {
@@ -3186,7 +3102,6 @@ export class FolderCatalogStore {
       ) {
         throw new Error("导入条目数量超过资料库容量，请减少选择后重试。");
       }
-
       const now = this.now();
       const occupiedTitles = new Set(
         manifest.entries.map((entry) =>
@@ -3201,8 +3116,10 @@ export class FolderCatalogStore {
         | MaterialLibraryProjectManifest["entries"][number]
         | SkillLibraryProjectManifest["entries"][number]
       > = [];
-      const files: Array<{ target: string; content: string }> = [];
-
+      const files: Array<{
+        target: string;
+        content: string;
+      }> = [];
       for (const source of input.entries) {
         const title = nextImportedEntryTitle(source.title, occupiedTitles);
         const id = createCatalogId(`${input.domain}-entry`);
@@ -3253,7 +3170,6 @@ export class FolderCatalogStore {
           createdEntries.push({ ...entry, body: source.content });
         }
       }
-
       const nextManifest =
         manifest.kind === "deepwrite.material-library"
           ? FolderMaterialProjectManifestSchema.parse({
@@ -3279,7 +3195,6 @@ export class FolderCatalogStore {
       return { entries: createdEntries };
     });
   }
-
   async moveLibraryEntry(
     rawInput: MoveLibraryEntryInput
   ): Promise<MoveLibraryEntryResult> {
@@ -3315,7 +3230,6 @@ export class FolderCatalogStore {
           input.sourceBaseProjectRevision,
           sourceManifest.revision
         );
-
       const sourceEntry = sourceManifest.entries[entryIndex]!;
       const now = this.now();
       if (input.sourceLibraryId === input.targetLibraryId) {
@@ -3357,7 +3271,6 @@ export class FolderCatalogStore {
           entryId: input.entryId
         };
       }
-
       const targetDirectory = await secureProjectRoot(
         findRegistration(
           registry,
@@ -3524,7 +3437,6 @@ export class FolderCatalogStore {
       };
     });
   }
-
   async removeLibraryEntry(
     rawInput: RemoveFolderLibraryEntryInput
   ): Promise<RemoveFolderLibraryEntryResult> {
@@ -3619,7 +3531,6 @@ export class FolderCatalogStore {
       return { libraryId, entryId, deleted: true };
     });
   }
-
   async unregisterProject(
     rawInput: UnregisterFolderCatalogProjectInput
   ): Promise<UnregisterFolderCatalogProjectResult> {
@@ -3645,7 +3556,6 @@ export class FolderCatalogStore {
       return { projectId, domain, unregistered };
     });
   }
-
   async deleteProject(
     rawInput: DeleteFolderCatalogProjectInput
   ): Promise<DeleteFolderCatalogProjectResult> {
@@ -3661,12 +3571,10 @@ export class FolderCatalogStore {
       if (!registration) {
         return { projectId, domain, deleted: false };
       }
-
       const projectDirectory = await secureProjectRoot(
         registration.projectDirectory
       );
       await this.readProject(projectDirectory, registryDomain, projectId);
-
       const stagedDeletion = join(
         dirname(projectDirectory),
         `.deepwrite-deleting-${randomHex8()}`
@@ -3687,12 +3595,10 @@ export class FolderCatalogStore {
         await rename(stagedDeletion, projectDirectory);
         throw error;
       }
-
       await removeEmptyOrPartialProject(stagedDeletion);
       return { projectId, domain, deleted: true };
     });
   }
-
   async duplicateProject(
     rawInput: DuplicateCatalogProjectInput
   ): Promise<DuplicateCatalogProjectResult> {
@@ -3706,7 +3612,6 @@ export class FolderCatalogStore {
       const materialTitles = snapshot.materials.map(({ title }) => title);
       const skillTitles = snapshot.skills.map(({ title }) => title);
       let primaryResource: FolderCatalogResource;
-
       if (input.domain === "book") {
         const source = snapshot.books.find(({ id }) => id === input.projectId);
         if (!source) throw new Error("未找到要复制的创作空间。");
@@ -3864,7 +3769,6 @@ export class FolderCatalogStore {
           resource: primaryResource
         });
       }
-
       const createdProjectDirectories: string[] = [];
       const registrations: RegistryProject[] = [];
       try {
@@ -3905,7 +3809,6 @@ export class FolderCatalogStore {
         }
         throw error;
       }
-
       return {
         sourceProjectId: input.projectId,
         projectId: primaryResource.id,
@@ -3915,290 +3818,16 @@ export class FolderCatalogStore {
       };
     });
   }
-
-  async installMarketplaceSkillContent(
-    rawInput: MarketplaceInstallPackage
-  ): Promise<CatalogInstallMarketplaceSkillContentResult> {
-    const input = MarketplaceInstallPackageSchema.parse(rawInput);
-    return await this.mutate(async () => {
-      const registry = await this.ensureRegistry();
-      const snapshot = await this.aggregateSnapshot(registry);
-      const sourceRef = {
-        contentType: input.source.contentType,
-        id: input.source.contentId
-      } as const;
-      const matchingLibraries = snapshot.skills.filter(
-        ({ marketplaceSource }) =>
-          marketplaceSource?.contentType === input.source.contentType &&
-          marketplaceSource.contentId === input.source.contentId &&
-          marketplaceSource.version === input.source.version
-      );
-      const matchingEntryLibrary = snapshot.skills.find(({ entries }) =>
-        entries.some(
-          ({ marketplaceSource }) =>
-            marketplaceSource?.contentType === input.source.contentType &&
-            marketplaceSource.contentId === input.source.contentId &&
-            marketplaceSource.version === input.source.version
-        )
-      );
-      const matchingGroup = snapshot.skillGroups.find(
-        ({ marketplaceSource }) =>
-          marketplaceSource?.contentType === input.source.contentType &&
-          marketplaceSource.contentId === input.source.contentId &&
-          marketplaceSource.version === input.source.version
-      );
-      if (
-        matchingLibraries.length > 0 ||
-        matchingEntryLibrary ||
-        matchingGroup
-      ) {
-        const installedLibraries = matchingEntryLibrary
-          ? [...matchingLibraries, matchingEntryLibrary].filter(
-              (library, index, values) =>
-                values.findIndex(({ id }) => id === library.id) === index
-            )
-          : matchingLibraries;
-        return CatalogInstallMarketplaceSkillContentResultSchema.parse({
-          source: sourceRef,
-          version: input.source.version,
-          title:
-            matchingGroup?.title ?? installedLibraries[0]?.title ?? input.title,
-          alreadyInstalled: true,
-          libraryIds: installedLibraries.map(({ id }) => id),
-          ...(matchingGroup ? { groupId: matchingGroup.id } : {})
-        });
-      }
-
-      if (input.targetLibraryId) {
-        if (
-          input.source.contentType !== "skill" ||
-          input.createGroup ||
-          input.buckets.length !== 1 ||
-          input.buckets[0]!.entries.length !== 1
-        ) {
-          throw new Error("只有单技能可以安装到已有技能库。");
-        }
-        const targetLibrary = snapshot.skills.find(
-          ({ id }) => id === input.targetLibraryId
-        );
-        if (!targetLibrary || targetLibrary.isBuiltin) {
-          throw new Error("目标技能库不存在或不可写。");
-        }
-        const bucket = input.buckets[0]!;
-        const registration = findRegistration(
-          registry,
-          targetLibrary.id,
-          "skill-library"
-        );
-        const projectDirectory = await secureProjectRoot(
-          registration.projectDirectory
-        );
-        const manifest = await this.readManifest(
-          projectDirectory,
-          "deepwrite.skill-library",
-          targetLibrary.id
-        );
-        const remoteEntry = bucket.entries[0]!;
-        const now = this.now();
-        const id = createCatalogId("skill-entry");
-        const path = await uniqueRelativeMarkdownPath(
-          projectDirectory,
-          "entries",
-          id,
-          new Set(
-            manifest.entries.map((entry) => portableContentPathKey(entry.path))
-          )
-        );
-        const title = nextMarketplaceTitle(
-          remoteEntry.title,
-          manifest.entries.map((entry) => entry.title)
-        );
-        const entry = {
-          id,
-          stageId: remoteEntry.stageId,
-          title,
-          path,
-          createdAt: now,
-          updatedAt: now,
-          marketplaceSource: {
-            contentType: input.source.contentType,
-            contentId: input.source.contentId,
-            version: input.source.version,
-            installedAt: now
-          },
-          sourceSkillId: remoteEntry.marketplaceSkillId
-        };
-        const next = FolderSkillProjectManifestSchema.parse({
-          ...manifest,
-          revision: manifest.revision + 1,
-          updatedAt: now,
-          entries: [...manifest.entries, entry]
-        });
-        await commitProjectMarkdownUpdate(
-          await secureWritableProjectPath(projectDirectory, path),
-          remoteEntry.content,
-          undefined,
-          join(projectDirectory, MANIFEST_FILE),
-          next,
-          this.maxMarkdownBytes,
-          this.maxManifestBytes
-        );
-        await this.bumpRegistry(registry, now);
-        return CatalogInstallMarketplaceSkillContentResultSchema.parse({
-          source: sourceRef,
-          version: input.source.version,
-          title,
-          alreadyInstalled: false,
-          libraryIds: [targetLibrary.id]
-        });
-      }
-
-      const now = this.now();
-      const usedLibraryTitles = snapshot.skills.map(({ title }) => title);
-      const plans: DuplicateProjectWritePlan[] = [];
-      const members: SkillLibraryGroup["members"] = {};
-      const libraryIds: string[] = [];
-      const kindLabels: Record<
-        MarketplaceInstallPackage["buckets"][number]["kind"],
-        string
-      > = {
-        general: "通用",
-        plot: "剧情",
-        style: "风格",
-        other: "其他"
-      };
-
-      for (const bucket of input.buckets) {
-        const baseTitle =
-          input.buckets.length === 1 && !input.createGroup
-            ? input.title
-            : `${input.title} · ${kindLabels[bucket.kind]}`;
-        const title = nextMarketplaceTitle(baseTitle, usedLibraryTitles);
-        usedLibraryTitles.push(title);
-        const usedEntryTitles: string[] = [];
-        const library = SkillLibrarySchema.parse({
-          id: createCatalogId("skill"),
-          title,
-          skillType: bucket.libraryType,
-          skillKind: bucket.kind,
-          overview: input.overview,
-          isBuiltin: false,
-          marketplaceSource: {
-            contentType: input.source.contentType,
-            contentId: input.source.contentId,
-            version: input.source.version,
-            installedAt: now,
-            ...(input.createGroup ? { bucketKind: bucket.kind } : {})
-          },
-          entries: bucket.entries.map((entry) => {
-            const entryTitle = nextMarketplaceTitle(
-              entry.title,
-              usedEntryTitles
-            );
-            usedEntryTitles.push(entryTitle);
-            return {
-              id: createCatalogId("skill-entry"),
-              stageId: entry.stageId,
-              title: entryTitle,
-              body: entry.content,
-              sourceSkillId: entry.marketplaceSkillId,
-              createdAt: now,
-              updatedAt: now
-            };
-          }),
-          createdAt: now,
-          updatedAt: now
-        });
-        libraryIds.push(library.id);
-        members[bucket.kind] = library.id;
-        plans.push({
-          domain: "skill-library",
-          parentDirectory: this.defaultProjectParents["skill-library"],
-          resource: library
-        });
-      }
-
-      let group: SkillLibraryGroup | undefined;
-      if (input.createGroup) {
-        group = SkillLibraryGroupSchema.parse({
-          id: createCatalogId("skill-group"),
-          title: nextMarketplaceTitle(
-            input.title,
-            snapshot.skillGroups.map(({ title }) => title)
-          ),
-          members,
-          marketplaceSource: {
-            contentType: input.source.contentType,
-            contentId: input.source.contentId,
-            version: input.source.version,
-            installedAt: now
-          },
-          createdAt: now,
-          updatedAt: now
-        });
-        plans.push({
-          domain: "skill-group",
-          parentDirectory: this.defaultProjectParents["skill-group"],
-          resource: group
-        });
-      }
-
-      const createdProjectDirectories: string[] = [];
-      const registrations: RegistryProject[] = [];
-      try {
-        for (const plan of plans) {
-          const projectDirectory = await this.writeNewResourceProject(
-            plan.domain,
-            plan.parentDirectory,
-            plan.resource
-          );
-          createdProjectDirectories.push(projectDirectory);
-          registrations.push({
-            id: plan.resource.id,
-            domain: plan.domain,
-            projectDirectory,
-            registeredAt: now
-          });
-        }
-        await this.writeRegistry({
-          ...registry,
-          revision: registry.revision + 1,
-          updatedAt: now,
-          projects: [...registry.projects, ...registrations]
-        });
-      } catch (error: unknown) {
-        try {
-          await cleanupNewProjectDirectories(createdProjectDirectories);
-        } catch (cleanupError: unknown) {
-          throw new AggregateError(
-            [error, cleanupError],
-            "技能广场安装失败，且无法完整清理未注册目录。"
-          );
-        }
-        throw error;
-      }
-
-      return CatalogInstallMarketplaceSkillContentResultSchema.parse({
-        source: sourceRef,
-        version: input.source.version,
-        title: group?.title ?? plans[0]!.resource.title,
-        alreadyInstalled: false,
-        libraryIds,
-        ...(group ? { groupId: group.id } : {})
-      });
-    });
-  }
-
-  async removeBook(
-    bookId: string
-  ): Promise<{ bookId: string; deleted: boolean }> {
+  async removeBook(bookId: string): Promise<{
+    bookId: string;
+    deleted: boolean;
+  }> {
     const result = await this.unregisterProject({
       projectId: bookId,
       domain: "book"
     });
     return { bookId: result.projectId, deleted: result.unregistered };
   }
-
   async getProjectRevision(
     id: string,
     domain: FolderCatalogProjectDomain
@@ -4216,7 +3845,6 @@ export class FolderCatalogStore {
       ).revision;
     });
   }
-
   private async ensureRegistry(): Promise<FolderCatalogRegistry> {
     const existing = await this.readRegistryOptional();
     if (existing) {
@@ -4248,7 +3876,6 @@ export class FolderCatalogStore {
     await this.writeRegistry(registry);
     return registry;
   }
-
   private async readRegistryOptional(): Promise<
     FolderCatalogRegistry | undefined
   > {
@@ -4304,7 +3931,6 @@ export class FolderCatalogStore {
     }
     return undefined;
   }
-
   private async writeRegistry(registry: FolderCatalogRegistry): Promise<void> {
     await atomicWriteJson(this.registryPath, registry, this.maxManifestBytes);
     try {
@@ -4318,7 +3944,6 @@ export class FolderCatalogStore {
       // preferable to reporting a successful registration as failed.
     }
   }
-
   private async writeMissingSnapshotProjects(
     registry: FolderCatalogRegistry,
     snapshot: CatalogSnapshot
@@ -4368,7 +3993,6 @@ export class FolderCatalogStore {
       throw error;
     }
   }
-
   private async writeNewResourceProject(
     domain: FolderCatalogProjectDomain,
     parentDirectory: string,
@@ -4417,7 +4041,6 @@ export class FolderCatalogStore {
       throw error;
     }
   }
-
   /**
    * Reads only deepwrite.json. In particular, this path must never perform a
    * legacy migration because that migration reads the legacy draft Markdown.
@@ -4458,12 +4081,18 @@ export class FolderCatalogStore {
     }
     return { projectDirectory, manifest };
   }
-
   private async readManifest<Kind extends FolderCatalogProjectManifest["kind"]>(
     projectDirectory: string,
     expectedKind?: Kind,
     expectedResourceId?: string
-  ): Promise<Extract<FolderCatalogProjectManifest, { kind: Kind }>> {
+  ): Promise<
+    Extract<
+      FolderCatalogProjectManifest,
+      {
+        kind: Kind;
+      }
+    >
+  > {
     const root = await secureProjectRoot(projectDirectory);
     const manifestPath = await secureExistingProjectPath(
       root,
@@ -4537,9 +4166,13 @@ export class FolderCatalogStore {
     ) {
       throw new Error("项目标识与注册信息不一致。");
     }
-    return manifest as Extract<FolderCatalogProjectManifest, { kind: Kind }>;
+    return manifest as Extract<
+      FolderCatalogProjectManifest,
+      {
+        kind: Kind;
+      }
+    >;
   }
-
   private async readCurrentBookManifest(
     projectDirectory: string,
     expectedResourceId?: string
@@ -4554,7 +4187,6 @@ export class FolderCatalogStore {
     }
     return manifest;
   }
-
   private async readProject(
     rawDirectory: string,
     expectedDomain?: FolderCatalogProjectDomain,
@@ -4591,7 +4223,6 @@ export class FolderCatalogStore {
       resource
     };
   }
-
   private async registerProject(
     registry: FolderCatalogRegistry,
     project: RegistryProject
@@ -4643,7 +4274,6 @@ export class FolderCatalogStore {
       projects
     });
   }
-
   private async bumpRegistry(
     registry: FolderCatalogRegistry,
     updatedAt: string
@@ -4660,7 +4290,6 @@ export class FolderCatalogStore {
       // not turn a successful user save into a reported failure.
     }
   }
-
   private async aggregateSnapshot(
     registry: FolderCatalogRegistry
   ): Promise<CatalogSnapshot> {
@@ -4759,7 +4388,10 @@ export class FolderCatalogStore {
           portableContentPathKey(path)
         )
       );
-      const pendingFiles: Array<{ path: string; content: string }> = [];
+      const pendingFiles: Array<{
+        path: string;
+        content: string;
+      }> = [];
       for (const stage of missing) {
         if (plotStages.length >= 32) {
           throw new Error(
@@ -4839,7 +4471,6 @@ export class FolderCatalogStore {
       ...(projectDiagnostics.length ? { projectDiagnostics } : {})
     });
   }
-
   private async aggregateIndexSnapshot(
     registry: FolderCatalogRegistry
   ): Promise<CatalogIndexSnapshot> {
@@ -4849,7 +4480,6 @@ export class FolderCatalogStore {
     const skills: CatalogIndexSnapshot["skills"] = [];
     const skillGroups: CatalogIndexSnapshot["skillGroups"] = [];
     const projectDiagnostics: CatalogProjectDiagnostic[] = [];
-
     for (const project of registry.projects) {
       try {
         const { projectDirectory, manifest } =
@@ -4912,7 +4542,6 @@ export class FolderCatalogStore {
         });
       }
     }
-
     const creativePlotStages = mergeCreativePlotStageDefinitions(
       registry.creativePlotStages,
       books.flatMap((book) => book.plotStages)
@@ -4933,7 +4562,6 @@ export class FolderCatalogStore {
       ...(projectDiagnostics.length ? { projectDiagnostics } : {})
     });
   }
-
   private async mutate<Result>(
     operation: () => Promise<Result>
   ): Promise<Result> {
@@ -4956,7 +4584,6 @@ export class FolderCatalogStore {
     }
     return result!;
   }
-
   private async readAfterWrites<Result>(
     operation: () => Promise<Result>
   ): Promise<Result> {
@@ -4966,7 +4593,6 @@ export class FolderCatalogStore {
     return await this.mutate(operation);
   }
 }
-
 function duplicateBookResource(source: Book, title: string, now: string): Book {
   const { projectRevision: _projectRevision, ...copyable } = source;
   return BookSchema.parse({
@@ -4977,7 +4603,6 @@ function duplicateBookResource(source: Book, title: string, now: string): Book {
     updatedAt: now
   });
 }
-
 function duplicateLibraryResource(
   source: MaterialLibrary,
   title: string,
@@ -5018,23 +4643,6 @@ function duplicateLibraryResource(
   });
 }
 
-function nextMarketplaceTitle(
-  baseTitle: string,
-  existingTitles: readonly string[]
-): string {
-  const normalized = new Set(
-    existingTitles.map((title) => title.trim().toLocaleLowerCase())
-  );
-  if (!normalized.has(baseTitle.trim().toLocaleLowerCase())) return baseTitle;
-  let suffix = 2;
-  while (
-    normalized.has(`${baseTitle} (${suffix})`.trim().toLocaleLowerCase())
-  ) {
-    suffix += 1;
-  }
-  return `${baseTitle} (${suffix})`;
-}
-
 const DRAFT_CHARACTER_STATE_TITLE_SUFFIX = " · 人物状态";
 const CATALOG_TITLE_MAX_LENGTH = 256;
 
@@ -5043,11 +4651,15 @@ function draftCharacterStateTitle(sectionTitle: string): string {
     CATALOG_TITLE_MAX_LENGTH - DRAFT_CHARACTER_STATE_TITLE_SUFFIX.length;
   return `${sectionTitle.slice(0, availableSectionTitleLength)}${DRAFT_CHARACTER_STATE_TITLE_SUFFIX}`;
 }
-
 function findDraftDocumentManifest(
   draft: FolderCurrentBookProjectManifest["draft"],
   documentId: string
-): { sectionIndex: number; kind: "body" | "characterState" } | undefined {
+):
+  | {
+      sectionIndex: number;
+      kind: "body" | "characterState";
+    }
+  | undefined {
   for (const [sectionIndex, section] of draft.sections.entries()) {
     if (section.body.id === documentId) {
       return { sectionIndex, kind: "body" };
@@ -5058,7 +4670,6 @@ function findDraftDocumentManifest(
   }
   return undefined;
 }
-
 function findManifestDocument(
   manifest: FolderCatalogProjectManifest,
   documentId: string
@@ -5089,14 +4700,12 @@ function findManifestDocument(
   }
   return undefined;
 }
-
 function isReservedDraftDocumentId(documentId: string): boolean {
   return (
     documentId.startsWith("draft-section:") &&
     (documentId.endsWith(":body") || documentId.endsWith(":character-state"))
   );
 }
-
 function nextDraftSectionId(
   bookType: Book["bookType"],
   sectionIds: readonly string[],
@@ -5123,7 +4732,6 @@ function nextDraftSectionId(
     sectionNumber += 1;
   }
 }
-
 function chineseSectionNumber(value: number): string {
   const digits = ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九"];
   if (value <= 10) return value === 10 ? "十" : digits[value]!;
@@ -5135,7 +4743,6 @@ function chineseSectionNumber(value: number): string {
   }
   return String(value);
 }
-
 function defaultDraftSectionTitle(
   bookType: Book["bookType"],
   sectionId: string,
@@ -5145,11 +4752,8 @@ function defaultDraftSectionTitle(
   const numeric = (
     bookType === "script" ? /^episode-(\d+)$/u : /^section-(\d+)$/u
   ).exec(sectionId)?.[1];
-  return `第${chineseSectionNumber(numeric ? Number(numeric) : index + 1)}${
-    bookType === "script" ? "集" : "节"
-  }`;
+  return `第${chineseSectionNumber(numeric ? Number(numeric) : index + 1)}${bookType === "script" ? "集" : "节"}`;
 }
-
 function createDraftSectionsRequestHash(
   input: CreateDraftSectionsInput
 ): string {
@@ -5167,7 +4771,6 @@ function createDraftSectionsRequestHash(
   };
   return createHash("sha256").update(JSON.stringify(intent)).digest("hex");
 }
-
 async function hydrateDraftSectionCreationResult(
   projectDirectory: string,
   manifest: FolderCurrentBookProjectManifest,
@@ -5227,7 +4830,6 @@ async function hydrateDraftSectionCreationResult(
     })
   });
 }
-
 function positiveByteLimit(
   value: number | undefined,
   fallback: number,
@@ -5239,7 +4841,6 @@ function positiveByteLimit(
   }
   return limit;
 }
-
 function emptyRegistry(updatedAt: string): FolderCatalogRegistry {
   return {
     schemaVersion: 1,
@@ -5250,7 +4851,6 @@ function emptyRegistry(updatedAt: string): FolderCatalogRegistry {
     projects: []
   };
 }
-
 function setLegacyImport(
   registry: FolderCatalogRegistry,
   legacyImport: CatalogLegacyImport | undefined
@@ -5261,7 +4861,6 @@ function setLegacyImport(
     registry.legacyImport = legacyImport;
   }
 }
-
 function parseRegistry(value: unknown): FolderCatalogRegistry {
   if (!isRecord(value)) {
     throw new Error("Catalog registry must be a JSON object.");
@@ -5342,7 +4941,6 @@ function parseRegistry(value: unknown): FolderCatalogRegistry {
     ...(legacyImport === undefined ? {} : { legacyImport })
   };
 }
-
 function applyGlobalPlotStagesToNewBook<Resource extends Book>(
   book: Resource,
   globalStages: readonly CreativePlotStage[],
@@ -5394,24 +4992,20 @@ function applyGlobalPlotStagesToNewBook<Resource extends Book>(
     documents
   };
 }
-
 function parseId(value: unknown): string {
   return parseNonBlankString(value, "project id");
 }
-
 function parseLibraryDomain(value: unknown): FolderCatalogLibraryDomain {
   if (value !== "material" && value !== "skill") {
     throw new Error("library domain must be material or skill.");
   }
   return value;
 }
-
 function libraryProjectDomain(
   domain: FolderCatalogLibraryDomain
 ): "material-library" | "skill-library" {
   return domain === "material" ? "material-library" : "skill-library";
 }
-
 function parseUnregisterDomain(value: unknown): FolderCatalogUnregisterDomain {
   if (
     value !== "book" &&
@@ -5426,7 +5020,6 @@ function parseUnregisterDomain(value: unknown): FolderCatalogUnregisterDomain {
   }
   return value;
 }
-
 function parseDeletableProjectDomain(
   value: unknown
 ): "book" | FolderCatalogLibraryDomain {
@@ -5437,7 +5030,6 @@ function parseDeletableProjectDomain(
   }
   return value;
 }
-
 function registryDomainForUnregister(
   domain: FolderCatalogUnregisterDomain
 ): FolderCatalogProjectDomain {
@@ -5449,14 +5041,12 @@ function registryDomainForUnregister(
   }
   return domain;
 }
-
 function parseNonBlankString(value: unknown, label: string): string {
   if (typeof value !== "string" || value.trim() === "") {
     throw new Error(`${label} must be a non-empty string.`);
   }
   return value.trim();
 }
-
 function parseTimestamp(value: unknown, label: string): string {
   if (
     typeof value !== "string" ||
@@ -5467,28 +5057,25 @@ function parseTimestamp(value: unknown, label: string): string {
   }
   return value;
 }
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
-
 function isFolderDomain(value: unknown): value is FolderCatalogProjectDomain {
   return (
     typeof value === "string" &&
     (CATALOG_PROJECT_DOMAINS as readonly string[]).includes(value)
   );
 }
-
 function registryProjectKey(
   domain: FolderCatalogProjectDomain,
   id: string
 ): string {
   return `${domain}\u0000${id}`;
 }
-
-function manifestContentItems(
-  manifest: FolderCatalogProjectManifest
-): Array<{ id: string; path: string }> {
+function manifestContentItems(manifest: FolderCatalogProjectManifest): Array<{
+  id: string;
+  path: string;
+}> {
   if (manifest.kind === "deepwrite.book") {
     return manifest.schemaVersion !== 1
       ? [
@@ -5508,7 +5095,6 @@ function manifestContentItems(
   }
   return [];
 }
-
 function assertManifestUniqueness(
   manifest: FolderCatalogProjectManifest
 ): void {
@@ -5523,7 +5109,6 @@ function assertManifestUniqueness(
     throw new Error("Project manifest content paths must be unique.");
   }
 }
-
 async function assertManifestContentFilesUnique(
   projectDirectory: string,
   manifest: FolderCatalogProjectManifest
@@ -5546,7 +5131,6 @@ async function assertManifestContentFilesUnique(
     identities.add(identity);
   }
 }
-
 /**
  * Resolve and stat every Markdown file without opening it. The returned byte
  * counts power the metadata-only index and the inode identity check prevents
@@ -5596,19 +5180,16 @@ async function inspectProjectMarkdownMetadata(
   }
   return contentMetadataById;
 }
-
 function isCreateAtDirectoryInput(
   value: CreateShortBookInput | CreateShortBookAtDirectoryInput
 ): value is CreateShortBookAtDirectoryInput {
   return "input" in value;
 }
-
 function isCreateScriptAtDirectoryInput(
   value: CreateScriptBookInput | CreateScriptBookAtDirectoryInput
 ): value is CreateScriptBookAtDirectoryInput {
   return "input" in value;
 }
-
 function assertBookLibraryReferences(
   book: Pick<
     Book,
@@ -5649,7 +5230,6 @@ function assertBookLibraryReferences(
     }
   }
 }
-
 function assertBaseRevision(
   expected: number | undefined,
   actual: number
@@ -5658,7 +5238,6 @@ function assertBaseRevision(
     throw new FolderCatalogConflictError(expected, actual);
   }
 }
-
 function assertUniqueGroupMembers(libraryIds: Array<string | undefined>): void {
   const selected = libraryIds.filter((libraryId): libraryId is string =>
     Boolean(libraryId)
@@ -5667,7 +5246,6 @@ function assertUniqueGroupMembers(libraryIds: Array<string | undefined>): void {
     throw new Error("同一个资料库不能在一个分组中绑定到多个分类。");
   }
 }
-
 function assertLibraryNotInAnotherGroup(
   groups: ReadonlyArray<{
     id: string;
@@ -5689,13 +5267,11 @@ function assertLibraryNotInAnotherGroup(
     );
   }
 }
-
 function assertProjectRevision(value: number): void {
   if (!Number.isSafeInteger(value) || value < 0) {
     throw new Error("Project revision must be a non-negative safe integer.");
   }
 }
-
 function domainForKind(
   kind: FolderCatalogProjectManifest["kind"]
 ): FolderCatalogProjectDomain {
@@ -5712,7 +5288,6 @@ function domainForKind(
       return "skill-group";
   }
 }
-
 function kindForDomain(
   domain: FolderCatalogProjectDomain
 ): FolderCatalogProjectManifest["kind"] {
@@ -5729,7 +5304,6 @@ function kindForDomain(
       return "deepwrite.skill-group";
   }
 }
-
 async function migrateLegacyBookProject(
   projectDirectory: string,
   manifest: FolderLegacyBookProjectManifest,
@@ -5772,7 +5346,10 @@ async function migrateLegacyBookProject(
   const usedPaths = new Set(
     manifest.documents.map(({ path }) => portableContentPathKey(path))
   );
-  const pendingFiles: Array<{ path: string; content: string }> = [];
+  const pendingFiles: Array<{
+    path: string;
+    content: string;
+  }> = [];
   const sections: BookProjectDraftSectionManifest[] = [];
   for (const section of draft.sections) {
     assertTextByteLength(
@@ -5876,7 +5453,6 @@ async function migrateLegacyBookProject(
     }
   });
   assertJsonByteLength(next, maxManifestBytes);
-
   // The v1 manifest remains authoritative until every new file is committed.
   // A failure or process stop before the final manifest rename can at worst
   // leave unreferenced recovery files; the original draft.md is never removed.
@@ -5909,7 +5485,6 @@ async function migrateLegacyBookProject(
   );
   return next;
 }
-
 async function migrateV2BookProject(
   projectDirectory: string,
   manifest: V2BookProjectManifest,
@@ -5927,8 +5502,10 @@ async function migrateV2BookProject(
       ])
     ].map(({ path }) => portableContentPathKey(path))
   );
-  const pendingFiles: Array<{ path: string; content: string }> = [];
-
+  const pendingFiles: Array<{
+    path: string;
+    content: string;
+  }> = [];
   for (const stage of plotStages) {
     const documentIndex = documents.findIndex(({ id }) => id === stage.id);
     if (documentIndex >= 0) {
@@ -5954,7 +5531,6 @@ async function migrateV2BookProject(
       updatedAt: manifest.updatedAt
     });
   }
-
   await appendMissingCharacterOverviewDocument({
     projectDirectory,
     documents,
@@ -5963,7 +5539,6 @@ async function migrateV2BookProject(
     createdAt: manifest.createdAt,
     updatedAt: manifest.updatedAt
   });
-
   const next = FolderCurrentBookProjectManifestSchema.parse({
     ...manifest,
     schemaVersion: 4,
@@ -5972,7 +5547,6 @@ async function migrateV2BookProject(
     documents
   });
   assertJsonByteLength(next, maxManifestBytes);
-
   // v2 remains authoritative until every missing stage document is durable.
   for (const file of pendingFiles) {
     const target = await secureWritableProjectPath(projectDirectory, file.path);
@@ -5993,7 +5567,6 @@ async function migrateV2BookProject(
   );
   return next;
 }
-
 async function migrateV3BookProject(
   projectDirectory: string,
   manifest: V3BookProjectManifest,
@@ -6006,7 +5579,10 @@ async function migrateV3BookProject(
       portableContentPathKey(path)
     )
   );
-  const pendingFiles: Array<{ path: string; content: string }> = [];
+  const pendingFiles: Array<{
+    path: string;
+    content: string;
+  }> = [];
   await appendMissingCharacterOverviewDocument({
     projectDirectory,
     documents,
@@ -6041,12 +5617,14 @@ async function migrateV3BookProject(
   );
   return next;
 }
-
 async function appendMissingCharacterOverviewDocument(input: {
   projectDirectory: string;
   documents: BookProjectDocumentManifest[];
   usedPaths: Set<string>;
-  pendingFiles: Array<{ path: string; content: string }>;
+  pendingFiles: Array<{
+    path: string;
+    content: string;
+  }>;
   createdAt: string;
   updatedAt: string;
 }): Promise<void> {
@@ -6071,7 +5649,6 @@ async function appendMissingCharacterOverviewDocument(input: {
     updatedAt: input.updatedAt
   });
 }
-
 export function assertLegacyBookMigrationSourcesUnchanged(input: {
   originalManifestText: string;
   currentManifestText: string;
@@ -6085,7 +5662,6 @@ export function assertLegacyBookMigrationSourcesUnchanged(input: {
     throw new Error("旧版书籍在正文迁移期间被外部修改，已中止迁移。");
   }
 }
-
 async function writeResourceContents(
   projectDirectory: string,
   domain: FolderCatalogProjectDomain,
@@ -6317,18 +5893,15 @@ async function writeResourceContents(
     }
   }
 }
-
 function emptyContentMetadata(updatedAt: string): CatalogContentMetadata {
   return {
     contentBytes: 0,
     contentStamp: `manifest-v1:0:${updatedAt}`
   };
 }
-
 function manifestContentStamp(content: string, updatedAt: string): string {
   return `manifest-v1:${Buffer.byteLength(content, "utf8")}:${updatedAt}`;
 }
-
 function indexBookFromManifest(
   manifest: FolderBookProjectManifest,
   contentMetadataById: ReadonlyMap<string, CatalogContentMetadata>
@@ -6430,7 +6003,6 @@ function indexBookFromManifest(
     }
   });
 }
-
 function indexResourceFromManifest(
   manifest: FolderCatalogProjectManifest,
   contentMetadataById: ReadonlyMap<string, CatalogContentMetadata>
@@ -6536,7 +6108,6 @@ function indexResourceFromManifest(
       };
   }
 }
-
 async function hydrateResource(
   projectDirectory: string,
   manifest: FolderCatalogProjectManifest,
@@ -6701,10 +6272,11 @@ async function hydrateResource(
       };
   }
 }
-
 async function readProjectMarkdownContents(
   projectDirectory: string,
-  items: ReadonlyArray<{ path: string }>,
+  items: ReadonlyArray<{
+    path: string;
+  }>,
   maxMarkdownBytes: number,
   maxProjectContentBytes: number
 ): Promise<string[]> {
@@ -6726,7 +6298,6 @@ async function readProjectMarkdownContents(
   }
   return contents;
 }
-
 function resourceContentByteLength(resource: FolderCatalogResource): number {
   const metadataBytes = Buffer.byteLength(
     JSON.stringify(resource, (key, value) =>
@@ -6761,7 +6332,6 @@ function resourceContentByteLength(resource: FolderCatalogResource): number {
   }
   return metadataBytes;
 }
-
 function sanitizeFileName(value: string, fallback = "未命名项目"): string {
   const normalized = value
     .normalize("NFC")
@@ -6772,17 +6342,14 @@ function sanitizeFileName(value: string, fallback = "未命名项目"): string {
   const shortened = [...normalized].slice(0, 80).join("");
   return shortened || fallback;
 }
-
 function sanitizePathSegment(value: string): string {
   return sanitizeFileName(value, "content")
     .replace(/\s+/gu, "-")
     .replace(/-+/gu, "-");
 }
-
 function portableContentPathKey(path: string): string {
   return path.normalize("NFC").toLowerCase();
 }
-
 async function uniqueRelativeMarkdownPath(
   projectDirectory: string,
   directory: string,
@@ -6814,7 +6381,6 @@ async function uniqueRelativeMarkdownPath(
   }
   return CatalogProjectContentPathSchema.parse(candidate);
 }
-
 async function uniqueRelativeMarkdownPathWithSuffix(
   projectDirectory: string,
   directory: string,
@@ -6847,13 +6413,12 @@ async function uniqueRelativeMarkdownPathWithSuffix(
   }
   return CatalogProjectContentPathSchema.parse(candidate);
 }
-
 async function availableProjectDirectory(
   parentDirectory: string,
   title: string
 ): Promise<string> {
   const name = sanitizeFileName(title);
-  for (let index = 1; index < 10_000; index += 1) {
+  for (let index = 1; index < 10000; index += 1) {
     const suffix = index === 1 ? "" : `-${index}`;
     const candidate = join(parentDirectory, `${name}${suffix}`);
     if (!(await pathExists(candidate))) {
@@ -6862,7 +6427,6 @@ async function availableProjectDirectory(
   }
   throw new Error("无法为项目分配不重复的文件夹名称。");
 }
-
 async function secureDirectory(path: string, label: string): Promise<string> {
   const info = await lstat(path);
   if (info.isSymbolicLink() || !info.isDirectory()) {
@@ -6870,11 +6434,9 @@ async function secureDirectory(path: string, label: string): Promise<string> {
   }
   return await realpath(path);
 }
-
 async function secureProjectRoot(path: string): Promise<string> {
   return await secureDirectory(resolve(path), "project root");
 }
-
 function assertContained(root: string, candidate: string): void {
   const offset = relative(root, candidate);
   if (
@@ -6885,7 +6447,6 @@ function assertContained(root: string, candidate: string): void {
   }
   throw new Error("Project path escapes its project directory.");
 }
-
 async function secureExistingProjectPath(
   projectRoot: string,
   relativePath: string,
@@ -6911,7 +6472,6 @@ async function secureExistingProjectPath(
   assertContained(projectRoot, actual);
   return actual;
 }
-
 async function secureWritableProjectPath(
   projectRoot: string,
   relativePath: string
@@ -6945,7 +6505,6 @@ async function secureWritableProjectPath(
   }
   return target;
 }
-
 async function readProjectMarkdown(
   projectDirectory: string,
   path: string,
@@ -6954,7 +6513,6 @@ async function readProjectMarkdown(
   const actual = await secureExistingProjectPath(projectDirectory, path, true);
   return await readRequiredUtf8File(actual, maxBytes, "Markdown file");
 }
-
 async function readOptionalUtf8File(
   path: string,
   maxBytes: number,
@@ -6969,7 +6527,6 @@ async function readOptionalUtf8File(
     throw error;
   }
 }
-
 async function readRequiredUtf8File(
   path: string,
   maxBytes: number,
@@ -6993,7 +6550,6 @@ async function readRequiredUtf8File(
     throw new Error(`${label} is not valid UTF-8.`);
   }
 }
-
 function parseJson(text: string, path: string): unknown {
   try {
     return JSON.parse(text) as unknown;
@@ -7003,7 +6559,6 @@ function parseJson(text: string, path: string): unknown {
     );
   }
 }
-
 function assertTextByteLength(
   text: string,
   maxBytes: number,
@@ -7013,7 +6568,6 @@ function assertTextByteLength(
     throw new Error(`${label} exceeds the ${maxBytes} byte limit.`);
   }
 }
-
 function assertJsonByteLength(value: unknown, maxBytes: number): void {
   assertTextByteLength(
     `${JSON.stringify(value, null, 2)}\n`,
@@ -7021,7 +6575,6 @@ function assertJsonByteLength(value: unknown, maxBytes: number): void {
     "JSON content"
   );
 }
-
 async function commitProjectMarkdownUpdate(
   target: string,
   nextContent: string,
@@ -7074,9 +6627,11 @@ async function commitProjectMarkdownUpdate(
     throw error;
   }
 }
-
 async function commitProjectFileCreations(
-  files: ReadonlyArray<{ target: string; content: string }>,
+  files: ReadonlyArray<{
+    target: string;
+    content: string;
+  }>,
   manifestPath: string,
   manifest: unknown,
   maxMarkdownBytes: number,
@@ -7089,7 +6644,10 @@ async function commitProjectFileCreations(
       throw new Error("新的正文小节文件路径已被其他文件占用。");
     }
   }
-  const committed: Array<{ target: string; content: string }> = [];
+  const committed: Array<{
+    target: string;
+    content: string;
+  }> = [];
   try {
     for (const file of files) {
       await atomicWriteText(file.target, file.content);
@@ -7121,7 +6679,6 @@ async function commitProjectFileCreations(
     throw error;
   }
 }
-
 async function atomicWriteText(path: string, value: string): Promise<void> {
   await mkdir(dirname(path), { recursive: true, mode: 0o700 });
   const temporary = join(dirname(path), `.deepwrite-${randomHex8()}.tmp`);
@@ -7133,7 +6690,6 @@ async function atomicWriteText(path: string, value: string): Promise<void> {
     throw error;
   }
 }
-
 async function atomicWriteJson(
   path: string,
   value: unknown,
@@ -7143,7 +6699,6 @@ async function atomicWriteJson(
   assertTextByteLength(serialized, maxBytes, "JSON content");
   await atomicWriteText(path, serialized);
 }
-
 async function unlinkOptional(path: string): Promise<void> {
   try {
     await unlink(path);
@@ -7153,12 +6708,10 @@ async function unlinkOptional(path: string): Promise<void> {
     }
   }
 }
-
 async function removeEmptyOrPartialProject(path: string): Promise<void> {
   const { rm } = await import("node:fs/promises");
   await rm(path, { recursive: true, force: true });
 }
-
 async function cleanupNewProjectDirectories(
   paths: readonly string[]
 ): Promise<void> {
@@ -7177,7 +6730,6 @@ async function cleanupNewProjectDirectories(
     );
   }
 }
-
 async function pathExists(path: string): Promise<boolean> {
   try {
     await lstat(path);
@@ -7189,14 +6741,12 @@ async function pathExists(path: string): Promise<boolean> {
     throw error;
   }
 }
-
 function isNodeError(
   error: unknown,
   code: string
 ): error is NodeJS.ErrnoException {
   return error instanceof Error && "code" in error && error.code === code;
 }
-
 function findRegistration(
   registry: FolderCatalogRegistry,
   id: string,
@@ -7210,7 +6760,6 @@ function findRegistration(
   }
   return project;
 }
-
 function findRegistrationByProjectId(
   registry: FolderCatalogRegistry,
   id: string
@@ -7224,7 +6773,6 @@ function findRegistrationByProjectId(
   }
   return projects[0]!;
 }
-
 function defaultDocumentTitle(documentId: string): string {
   return (
     DEFAULT_SHORT_DOCUMENTS.find(([id]) => id === documentId)?.[1] ?? documentId

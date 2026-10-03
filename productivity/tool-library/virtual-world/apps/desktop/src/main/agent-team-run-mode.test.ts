@@ -29,6 +29,20 @@ const runtimeConfig: AgentProviderRuntimeConfig = {
 };
 
 describe("agent team run mode", () => {
+  it.each(["short", "script"])(
+    "rejects discontinued %s targets before resolving members",
+    async (workspaceType) => {
+      const resolveDefinitions = vi.fn(async () => [inheritedMember]);
+      await expect(
+        resolveAgentTeamRuntime(
+          "team",
+          { workspaceType, parentAgentId: workspaceType } as never,
+          { resolveDefinitions, resolveModel: async () => undefined }
+        )
+      ).rejects.toThrow("主智能体");
+      expect(resolveDefinitions).not.toHaveBeenCalled();
+    }
+  );
   it("does not resolve team configuration in normal mode", async () => {
     const resolveDefinitions = vi.fn(async () => [inheritedMember]);
     const resolveModel = vi.fn(async () => runtimeConfig);
@@ -36,7 +50,7 @@ describe("agent team run mode", () => {
     await expect(
       resolveAgentTeamRuntime(
         "normal",
-        { workspaceType: "short", parentAgentId: "short" },
+        { workspaceType: "long", parentAgentId: "long" },
         { resolveDefinitions, resolveModel }
       )
     ).resolves.toEqual({ subagentRuntimeConfigs: {} });
@@ -62,14 +76,14 @@ describe("agent team run mode", () => {
     await expect(
       resolveAgentTeamRuntime(
         "team",
-        { workspaceType: "short", parentAgentId: "short" },
+        { workspaceType: "long", parentAgentId: "long" },
         { resolveDefinitions, resolveModel }
       )
     ).resolves.toEqual({
       subagentDefinitions: [inheritedMember, customMember],
       subagentRuntimeConfigs: { [runtimeConfig.id]: runtimeConfig }
     });
-    expect(resolveDefinitions).toHaveBeenCalledWith("short", "short");
+    expect(resolveDefinitions).toHaveBeenCalledWith("long", "long");
     expect(resolveModel).toHaveBeenCalledWith(runtimeConfig.id);
   });
 

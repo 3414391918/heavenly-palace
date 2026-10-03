@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import source from "./WorkspaceShell.vue?raw";
+import source from "./test-support/workspaceShellSource";
 import runtimeRegistrySource from "./composables/conversationRegistryPreferences.ts?raw";
 import registryPortSource from "./composables/conversationRuntimeRegistryStorePort.ts?raw";
-import shortConversationSource from "./composables/useShortConversationCoordinator.ts?raw";
+import shortConversationSource from "./composables/useLibraryConversationCoordinator.ts?raw";
 
 function functionBody(text: string, name: string, nextName: string): string {
   const start = text.indexOf(`function ${name}(`);
@@ -24,7 +24,7 @@ describe("App agent model selection", () => {
       "synchronizeSessionAgentModelSelection",
       "persistAgentRunPreferences"
     );
-    expect(source).toContain("useConversationRuntimeRegistryCoordinator({");
+    expect(source).toMatch(/useConversationRuntimeRegistryCoordinator\(\s*\{/u);
     expect(body).toContain("options.store.setSessionAgentModelSelection(");
     expect(body).toContain("{ source }");
     expect(body).not.toContain("localStorage");

@@ -128,7 +128,7 @@ describe("short workspace contracts", () => {
     for (const profile of DEFAULT_SHORT_WORKSPACE_AGENT_PROFILES) {
       expect(profile.label).not.toBe("");
       expect(profile.description).not.toBe("");
-      expect(profile.systemPrompt).toMatch(/^你是 DeepWrite 的/);
+      expect(profile.systemPrompt).toMatch(/^你是 虚拟世界 的/);
       expect(profile.systemPrompt.endsWith("\n")).toBe(true);
       expect(profile.welcomeShortcuts).toHaveLength(3);
       expect(

@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   DEFAULT_LIBRARY_AGENT_PROFILES,
   AgentTeamCatalogSnapshotSchema,
-  DEFAULT_AGENT_TEAM_SETTINGS,
+  DEFAULT_LONG_AGENT_TEAM_SETTINGS,
   createEnvelope,
   CommandEnvelopeSchema,
   type CommandResult
@@ -15,7 +15,7 @@ import {
 
 // Profiles and scope come from Main-owned settings, never caller-supplied capabilities.
 describe("Main management run authority", () => {
-  it.each(["short", "script", "long"] as const)(
+  it.each(["long"] as const)(
     "resolves managers independently of a selected %s team",
     async (bookType) => {
       const catalog = AgentTeamCatalogSnapshotSchema.parse({
@@ -24,8 +24,8 @@ describe("Main management run authority", () => {
           {
             id: "default",
             name: "默认",
-            workspaceType: "short",
-            settings: DEFAULT_AGENT_TEAM_SETTINGS
+            workspaceType: "long",
+            settings: DEFAULT_LONG_AGENT_TEAM_SETTINGS
           }
         ]
       });
@@ -35,14 +35,7 @@ describe("Main management run authority", () => {
         requestId: "query",
         payload: { libraries: [] }
       }));
-      const workspace =
-        bookType === "long"
-          ? { longWorkspace: { bookId: "book" } }
-          : {
-              [bookType === "short" ? "shortWorkspace" : "scriptWorkspace"]: {
-                id: "book"
-              }
-            };
+      const workspace = { longWorkspace: { bookId: "book" } };
       const result = await prepareLibraryManagementRunContext(
         workspace as Parameters<typeof prepareLibraryManagementRunContext>[0],
         { list: async () => catalog },
@@ -62,7 +55,7 @@ describe("Main management run authority", () => {
     }
   );
   it("authorizes only accepted runs with matching work, session and parent request", () => {
-    const scope = { bookId: "book", bookType: "short" as const };
+    const scope = { bookId: "book", bookType: "long" as const };
     const command = CommandEnvelopeSchema.parse(
       createEnvelope(
         "catalog.queryLibraryManagement",
