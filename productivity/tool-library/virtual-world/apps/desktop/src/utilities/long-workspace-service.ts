@@ -142,7 +142,7 @@ export class LongWorkspaceService {
   readonly catalog: LongProjectCatalog;
 
   private readonly characterProfiles: LongCharacterProfileService;
-  private readonly chapterImages: LongChapterImageService;
+  readonly chapterImages: LongChapterImageService;
   private readonly now: () => string;
   private readonly onDiagnostic:
     ((diagnostic: LongWorkspaceServiceDiagnostic) => void) | undefined;

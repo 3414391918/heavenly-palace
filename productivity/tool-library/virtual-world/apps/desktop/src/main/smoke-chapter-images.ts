@@ -164,6 +164,31 @@ export async function runChapterImageSmoke(
       smokeError?: string;
     };
     if (preview.smokeError) throw new Error(preview.smokeError);
+    const onIllustrationProgress = ({ message }: { message: string }) => {
+      if (message.startsWith("ILLUSTRATION_SMOKE ")) console.info(message);
+    };
+    window.webContents.on("console-message", onIllustrationProgress);
+    let illustration: unknown;
+    try {
+      illustration = await window.webContents.executeJavaScript(
+        `(async () => { const smoke = await import(${JSON.stringify(moduleUrl)}); return await smoke.runChapterIllustrationRendererSmoke(${JSON.stringify(summary)}, ${JSON.stringify(book.workspaceIndex)}); })()`
+      );
+    } finally {
+      window.webContents.off("console-message", onIllustrationProgress);
+    }
+    const insertedFiles = (await readdir(dirname(file))).sort();
+    if (insertedFiles.join(",") !== "001.png,002.png,sample.png")
+      throw new Error(
+        "Illustration creation changed existing image files or numbering"
+      );
+    const insertedBody = await readFile(body, "utf8");
+    if (
+      !insertedBody.includes("![](images/001.png)") ||
+      !insertedBody.includes("![](images/002.png)")
+    )
+      throw new Error(
+        "Illustration references were not persisted to the original body"
+      );
     return {
       status: "ok",
       copied: true,
@@ -175,7 +200,8 @@ export async function runChapterImageSmoke(
       imageBytes: saved.length,
       filePasteDecoded: checked.filePasteDecoded,
       previewReopened: checked.previewReopened,
-      ...preview
+      ...preview,
+      illustration
     };
   } finally {
     clipboard.write({

@@ -1,6 +1,10 @@
 import { z } from "zod";
 import { EnvelopeBaseSchema } from "./envelope";
 import { LongBookIdSchema, LongChapterCardIdSchema } from "./long-workspace";
+import {
+  LongWriteDocumentInputSchema,
+  LongWriteDocumentResultSchema
+} from "./long-workspace-api";
 
 export const LONG_CHAPTER_IMAGE_MAX_BYTES = 100 * 1024 * 1024;
 export const LONG_CHAPTER_IMAGE_MAX_PIXELS = 40_000_000;
@@ -42,6 +46,30 @@ export const LongReadClipboardImageResultSchema = z
 export const LongCopyChapterImageResultSchema = z
   .object({ copied: z.literal(true) })
   .strict();
+export const LongAddChapterImageInputSchema = z
+  .object({
+    bookId: LongBookIdSchema,
+    chapterCardId: LongChapterCardIdSchema,
+    pngDataUrl,
+    content: LongWriteDocumentInputSchema.shape.content,
+    expectedContent: LongWriteDocumentInputSchema.shape.content,
+    offset: z.number().int().nonnegative()
+  })
+  .strict();
+export const LongAddChapterImageResultSchema = z
+  .object({
+    filename: LongReadChapterImageInputSchema.shape.filename,
+    content: LongWriteDocumentInputSchema.shape.content,
+    selectionOffset: z.number().int().nonnegative(),
+    document: LongWriteDocumentResultSchema
+  })
+  .strict();
+export type LongAddChapterImageInput = z.infer<
+  typeof LongAddChapterImageInputSchema
+>;
+export type LongAddChapterImageResult = z.infer<
+  typeof LongAddChapterImageResultSchema
+>;
 export type LongReadChapterImageInput = z.infer<
   typeof LongReadChapterImageInputSchema
 >;
@@ -61,6 +89,10 @@ export type LongCopyChapterImageResult = z.infer<
   typeof LongCopyChapterImageResultSchema
 >;
 export const LongChapterImageCommandSchemas = [
+  EnvelopeBaseSchema.extend({
+    type: z.literal("long.addChapterImage"),
+    payload: LongAddChapterImageInputSchema
+  }),
   EnvelopeBaseSchema.extend({
     type: z.literal("long.readChapterImage"),
     payload: LongReadChapterImageInputSchema

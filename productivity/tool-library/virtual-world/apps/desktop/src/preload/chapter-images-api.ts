@@ -1,6 +1,9 @@
 import {
   CommandEnvelopeSchema,
   createEnvelope,
+  LongAddChapterImageInputSchema,
+  LongAddChapterImageResultSchema,
+  type LongAddChapterImageInput,
   LongReadChapterImageInputSchema,
   LongReadChapterImageResultSchema,
   LongReplaceChapterImageInputSchema,
@@ -24,6 +27,14 @@ export async function readChapterImage(input: LongReadChapterImageInput) {
     await invoke(
       "long.readChapterImage",
       LongReadChapterImageInputSchema.parse(input)
+    )
+  );
+}
+export async function addChapterImage(input: LongAddChapterImageInput) {
+  return LongAddChapterImageResultSchema.parse(
+    await invoke(
+      "long.addChapterImage",
+      LongAddChapterImageInputSchema.parse(input)
     )
   );
 }

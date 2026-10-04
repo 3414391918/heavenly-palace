@@ -256,31 +256,6 @@ function saveSettings(): void {
       <section class="settings-card">
         <div class="section-heading">
           <div>
-            <h4>欢迎快捷按钮</h4>
-            <p>空对话欢迎区显示三个快捷提问。</p>
-          </div>
-        </div>
-        <div class="welcome-shortcut-list">
-          <label
-            v-for="(_, index) in activeAgent.welcomeShortcuts"
-            :key="index"
-            class="welcome-shortcut-field"
-          >
-            <span>按钮 {{ index + 1 }}</span>
-            <input
-              v-model="activeAgent.welcomeShortcuts[index]"
-              type="text"
-              maxlength="200"
-              :disabled="formDisabled"
-              :aria-label="`小说欢迎快捷按钮 ${index + 1}`"
-            />
-          </label>
-        </div>
-      </section>
-
-      <section class="settings-card">
-        <div class="section-heading">
-          <div>
             <h4>读取范围</h4>
             <p>分别配置当前智能体可以读取的素材类型和技能类型。</p>
           </div>

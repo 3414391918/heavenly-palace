@@ -1,4 +1,5 @@
 import {
+  LongAddChapterImageResultSchema,
   LongReadChapterImageResultSchema,
   LongReplaceChapterImageResultSchema,
   type CommandEnvelope,
@@ -10,6 +11,15 @@ export async function handleLongChapterImageCoreCommand(
   service: LongWorkspaceService,
   command: CommandEnvelope
 ): Promise<CommandResult | undefined> {
+  if (command.type === "long.addChapterImage") {
+    return {
+      status: "accepted",
+      requestId: command.id,
+      payload: LongAddChapterImageResultSchema.parse(
+        await service.chapterImages.addChapterImage(command.payload)
+      )
+    };
+  }
   if (command.type === "long.readChapterImage") {
     return {
       status: "accepted",

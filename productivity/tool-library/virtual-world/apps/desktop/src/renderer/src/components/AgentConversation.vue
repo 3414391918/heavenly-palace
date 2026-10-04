@@ -33,6 +33,7 @@ import AgentActivityFloatPanel from "./AgentActivityFloatPanel.vue";
 import AgentUserInputCard from "./AgentUserInputCard.vue";
 import ConversationComposer from "./ConversationComposer.vue";
 import ConversationMessageList from "./ConversationMessageList.vue";
+import ConversationPromptTemplates from "./ConversationPromptTemplates.vue";
 import ConversationTurnNavigator from "./ConversationTurnNavigator.vue";
 import { AGENT_ACTIVITY_CONTEXT_KEY } from "../composables/agentActivityContext";
 import { WORKSPACE_WEB_SEARCH_DISABLED_REASON } from "../composables/agent-conversation/web-search";
@@ -334,7 +335,11 @@ const {
         @retry-long-proposal-preview="emit('retryLongProposalPreview', $event)"
         @locate-long-proposal="emit('locateLongProposal', $event)"
         @insert-selection="insertConversationReference"
-      />
+      >
+        <template v-if="agentId" #welcome-actions>
+          <ConversationPromptTemplates @use="applySuggestion" />
+        </template>
+      </ConversationMessageList>
 
       <ConversationTurnNavigator
         v-if="conversationTurns.length"

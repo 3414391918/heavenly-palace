@@ -196,6 +196,9 @@ export interface DeepWriteApi
   };
   longAgents: {
     list(): Promise<LongAgentSettings>;
+    updatePromptTemplate(
+      input: import("./prompt-templates").PromptTemplateUpdate
+    ): Promise<LongAgentSettings>;
     save(settings: LongAgentSettingsInput): Promise<LongAgentSettings>;
     reset(agentId?: LongAgentId): Promise<LongAgentSettings>;
   };

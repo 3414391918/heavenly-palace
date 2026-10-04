@@ -132,6 +132,30 @@ export async function handleSettingsCommands(
       };
     }
   }
+  if (command.type === "longAgents.updatePromptTemplate") {
+    try {
+      return {
+        status: "accepted",
+        requestId: command.id,
+        payload: LongAgentSettingsSchema.parse(
+          await ctx
+            .requireLongAgentConfigStore()
+            .updatePromptTemplate(command.payload)
+        )
+      };
+    } catch (error: unknown) {
+      return {
+        status: "rejected",
+        requestId: command.id,
+        error: {
+          code: "long_agents.template_update_failed",
+          message:
+            error instanceof Error ? error.message : "保存提示词模板失败。",
+          details: safeErrorDetails(error)
+        }
+      };
+    }
+  }
   if (command.type === "longAgents.save") {
     try {
       return {

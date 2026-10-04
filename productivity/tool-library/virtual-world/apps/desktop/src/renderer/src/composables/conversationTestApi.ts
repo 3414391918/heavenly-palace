@@ -82,6 +82,11 @@ export function createConversationTestApi(
       }
     },
     longAgents: {
+      async updatePromptTemplate() {
+        throw new Error(
+          "Prompt template editing is not used by conversation tests."
+        );
+      },
       async list() {
         return structuredClone(DEFAULT_LONG_AGENT_SETTINGS);
       },

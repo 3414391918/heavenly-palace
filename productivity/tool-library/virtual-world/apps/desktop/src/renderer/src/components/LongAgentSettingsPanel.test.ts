@@ -25,12 +25,13 @@ describe("main agent settings UI", () => {
     expect(settingsPageSource).not.toContain("<ShortAgentSettingsPanel");
   });
 
-  it("edits prompts, shortcuts and catalog read scopes", () => {
+  it("edits system prompts and catalog read scopes", () => {
     expect(longPanelSource).toContain("LongAgentSettingsInputSchema.safeParse");
     expect(longPanelSource).toContain("readAccess.materialKinds");
     expect(longPanelSource).toContain("readAccess.skillKinds");
-    for (const label of ["系统提示词", "欢迎快捷按钮", "素材库", "技能库"])
+    for (const label of ["系统提示词", "素材库", "技能库"])
       expect(longPanelSource).toContain(label);
+    expect(longPanelSource).not.toContain("<h4>欢迎快捷按钮</h4>");
     expect(longPanelSource).not.toContain('v-model="activeAgent.writeAccess');
     expect(longPanelSource).not.toContain("patchWriteAccess");
   });

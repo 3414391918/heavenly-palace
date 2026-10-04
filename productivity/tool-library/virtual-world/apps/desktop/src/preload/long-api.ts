@@ -5,6 +5,7 @@ import {
 } from "./character-appearance-api";
 import {
   readChapterImage,
+  addChapterImage,
   replaceChapterImage,
   copyChapterImage,
   readClipboardImage
@@ -48,6 +49,7 @@ import {
 } from "./long-document-api";
 import { resolveLongConflicts } from "./long-recovery-api";
 export const long: DeepWriteApi["long"] = {
+  addChapterImage,
   deleteCharacterAppearance,
   getCharacterAppearanceReferences,
   readChapterImage,

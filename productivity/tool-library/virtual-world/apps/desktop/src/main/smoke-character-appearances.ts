@@ -196,7 +196,18 @@ export async function runCharacterAppearanceSmoke(
     );
     const final = (await window.webContents.executeJavaScript(
       `(async () => { const smoke = await import(${JSON.stringify(moduleUrl)}); return await smoke.finishCharacterAppearanceRendererSmoke(); })()`
-    )) as { refreshed: boolean; rendered: boolean };
+    )) as {
+      refreshed: boolean;
+      rendered: boolean;
+      copiedAssetsDirectory: string;
+    };
+    if (
+      final.copiedAssetsDirectory !== inventory.target.assetsDirectory ||
+      clipboard.readText() !== inventory.target.assetsDirectory
+    )
+      throw new Error(
+        "Asset directory path did not reach the native clipboard"
+      );
     const reopened = LongCharacterProfileSnapshotSchema.parse(
       await core("long.readCharacterProfile", target)
     );

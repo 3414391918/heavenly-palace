@@ -51,6 +51,10 @@ try {
     define: { "process.env.NODE_ENV": JSON.stringify("production") },
     resolve: {
       alias: {
+        "@deepwrite/contracts/renderer": join(
+          workspaceRoot,
+          "packages/contracts/src/renderer.ts"
+        ),
         "@deepwrite/contracts": join(
           workspaceRoot,
           "packages/contracts/src/renderer.ts"
@@ -156,6 +160,14 @@ child.on("close", async (code) => {
     summary.chapterImages?.previewReopened !== true ||
     summary.chapterImages?.focusPreserved !== true ||
     summary.chapterImages?.reopenPreserved !== true ||
+    summary.chapterImages?.illustration?.status !== "ok" ||
+    summary.chapterImages?.illustration?.cancel !== true ||
+    summary.chapterImages?.illustration?.added !== true ||
+    summary.chapterImages?.illustration?.keyboardPaste !== true ||
+    summary.chapterImages?.illustration?.sequence !== true ||
+    summary.chapterImages?.illustration?.undoRedo !== true ||
+    summary.chapterImages?.illustration?.preview !== true ||
+    summary.chapterImages?.illustration?.reopened !== true ||
     !(summary.chapterImages?.imageBytes >= 8 * 1024 * 1024) ||
     summary.unifiedCreation?.created !== true ||
     summary.unifiedCreation?.team !== true ||
@@ -180,6 +192,6 @@ child.on("close", async (code) => {
   }
 
   console.log(
-    `Electron smoke passed: utilities, Pi/Faux completion, conversation persistence, unified novel/team creation, large chapter-image (${summary.chapterImages.imageBytes} bytes) clipboard/replace/reopen/render through real IPC with unchanged references, editor preview mode/scroll preservation, and character appearance create/copy/refresh/render/permanent-delete/cancel/lock/other-appearance retention.`
+    `Electron smoke passed: utilities, Pi/Faux completion, conversation persistence, unified novel/team creation, large chapter-image (${summary.chapterImages.imageBytes} bytes) clipboard/replace/reopen/render through real IPC with unchanged references, chapter illustration add/cancel/numbering/undo/redo/preview/reopen, editor preview mode/scroll preservation, and character appearance create/copy/refresh/render/permanent-delete/cancel/lock/other-appearance retention.`
   );
 });

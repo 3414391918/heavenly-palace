@@ -4,7 +4,8 @@ import type { TextContextMenuEvent } from "@deepwrite/contracts";
 import { captureTextMenuTarget } from "./textContextMenuTarget";
 import {
   installNativeTextContextMenu,
-  registerTextMenuExtension
+  registerTextMenuExtension,
+  registerTextMenuIllustration
 } from "./nativeTextContextMenu";
 
 vi.mock("./textContextMenuTarget", () => ({ captureTextMenuTarget: vi.fn() }));
@@ -71,6 +72,55 @@ describe("renderer native menu coordination", () => {
       allowed: true,
       handled: true
     });
+  });
+  it("adds an illustration without replacing the reference or history extension", () => {
+    const event = contextEvent();
+    const insert = vi.fn();
+    const add = vi.fn();
+    registerTextMenuExtension(event, { valid: () => true, insert });
+    registerTextMenuIllustration(event, { valid: () => true, add });
+    send("menu_illustration", { phase: "prepare" });
+    expect(reply.mock.lastCall![0].payload.context).toMatchObject({
+      canInsertReference: true,
+      canAddIllustration: true
+    });
+    send("menu_illustration", { phase: "action", action: "addIllustration" });
+    expect(add).toHaveBeenCalledOnce();
+    expect(insert).not.toHaveBeenCalled();
+    expect(reply.mock.lastCall![0].payload).toMatchObject({
+      allowed: true,
+      handled: true
+    });
+  });
+  it("invalidates an illustration action when its document changes or owner unmounts", () => {
+    const add = vi.fn();
+    const validIllustration = vi.fn(() => true);
+    const release = registerTextMenuIllustration(contextEvent(), {
+      valid: validIllustration,
+      add
+    });
+    send("menu_illustration_stale", { phase: "prepare" });
+    validIllustration.mockReturnValue(false);
+    send("menu_illustration_stale", {
+      phase: "action",
+      action: "addIllustration"
+    });
+    expect(add).not.toHaveBeenCalled();
+    registerTextMenuIllustration(contextEvent(), { valid: () => true, add });
+    send("menu_illustration_unmount", { phase: "prepare" });
+    release();
+    // The current registration's own release must cancel its menu.
+    const releaseCurrent = registerTextMenuIllustration(contextEvent(), {
+      valid: () => true,
+      add
+    });
+    send("menu_illustration_release", { phase: "prepare" });
+    releaseCurrent();
+    send("menu_illustration_release", {
+      phase: "action",
+      action: "addIllustration"
+    });
+    expect(add).not.toHaveBeenCalled();
   });
 
   it("uses the same custom undo/redo history as the editor toolbar", () => {

@@ -11,6 +11,7 @@ export type * from "./general-settings";
 export type * from "./body-text-format";
 export type * from "./library-agent";
 export type * from "./long-agent-settings";
+export * from "./prompt-templates";
 export type * from "./long-agent-team";
 export type * from "./long-ledger";
 export type * from "./long-manuscript-export";
@@ -319,6 +320,8 @@ export {
   LONG_CHAPTER_IMAGE_MAX_PIXELS
 } from "./long-chapter-image";
 export type {
+  LongAddChapterImageInput,
+  LongAddChapterImageResult,
   LongReadChapterImageInput,
   LongReadChapterImageResult,
   LongReplaceChapterImageInput,

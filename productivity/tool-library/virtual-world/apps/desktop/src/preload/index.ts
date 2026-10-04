@@ -86,6 +86,7 @@ import {
   listGeneralSettings,
   listLibraryAgents,
   listLongAgents,
+  updateLongPromptTemplate,
   listWorkspaceDirectory,
   resetLibraryAgents,
   resetLongAgents,
@@ -176,6 +177,7 @@ const api: DeepWriteApi = {
   chatAssistantRoleplay,
   longAgents: {
     list: listLongAgents,
+    updatePromptTemplate: updateLongPromptTemplate,
     save: saveLongAgents,
     reset: resetLongAgents
   },

@@ -7,6 +7,11 @@ import {
   LongAgentSettingsInputSchema,
   LongAgentSettingsSchema,
   getDefaultLongAgentProfile,
+  PromptTemplatesSchema,
+  PromptTemplateUpdateSchema,
+  promptTemplatesFromShortcuts,
+  type PromptTemplate,
+  type PromptTemplateUpdate,
   type LongAgentId,
   type LongAgentProfile,
   type LongAgentReadAccess,
@@ -19,7 +24,10 @@ import { LEGACY_LONG_AGENT_SYSTEM_PROMPT } from "./legacy-long-agent-default-pro
 
 export const LONG_AGENT_SETTINGS_DISK_VERSION = 3 as const;
 
-interface DiskLongAgentSettings extends LongAgentSettingsInput {
+interface StoredLongAgentSettings extends LongAgentSettingsInput {
+  promptTemplates: PromptTemplate[];
+}
+interface DiskLongAgentSettings extends StoredLongAgentSettings {
   version: typeof LONG_AGENT_SETTINGS_DISK_VERSION;
 }
 
@@ -62,9 +70,12 @@ function cloneProfile(profile: LongAgentProfile): LongAgentProfile {
   };
 }
 
-function defaultsAsInput(): LongAgentSettingsInput {
+function defaultsAsInput(): StoredLongAgentSettings {
   return {
     workspaceType: "long",
+    promptTemplates: promptTemplatesFromShortcuts(
+      DEFAULT_LONG_AGENT_PROFILES[0]!.welcomeShortcuts
+    ),
     agents: DEFAULT_LONG_AGENT_PROFILES.map((profile) => ({
       id: profile.id,
       systemPrompt: profile.systemPrompt,
@@ -131,12 +142,16 @@ function normalizeReadAccess(
   };
 }
 
-function parseDiskSettings(raw: unknown): LongAgentSettingsInput {
+function parseDiskSettings(raw: unknown): StoredLongAgentSettings {
   if (raw === undefined) return defaultsAsInput();
   if (!isRecord(raw)) {
     throw new Error("主智能体配置内容无效，已停止加载以避免覆盖原文件。");
   }
-  const { version: _version, ...rawSettings } = raw;
+  const {
+    version: _version,
+    promptTemplates: rawTemplates,
+    ...rawSettings
+  } = raw;
   const parsed = LongAgentSettingsInputSchema.safeParse(
     normalizeReadAccess(rawSettings)
   );
@@ -150,6 +165,10 @@ function parseDiskSettings(raw: unknown): LongAgentSettingsInput {
   }
   return {
     workspaceType: "long",
+    promptTemplates:
+      rawTemplates === undefined
+        ? promptTemplatesFromShortcuts(parsed.data.agents[0]!.welcomeShortcuts)
+        : PromptTemplatesSchema.parse(rawTemplates),
     agents: parsed.data.agents.map((agent) => ({
       ...cloneInputAgent(agent),
       systemPrompt:
@@ -186,8 +205,9 @@ export class LongAgentConfigStore {
     const input = LongAgentSettingsInputSchema.parse(rawInput);
     let saved: LongAgentSettings | undefined;
     const operation = this.writeChain.then(async () => {
-      const normalized: LongAgentSettingsInput = {
+      const normalized: StoredLongAgentSettings = {
         workspaceType: "long",
+        promptTemplates: (await this.readInput()).promptTemplates,
         agents: input.agents.map(cloneInputAgent)
       };
       await this.writeInput(normalized);
@@ -204,7 +224,10 @@ export class LongAgentConfigStore {
       : undefined;
     let saved: LongAgentSettings | undefined;
     const operation = this.writeChain.then(async () => {
-      const next = agentId ? await this.readInput() : defaultsAsInput();
+      const current = await this.readInput();
+      const next = agentId
+        ? current
+        : { ...defaultsAsInput(), promptTemplates: current.promptTemplates };
       if (agentId) {
         const builtin = getDefaultLongAgentProfile(agentId);
         const replacement: LongAgentSettingsInputAgent = {
@@ -223,9 +246,16 @@ export class LongAgentConfigStore {
         }
         next.agents[index] = replacement;
       }
-      const validated = LongAgentSettingsInputSchema.parse(next);
-      await this.writeInput(validated);
-      saved = this.toPublicSettings(validated);
+      const validated = LongAgentSettingsInputSchema.parse({
+        workspaceType: next.workspaceType,
+        agents: next.agents
+      });
+      const normalized = {
+        ...validated,
+        promptTemplates: next.promptTemplates
+      };
+      await this.writeInput(normalized);
+      saved = this.toPublicSettings(normalized);
     });
     this.trackWrite(operation);
     await operation;
@@ -241,6 +271,36 @@ export class LongAgentConfigStore {
       : cloneProfile(getDefaultLongAgentProfile(agentId));
   }
 
+  async updatePromptTemplate(
+    rawUpdate: PromptTemplateUpdate
+  ): Promise<LongAgentSettings> {
+    const update = PromptTemplateUpdateSchema.parse(rawUpdate);
+    let saved: LongAgentSettings | undefined;
+    const operation = this.writeChain.then(async () => {
+      const current = await this.readInput();
+      const templates = current.promptTemplates;
+      if (update.action === "delete") {
+        current.promptTemplates = templates.filter(
+          ({ id }) => id !== update.id
+        );
+      } else {
+        const index = templates.findIndex(
+          ({ id }) => id === update.template.id
+        );
+        if (index < 0) templates.push(update.template);
+        else templates[index] = update.template;
+      }
+      current.promptTemplates = PromptTemplatesSchema.parse(
+        current.promptTemplates
+      );
+      await this.writeInput(current);
+      saved = this.toPublicSettings(current);
+    });
+    this.trackWrite(operation);
+    await operation;
+    return saved!;
+  }
+
   private trackWrite(operation: Promise<unknown>): void {
     this.writeChain = operation.then(
       () => undefined,
@@ -248,7 +308,7 @@ export class LongAgentConfigStore {
     );
   }
 
-  private async readInput(): Promise<LongAgentSettingsInput> {
+  private async readInput(): Promise<StoredLongAgentSettings> {
     const raw = await readJson(this.settingsPath);
     const input = parseDiskSettings(raw);
     if (
@@ -265,19 +325,21 @@ export class LongAgentConfigStore {
     return input;
   }
 
-  private async writeInput(input: LongAgentSettingsInput): Promise<void> {
+  private async writeInput(input: StoredLongAgentSettings): Promise<void> {
     const disk: DiskLongAgentSettings = {
       version: LONG_AGENT_SETTINGS_DISK_VERSION,
       workspaceType: "long",
+      promptTemplates: input.promptTemplates,
       agents: input.agents.map(cloneInputAgent)
     };
     await atomicWriteJson(this.settingsPath, disk);
   }
 
-  private toPublicSettings(input: LongAgentSettingsInput): LongAgentSettings {
+  private toPublicSettings(input: StoredLongAgentSettings): LongAgentSettings {
     const byId = new Map(input.agents.map((agent) => [agent.id, agent]));
     return LongAgentSettingsSchema.parse({
       workspaceType: "long",
+      promptTemplates: input.promptTemplates,
       agents: LONG_AGENT_IDS.map((id) => {
         const builtin = getDefaultLongAgentProfile(id);
         const override = byId.get(id);

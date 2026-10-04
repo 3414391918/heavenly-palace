@@ -80,6 +80,7 @@ import {
 } from "../composables/useLongEditorStructureSelection";
 import { useTextViewMode } from "../composables/useTextViewMode";
 import { useLongEditorViewSession } from "../composables/useLongEditorViewSession";
+import { useLongEditorIllustrationCommit } from "../features/chapter-images/useLongEditorIllustrationCommit";
 
 const props = defineProps<{
   bookId: string;
@@ -556,7 +557,9 @@ const pendingStoryPlotDelete = computed(() => {
     canConfirm: Boolean(pendingStoryPlotDeleteImpact.value)
   };
 });
+const illustrationWritePending = ref(false);
 const isDocumentContentBusy = computed(() => {
+  if (illustrationWritePending.value) return true;
   if (isDocumentSwitchPending.value) return true;
   if (currentIsStructuredText.value || currentIsForeshadowingView.value) {
     return false;
@@ -1077,6 +1080,7 @@ const {
   currentIsPlotPointStoryline
 });
 async function saveAllChanges(): Promise<boolean> {
+  if (!illustrations.canLeave()) return false;
   if (
     characterProfileEditor.value &&
     !(await characterProfileEditor.value.prepareLeave())
@@ -1194,6 +1198,19 @@ const {
     historyHost.scrollEditorToRange(input, start),
   clearRecoveryRecordForKey,
   scheduleRecoveryWrite
+});
+
+const illustrations = useLongEditorIllustrationCommit({
+  bookId: () => props.bookId,
+  selection: () => props.selection,
+  selectedFile: currentSelectionFile,
+  currentState,
+  documentStates,
+  pending: illustrationWritePending,
+  recordChange: recordProgrammaticChange,
+  clearRecovery: clearRecoveryRecordForKey,
+  persistRecovery: persistRecoveryForKey,
+  saved: (result) => emit("saved", result)
 });
 
 const {
@@ -2208,6 +2225,7 @@ onBeforeUnmount(() => {
           :eyebrow="documentEyebrow"
           :format="currentDocumentFormat"
           :content="currentVisibleContent"
+          :saved-content="currentState?.savedContent"
           :resolve-image-url="
             (source) =>
               longChapterImageUrl(
@@ -2216,14 +2234,7 @@ onBeforeUnmount(() => {
                 source
               )
           "
-          :image-context="
-            selection.chapterCardId &&
-            /^long\/chapters\/[a-f0-9]{32}\/body\.md$/.test(
-              currentSelectionFile?.file.path ?? ''
-            )
-              ? { bookId: props.bookId, chapterCardId: selection.chapterCardId }
-              : undefined
-          "
+          :image-context="illustrations.imageContext.value"
           :document-key="currentSelectionFile?.file.id ?? selection?.key ?? ''"
           :view-mode="viewMode"
           :read-only="currentReadOnly"
@@ -2246,6 +2257,8 @@ onBeforeUnmount(() => {
           @editor-element-change="setEditorInputElement"
           @preview-element-change="setDocumentPreviewElement"
           @editor-scroll="handleEditorScroll"
+          @illustration-added="illustrations.accept"
+          @illustration-busy="illustrationWritePending = $event"
         />
         <div
           v-else-if="

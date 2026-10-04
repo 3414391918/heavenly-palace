@@ -8,6 +8,7 @@ export function createUnusedLongApi(): DeepWriteApi["long"] {
     getCharacterAppearanceReferences: unused,
     deleteCharacterAppearance: unused,
     readChapterImage: unused,
+    addChapterImage: unused,
     replaceChapterImage: unused,
     copyChapterImage: unused,
     readClipboardImage: unused,

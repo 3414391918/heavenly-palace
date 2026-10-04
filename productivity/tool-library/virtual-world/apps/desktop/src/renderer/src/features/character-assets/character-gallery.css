@@ -4,6 +4,7 @@
 }
 header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
@@ -12,6 +13,11 @@ header {
 header div {
   display: grid;
   gap: 4px;
+}
+header .asset-gallery-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 header span {
   font-size: 0.85em;

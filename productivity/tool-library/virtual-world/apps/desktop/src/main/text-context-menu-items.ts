@@ -100,5 +100,12 @@ export function buildTextMenuItems(
   if (context.canInsertReference && selected && !context.password) {
     items.unshift(item("insertReference", "插入输入框", true), separator());
   }
+  if (
+    context.kind === "editable" &&
+    context.canAddIllustration &&
+    !context.password
+  ) {
+    items.push(separator(), item("addIllustration", "新增插画", true));
+  }
   return items;
 }

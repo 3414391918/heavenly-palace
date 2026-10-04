@@ -66,6 +66,9 @@ export interface LongPreloadApi {
   readChapterImage(
     input: LongReadChapterImageInput
   ): Promise<LongReadChapterImageResult>;
+  addChapterImage(
+    input: LongAddChapterImageInput
+  ): Promise<LongAddChapterImageResult>;
   replaceChapterImage(
     input: LongReplaceChapterImageInput
   ): Promise<LongReplaceChapterImageResult>;
@@ -142,6 +145,8 @@ export interface LongPreloadApi {
   delete(input: LongRemoveBookInput): Promise<LongRemoveBookResult>;
 }
 import type {
+  LongAddChapterImageInput,
+  LongAddChapterImageResult,
   LongReadChapterImageInput,
   LongReadChapterImageResult,
   LongReplaceChapterImageInput,

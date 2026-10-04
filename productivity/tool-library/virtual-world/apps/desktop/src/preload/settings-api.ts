@@ -9,6 +9,8 @@ import {
   LongAgentIdSchema,
   LongAgentSettingsInputSchema,
   LongAgentSettingsSchema,
+  PromptTemplateUpdateSchema,
+  type PromptTemplateUpdate,
   WorkspaceDirectorySettingsSchema,
   createEnvelope,
   type ExportLongManuscriptInput,
@@ -60,6 +62,21 @@ export async function resetLongAgents(
         { ...(agentId ? { agentId } : {}) },
         { id, correlationId: id }
       )
+    )
+  );
+}
+
+export async function updateLongPromptTemplate(
+  rawInput: PromptTemplateUpdate
+): Promise<LongAgentSettings> {
+  const input = PromptTemplateUpdateSchema.parse(rawInput);
+  const id = browserId("cmd_long_prompt_template_update");
+  return LongAgentSettingsSchema.parse(
+    await invokeCommand<LongAgentSettings>(
+      createEnvelope("longAgents.updatePromptTemplate", input, {
+        id,
+        correlationId: id
+      })
     )
   );
 }

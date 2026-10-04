@@ -7,6 +7,7 @@ import {
   readChapterImage,
   replaceChapterImage
 } from "./long-project-store/chapter-images";
+import { addChapterImage } from "./long-project-store/chapter-illustrations";
 import {
   importCharacterAssetsAtPaths,
   renameCharacterAsset,
@@ -20,7 +21,8 @@ import type {
   LongDeleteCharacterAssetInput,
   LongDeleteCharacterAppearanceInput,
   LongReadChapterImageInput,
-  LongReplaceChapterImageInput
+  LongReplaceChapterImageInput,
+  LongAddChapterImageInput
 } from "@deepwrite/contracts";
 import { resolveLongProjectConflicts } from "./long-project-store/resolve-conflicts";
 import type { LongWorkspaceOperationBatch } from "@deepwrite/contracts";
@@ -211,6 +213,13 @@ export class LongProjectStore {
     input: LongReadChapterImageInput
   ) {
     return await readChapterImage(this.context, projectDirectory, input);
+  }
+
+  async addChapterImage(
+    projectDirectory: string,
+    input: LongAddChapterImageInput
+  ) {
+    return await addChapterImage(this.context, projectDirectory, input);
   }
 
   async replaceChapterImage(

@@ -1,13 +1,12 @@
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, ref, watch, nextTick } from "vue";
+import { ref, watch, nextTick } from "vue";
 import type { LongReadChapterImageInput } from "@deepwrite/contracts";
-import ImageDialog from "../character-assets/CharacterAssetDialog.vue";
+import ChapterImagePasteDialog from "./ChapterImagePasteDialog.vue";
 import { uiMessage } from "../../ui-feedback";
 import {
   useChapterImageActions,
   type ChapterImageContext
 } from "./useChapterImageActions";
-import { pastedImagePng, singlePastedImage } from "./clipboard-image";
 const props = defineProps<{
   context?: ChapterImageContext | undefined;
   disabled: boolean;
@@ -23,12 +22,6 @@ const state = useChapterImageActions(
 );
 const { menu, dialog, busy, loading } = state;
 const menuPanel = ref<HTMLElement | null>(null);
-const pasting = ref(false);
-let pasteGeneration = 0;
-watch(dialog, () => {
-  pasteGeneration++;
-  pasting.value = false;
-});
 watch(menu, async (value) => {
   if (value) {
     await nextTick();
@@ -67,41 +60,6 @@ async function perform(action: () => Promise<unknown>, success?: string) {
     uiMessage.error(error instanceof Error ? error.message : "图片操作失败。");
   }
 }
-async function onPaste(event: ClipboardEvent) {
-  if (!dialog.value) return;
-  event.preventDefault();
-  event.stopPropagation();
-  if (busy.value || loading.value || pasting.value) return;
-  const current = ++pasteGeneration;
-  pasting.value = true;
-  try {
-    const files = Array.from(event.clipboardData?.files ?? []);
-    if (files.length) {
-      const file = singlePastedImage(files);
-      const png = await pastedImagePng(file);
-      if (current === pasteGeneration) state.acceptPng(png);
-    } else await state.pasteClipboard();
-  } catch (error) {
-    uiMessage.error(error instanceof Error ? error.message : "无法粘贴图片。");
-  } finally {
-    if (current === pasteGeneration) pasting.value = false;
-  }
-}
-async function paste() {
-  if (pasting.value) return;
-  pasting.value = true;
-  const current = ++pasteGeneration;
-  await perform(() => state.pasteClipboard());
-  if (current === pasteGeneration) pasting.value = false;
-}
-function close() {
-  if (!pasting.value) state.closeDialog();
-}
-onMounted(() => document.addEventListener("paste", onPaste, true));
-onBeforeUnmount(() => {
-  pasteGeneration++;
-  document.removeEventListener("paste", onPaste, true);
-});
 </script>
 
 <template>
@@ -139,54 +97,17 @@ onBeforeUnmount(() => {
         </div>
       </div>
     </Teleport>
-    <ImageDialog
+    <ChapterImagePasteDialog
       v-if="dialog"
-      title="替换图片"
-      :busy="busy || pasting"
-      @close="close"
-    >
-      <div class="chapter-image-replacement">
-        <p>粘贴一张图片，确认后替换当前图片。</p>
-        <div
-          class="chapter-image-paste-area"
-          tabindex="0"
-          aria-label="粘贴替换图片"
-        >
-          <img
-            v-if="dialog.pastedImage"
-            :src="dialog.pastedImage"
-            alt="待替换图片"
-          />
-          <span v-else>{{
-            loading
-              ? "正在读取原图…"
-              : pasting
-                ? "正在读取粘贴图片…"
-                : "按 Command / Ctrl + V 粘贴图片"
-          }}</span>
-        </div>
-        <button
-          type="button"
-          :disabled="loading || busy || pasting"
-          @click="paste"
-        >
-          粘贴图片
-        </button>
-      </div>
-      <template #actions>
-        <button type="button" :disabled="busy || pasting" @click="close">
-          取消
-        </button>
-        <button
-          type="button"
-          class="chapter-image-confirm"
-          :disabled="!dialog.pastedImage || !dialog.revision || busy || pasting"
-          @click="perform(state.confirm, '图片已替换并保存')"
-        >
-          {{ busy ? "正在替换…" : "确认替换" }}
-        </button>
-      </template>
-    </ImageDialog>
+      mode="replace"
+      :image="dialog.pastedImage"
+      :busy="busy"
+      :loading="loading"
+      :ready="Boolean(dialog.revision)"
+      @close="state.closeDialog"
+      @image="state.acceptPng"
+      @confirm="perform(state.confirm, '图片已替换并保存')"
+    />
   </div>
 </template>
 

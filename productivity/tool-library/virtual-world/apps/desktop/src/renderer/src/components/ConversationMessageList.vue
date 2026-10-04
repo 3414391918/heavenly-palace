@@ -112,17 +112,19 @@ const { handleConversationContextMenu } = useConversationSelectionInsertion({
         <span class="empty-agent-mark"><AppIcon name="logo" :size="40" /></span>
         <h1>{{ welcomeContent.title }}</h1>
         <p>{{ welcomeContent.description }}</p>
-        <div class="empty-suggestions">
-          <button
-            v-for="item in welcomeContent.questions"
-            :key="item"
-            type="button"
-            :disabled="!runtimeAvailable"
-            @click="emit('suggestion', item)"
-          >
-            {{ item }}
-          </button>
-        </div>
+        <slot name="welcome-actions"
+          ><div class="empty-suggestions">
+            <button
+              v-for="item in welcomeContent.questions"
+              :key="item"
+              type="button"
+              :disabled="!runtimeAvailable"
+              @click="emit('suggestion', item)"
+            >
+              {{ item }}
+            </button>
+          </div></slot
+        >
       </div>
     </slot>
 

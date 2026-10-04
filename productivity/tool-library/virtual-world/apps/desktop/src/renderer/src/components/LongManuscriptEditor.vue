@@ -1,13 +1,19 @@
 <script setup lang="ts">
-import type { TextViewMode } from "@deepwrite/contracts";
-import { onBeforeUnmount, ref, watch } from "vue";
+import type {
+  TextViewMode,
+  LongAddChapterImageResult
+} from "@deepwrite/contracts";
+import { nextTick, onBeforeUnmount, ref, watch } from "vue";
 import DocumentMetaRow from "./DocumentMetaRow.vue";
 import EditorSearchHighlight from "./EditorSearchHighlight.vue";
 import MarkdownContent from "./MarkdownContent.vue";
 import ChapterImageActions from "../features/chapter-images/ChapterImageActions.vue";
 import type { ChapterImageContext } from "../features/chapter-images/useChapterImageActions";
+import ChapterImagePasteDialog from "../features/chapter-images/ChapterImagePasteDialog.vue";
+import { useChapterIllustrationInsertion } from "../features/chapter-images/useChapterIllustrationInsertion";
+import { uiMessage } from "../ui-feedback";
 
-defineProps<{
+const props = defineProps<{
   title: string;
   titleDraft: string;
   titleEditable: boolean;
@@ -15,6 +21,7 @@ defineProps<{
   eyebrow: string;
   format: string;
   content: string;
+  savedContent?: string | undefined;
   resolveImageUrl?: (source: string) => string | undefined;
   imageContext?: ChapterImageContext | undefined;
   documentKey: string;
@@ -39,10 +46,44 @@ const emit = defineEmits<{
   editorElementChange: [element: HTMLTextAreaElement | null];
   previewElementChange: [element: HTMLElement | null];
   editorScroll: [event: Event];
+  illustrationAdded: [
+    result: LongAddChapterImageResult,
+    previousContent: string
+  ];
+  illustrationBusy: [busy: boolean];
 }>();
 
 const editorElement = ref<HTMLTextAreaElement | null>(null);
 const previewElement = ref<HTMLElement | null>(null);
+const insertion = useChapterIllustrationInsertion({
+  context: () => props.imageContext,
+  documentKey: () => props.documentKey,
+  content: () => props.content,
+  savedContent: () => props.savedContent,
+  blocked: () => props.readOnly || props.busy || props.viewMode !== "edit",
+  api: () => {
+    const api = window.deepwrite?.long;
+    if (!api) throw new Error("桌面图片服务不可用。");
+    return api;
+  },
+  added: (result, previous) => {
+    const input = editorElement.value;
+    const scrollTop = input?.scrollTop ?? 0;
+    emit("illustrationAdded", result, previous);
+    void nextTick(() => {
+      if (!input || input !== editorElement.value) return;
+      input.setSelectionRange(result.selectionOffset, result.selectionOffset);
+      input.focus({ preventScroll: true });
+      input.scrollTop = scrollTop;
+    });
+  },
+  busy: (value) => emit("illustrationBusy", value),
+  error: uiMessage.error
+});
+function handleContextMenu(event: MouseEvent) {
+  emit("contextmenu", event);
+  insertion.register(event);
+}
 
 watch(editorElement, (element) => emit("editorElementChange", element), {
   flush: "post"
@@ -114,13 +155,13 @@ function updateTitle(event: Event): void {
         ref="editorElement"
         :value="content"
         class="long-document-editor"
-        :readonly="readOnly || busy"
+        :readonly="readOnly || busy || insertion.busy.value"
         :aria-label="`${title}${format || '正文'}`"
         spellcheck="false"
         @beforeinput="emit('beforeinput', $event)"
         @input="emit('input', $event)"
         @keydown="emit('keydown', $event)"
-        @contextmenu="emit('contextmenu', $event)"
+        @contextmenu="handleContextMenu"
         @scroll="emit('editorScroll', $event)"
       />
     </EditorSearchHighlight>
@@ -147,6 +188,16 @@ function updateTitle(event: Event): void {
       <p v-else class="is-empty">暂无正文</p>
     </article>
   </section>
+  <ChapterImagePasteDialog
+    v-if="insertion.dialog.value"
+    mode="add"
+    :image="insertion.dialog.value.pastedImage"
+    :ready="true"
+    :busy="insertion.busy.value"
+    @image="insertion.acceptPng"
+    @close="insertion.close"
+    @confirm="insertion.confirm"
+  />
 </template>
 
 <style scoped>

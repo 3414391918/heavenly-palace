@@ -1,4 +1,6 @@
 import { effectScope } from "vue";
+export { runChapterIllustrationRendererSmoke } from "./chapter-illustration.smoke";
+export { runPromptTemplateRendererSmoke } from "../../components/prompt-template.smoke";
 import type { LongReadChapterImageInput } from "@deepwrite/contracts";
 import { useChapterImageActions } from "./useChapterImageActions";
 import { pastedImagePng, singlePastedImage } from "./clipboard-image";

@@ -103,16 +103,7 @@ import {
 } from "./models";
 import { ModelUsageQueryCommandEnvelopeSchema } from "./model-usage";
 import {} from "./workspace";
-import {
-  LibraryAgentsListCommandEnvelopeSchema,
-  LibraryAgentsResetCommandEnvelopeSchema,
-  LibraryAgentsSaveCommandEnvelopeSchema
-} from "./library-agent";
-import {
-  LongAgentsListCommandEnvelopeSchema,
-  LongAgentsResetCommandEnvelopeSchema,
-  LongAgentsSaveCommandEnvelopeSchema
-} from "./long-agent-settings";
+import { SettingsCommandEnvelopeSchemas } from "./settings-command-schemas";
 import {
   CatalogCreateLibraryAtPathCommandEnvelopeSchema,
   CatalogCreateLibraryCommandEnvelopeSchema,
@@ -142,21 +133,6 @@ import {
   CatalogUpdateLibraryGroupCommandEnvelopeSchema,
   CatalogUnregisterProjectCommandEnvelopeSchema
 } from "./catalog";
-import {
-  WorkspaceDirectoryChooseCommandEnvelopeSchema,
-  WorkspaceDirectoryListCommandEnvelopeSchema
-} from "./workspace-directory";
-import {
-  AppearanceFontsInstallCommandEnvelopeSchema,
-  AppearanceFontsListCommandEnvelopeSchema,
-  AppearanceFontsRemoveCommandEnvelopeSchema,
-  AppearanceListCommandEnvelopeSchema,
-  AppearanceSaveCommandEnvelopeSchema
-} from "./appearance";
-import {
-  GeneralSettingsListCommandEnvelopeSchema,
-  GeneralSettingsSaveCommandEnvelopeSchema
-} from "./general-settings";
 import { ExportLongManuscriptCommandEnvelopeSchema } from "./long-manuscript-export";
 import {
   CatalogReadWritingContextCommandEnvelopeSchema,
@@ -242,12 +218,7 @@ export const CommandEnvelopeSchema = z.discriminatedUnion("type", [
   ModelsResolveCapacityCommandEnvelopeSchema,
   ModelsListRemoteCommandEnvelopeSchema,
   ModelUsageQueryCommandEnvelopeSchema,
-  LongAgentsListCommandEnvelopeSchema,
-  LongAgentsSaveCommandEnvelopeSchema,
-  LongAgentsResetCommandEnvelopeSchema,
-  LibraryAgentsListCommandEnvelopeSchema,
-  LibraryAgentsSaveCommandEnvelopeSchema,
-  LibraryAgentsResetCommandEnvelopeSchema,
+  ...SettingsCommandEnvelopeSchemas,
   ...RevisionAnalysisCommandSchemas,
   AgentTeamsSaveBuiltinsCommandEnvelopeSchema,
   CatalogQueryLibraryManagementCommandEnvelopeSchema,
@@ -259,15 +230,6 @@ export const CommandEnvelopeSchema = z.discriminatedUnion("type", [
   AgentTeamsSaveCommandEnvelopeSchema,
   AgentTeamsExportPackageCommandEnvelopeSchema,
   AgentTeamsInstallPackageCommandEnvelopeSchema,
-  WorkspaceDirectoryListCommandEnvelopeSchema,
-  WorkspaceDirectoryChooseCommandEnvelopeSchema,
-  AppearanceListCommandEnvelopeSchema,
-  AppearanceSaveCommandEnvelopeSchema,
-  AppearanceFontsListCommandEnvelopeSchema,
-  AppearanceFontsInstallCommandEnvelopeSchema,
-  AppearanceFontsRemoveCommandEnvelopeSchema,
-  GeneralSettingsListCommandEnvelopeSchema,
-  GeneralSettingsSaveCommandEnvelopeSchema,
   ...ChatAssistantRoleplayCommandSchemas,
   ChatAssistantProjectConfigListCommandEnvelopeSchema,
   ChatAssistantProjectConfigGetCommandEnvelopeSchema,

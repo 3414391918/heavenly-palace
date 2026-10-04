@@ -1,4 +1,6 @@
 import {
+  LongAddChapterImageInputSchema,
+  type LongAddChapterImageInput,
   LongReadChapterImageInputSchema,
   LongReplaceChapterImageInputSchema,
   type LongReadChapterImageInput,
@@ -18,6 +20,19 @@ export class LongChapterImageService {
     const parsed = LongReadChapterImageInputSchema.parse(input);
     const opened = await this.catalog.open(parsed.bookId);
     return await this.store.readChapterImage(opened.projectDirectory, parsed);
+  }
+
+  async addChapterImage(input: LongAddChapterImageInput) {
+    const parsed = LongAddChapterImageInputSchema.parse(input);
+    const opened = await this.catalog.open(parsed.bookId);
+    const result = await this.store.addChapterImage(
+      opened.projectDirectory,
+      parsed
+    );
+    await this.catalog
+      .updateSummary(parsed.bookId, result.document.summary)
+      .catch(() => undefined);
+    return result;
   }
 
   async replaceChapterImage(input: LongReplaceChapterImageInput) {

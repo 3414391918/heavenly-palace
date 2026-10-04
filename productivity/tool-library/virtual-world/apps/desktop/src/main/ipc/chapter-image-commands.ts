@@ -5,6 +5,7 @@ import {
   LONG_CHAPTER_IMAGE_MAX_BYTES,
   LONG_CHAPTER_IMAGE_MAX_PIXELS,
   LongReadChapterImageResultSchema,
+  LongAddChapterImageResultSchema,
   LongReplaceChapterImageResultSchema,
   LongReadClipboardImageResultSchema,
   LongCopyChapterImageResultSchema,
@@ -27,6 +28,7 @@ export async function handleChapterImageCommands(
 ): Promise<CommandResult | undefined> {
   if (
     command.type !== "long.readChapterImage" &&
+    command.type !== "long.addChapterImage" &&
     command.type !== "long.replaceChapterImage" &&
     command.type !== "long.copyChapterImage" &&
     command.type !== "long.readClipboardImage"
@@ -66,12 +68,17 @@ export async function handleChapterImageCommands(
             ...result,
             error: {
               ...result.error,
-              message: "这张图片或所在章节已被修改，请关闭窗口后重新打开替换。"
+              message:
+                command.type === "long.addChapterImage"
+                  ? "章节已被修改，请重新读取正文后添加插画。"
+                  : "这张图片或所在章节已被修改，请关闭窗口后重新打开替换。"
             }
           };
         return result;
       }
-      if (command.type === "long.replaceChapterImage")
+      if (command.type === "long.addChapterImage")
+        payload = LongAddChapterImageResultSchema.parse(result.payload);
+      else if (command.type === "long.replaceChapterImage")
         payload = LongReplaceChapterImageResultSchema.parse(result.payload);
       else {
         const image = LongReadChapterImageResultSchema.parse(result.payload);

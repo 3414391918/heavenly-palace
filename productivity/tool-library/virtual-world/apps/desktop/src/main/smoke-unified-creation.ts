@@ -8,6 +8,9 @@ export async function runUnifiedCreationSmoke(window: BrowserWindow) {
   ) {
     throw new Error("Unified creation smoke requires a disposable profile.");
   }
+  const moduleUrl = process.env.DEEPWRITE_SMOKE_CHAPTER_IMAGE_MODULE;
+  if (!moduleUrl)
+    throw new Error("Prompt template renderer smoke module missing");
   return window.webContents.executeJavaScript(`(async () => {
     const api=window.deepwrite;
     if(api.catalog.createShortBook || api.catalog.createScriptBook || api.workspaceAgents || api.bookTemplates || api.learningImitation || api.deviceSync || api.cloudBackup || api.marketplace) {
@@ -19,10 +22,12 @@ export async function runUnifiedCreationSmoke(window: BrowserWindow) {
     }
     const settings=await api.longAgents.list();
     if(settings.agents.length!==1 || settings.agents[0].id!=="long") throw new Error("Unexpected creation profiles");
+    const smoke=await import(${JSON.stringify(moduleUrl)});
+    const promptTemplates=await smoke.runPromptTemplateRendererSmoke();
     const teams=await api.agentTeams.create({name:"统一子智能体测试团队"});
     if(!teams.teams.some(team=>team.name==="统一子智能体测试团队" && team.workspaceType==="long")) throw new Error("Team creation failed");
     const analysis=await api.revisionAnalysis.list();
     if(!analysis.systemPrompt) throw new Error("Revision analysis settings unavailable");
-    return {status:"ok",created:true,settings:true,team:true,retiredApisAbsent:true};
+    return {status:"ok",created:true,settings:true,team:true,retiredApisAbsent:true,promptTemplates};
   })()`);
 }

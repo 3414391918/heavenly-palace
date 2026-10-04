@@ -16,9 +16,8 @@ describe("long editor selection insertion", () => {
     expect(editorSource).toContain(
       '@preview-contextmenu="handlePreviewContextMenu"'
     );
-    expect(manuscriptSource).toContain(
-      "@contextmenu=\"emit('contextmenu', $event)\""
-    );
+    expect(manuscriptSource).toContain('@contextmenu="handleContextMenu"');
+    expect(manuscriptSource).toContain('emit("contextmenu", event)');
     expect(manuscriptSource).toContain(
       "@contextmenu=\"emit('previewContextmenu', $event)\""
     );

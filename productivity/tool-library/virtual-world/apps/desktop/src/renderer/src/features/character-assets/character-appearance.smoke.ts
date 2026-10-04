@@ -188,7 +188,25 @@ export async function finishCharacterAppearanceRendererSmoke() {
   image.scrollIntoView();
   await image.decode();
   if (!image.naturalWidth) throw new Error("External asset did not render");
-  return { refreshed: true, rendered: true };
+  const storage = await window.deepwrite!.long.getCharacterAppearanceReferences(
+    {
+      bookId: live.props.bookId,
+      characterId: live.props.characterId
+    }
+  );
+  clickText(live.host, "复制绝对路径");
+  await until(
+    () =>
+      uiMessageItems.value.some(
+        (item) => item.content === "角色资产目录的绝对路径已复制"
+      ),
+    "copy absolute assets path"
+  );
+  return {
+    refreshed: true,
+    rendered: true,
+    copiedAssetsDirectory: storage.target.assetsDirectory
+  };
 }
 
 export async function runCharacterAppearanceDeletionSmoke() {

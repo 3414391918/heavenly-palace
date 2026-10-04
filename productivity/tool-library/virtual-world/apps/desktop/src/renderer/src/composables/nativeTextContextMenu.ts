@@ -17,12 +17,37 @@ export interface TextMenuExtension {
   insert?: () => void;
   history?: TextMenuHistory | undefined;
 }
+export interface TextMenuIllustration {
+  valid(): boolean;
+  add(): void;
+}
+interface IllustrationRegistration {
+  extension: TextMenuIllustration | undefined;
+}
+const illustrations = new WeakMap<MouseEvent, IllustrationRegistration>();
 
 interface TextMenuRegistration {
   extension: TextMenuExtension | undefined;
 }
 const extensions = new WeakMap<MouseEvent, TextMenuRegistration>();
-let invalidateExtension: ((extension: TextMenuExtension) => void) | undefined;
+let invalidateExtension:
+  ((extension: TextMenuExtension | TextMenuIllustration) => void) | undefined;
+
+export function registerTextMenuIllustration(
+  event: MouseEvent,
+  extension: TextMenuIllustration
+): () => void {
+  const registration = {
+    extension: extension as TextMenuIllustration | undefined
+  };
+  illustrations.set(event, registration);
+  return () => {
+    illustrations.delete(event);
+    const current = registration.extension;
+    registration.extension = undefined;
+    if (current) invalidateExtension?.(current);
+  };
+}
 
 export function registerTextMenuExtension(
   event: MouseEvent,
@@ -51,6 +76,8 @@ export function installNativeTextContextMenu(
         snapshot: NonNullable<ReturnType<typeof captureTextMenuTarget>>;
         extension: TextMenuExtension | undefined;
         registration: TextMenuRegistration | undefined;
+        illustration: TextMenuIllustration | undefined;
+        illustrationRegistration: IllustrationRegistration | undefined;
       }
     | undefined;
 
@@ -72,6 +99,8 @@ export function installNativeTextContextMenu(
     const previous = active;
     active = undefined;
     if (previous?.registration) previous.registration.extension = undefined;
+    if (previous?.illustrationRegistration)
+      previous.illustrationRegistration.extension = undefined;
     if (previous) reply(previous.request, { phase: "cancel" });
   }
 
@@ -89,6 +118,12 @@ export function installNativeTextContextMenu(
     )
       return false;
     const context = state.snapshot.context;
+    if (action === "addIllustration")
+      return (
+        context.kind === "editable" &&
+        !context.password &&
+        Boolean(state.illustration?.valid())
+      );
     if (action === "insertReference") return Boolean(state.extension?.insert);
     if (action === "copy" || action === "selectAll") return true;
     return context.kind === "editable";
@@ -106,9 +141,15 @@ export function installNativeTextContextMenu(
         : undefined;
       const registration = current && extensions.get(current.event);
       const extension = registration?.extension;
+      const illustrationRegistration =
+        current && illustrations.get(current.event);
+      const illustration = illustrationRegistration?.extension;
       if (current) extensions.delete(current.event);
+      if (current) illustrations.delete(current.event);
       if (!snapshot || !snapshot.valid()) {
         if (registration) registration.extension = undefined;
+        if (illustrationRegistration)
+          illustrationRegistration.extension = undefined;
         reply(request, {
           phase: "prepared",
           context: {
@@ -125,7 +166,9 @@ export function installNativeTextContextMenu(
         request,
         snapshot,
         extension: extension?.valid() ? extension : undefined,
-        registration
+        registration,
+        illustration: illustration?.valid() ? illustration : undefined,
+        illustrationRegistration
       };
       const history = active.extension?.history;
       reply(request, {
@@ -133,6 +176,7 @@ export function installNativeTextContextMenu(
         context: {
           ...snapshot.context,
           canInsertReference: Boolean(active.extension?.insert),
+          canAddIllustration: Boolean(active.illustration),
           ...(history
             ? {
                 history: {
@@ -146,17 +190,26 @@ export function installNativeTextContextMenu(
     } else if (request.id === active?.request.id) {
       if (request.payload.phase === "closed") {
         if (active.registration) active.registration.extension = undefined;
+        if (active.illustrationRegistration)
+          active.illustrationRegistration.extension = undefined;
         active = undefined;
         return;
       }
       const action = request.payload.action;
       const allowed = actionAllowed(action);
       const extension = active.extension;
+      const illustration = active.illustration;
       if (active.registration) active.registration.extension = undefined;
+      if (active.illustrationRegistration)
+        active.illustrationRegistration.extension = undefined;
       // Release the request before callbacks update reactive state or focus.
       active = undefined;
       let handled = false;
       try {
+        if (allowed && action === "addIllustration") {
+          illustration?.add();
+          handled = true;
+        }
         if (allowed && action === "insertReference") {
           extension?.insert?.();
           handled = true;
@@ -194,7 +247,8 @@ export function installNativeTextContextMenu(
     candidate = undefined;
   }
   invalidateExtension = (extension) => {
-    if (active?.extension === extension) cancel();
+    if (active?.extension === extension || active?.illustration === extension)
+      cancel();
   };
   document.addEventListener("contextmenu", onContextMenu, true);
   document.addEventListener("input", onInput, true);

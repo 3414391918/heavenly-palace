@@ -34,6 +34,26 @@ const build = (
   buildTextMenuItems(params, { ...context, ...overrides }, clipboard, "darwin");
 
 describe("native text menu policy", () => {
+  it("offers illustration insertion only to eligible editable non-password chapter text", () => {
+    expect(
+      build({ hasSelection: false, canAddIllustration: true }).at(-1)
+    ).toMatchObject({
+      label: "新增插画",
+      action: "addIllustration",
+      enabled: true
+    });
+    for (const overrides of [
+      {},
+      { kind: "readonly", canAddIllustration: true },
+      { password: true, canAddIllustration: true }
+    ]) {
+      expect(
+        build(overrides as Partial<TextContextMenuContext>).some(
+          (item) => item.action === "addIllustration"
+        )
+      ).toBe(false);
+    }
+  });
   it("groups editing actions in the expected order", () => {
     expect(build().map((item) => item.action ?? item.type)).toEqual([
       "undo",

@@ -97,7 +97,9 @@ describe("LongManuscriptEditor", () => {
   it("keeps the textarea mounted when an agent temporarily locks editing", () => {
     expect(source).toContain(`v-if="viewMode === 'edit'"`);
     expect(source).not.toContain(`v-if="viewMode === 'edit' && !readOnly"`);
-    expect(source).toContain(':readonly="readOnly || busy"');
+    expect(source).toContain(
+      ':readonly="readOnly || busy || insertion.busy.value"'
+    );
     expect(editorSource).toContain(`v-if="viewMode === 'edit'"`);
     expect(editorSource).not.toContain(
       `v-if="viewMode === 'edit' && !currentReadOnly"`

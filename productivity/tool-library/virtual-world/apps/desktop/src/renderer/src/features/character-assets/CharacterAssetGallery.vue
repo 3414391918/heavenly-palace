@@ -23,7 +23,8 @@ const images = computed(() =>
   props.assets.filter((item) => item.appearanceId === props.appearanceId)
 );
 const pending = ref(false),
-  copying = ref(false);
+  copying = ref(false),
+  copyingPath = ref(false);
 const viewer = ref<LongCharacterAsset | null>(null);
 const menu = ref<{ asset: LongCharacterAsset; x: number; y: number } | null>(
   null
@@ -78,6 +79,33 @@ async function upload() {
     uiMessage.error(e instanceof Error ? e.message : "上传失败");
   } finally {
     pending.value = false;
+  }
+}
+async function copyAbsolutePath() {
+  if (props.disabled || pending.value || copyingPath.value) return;
+  const target = {
+    bookId: props.bookId,
+    characterId: props.characterId
+  };
+  const appearanceId = props.appearanceId;
+  copyingPath.value = true;
+  try {
+    const storage =
+      await characterApi().getCharacterAppearanceReferences(target);
+    if (
+      target.bookId !== props.bookId ||
+      target.characterId !== props.characterId ||
+      appearanceId !== props.appearanceId
+    )
+      return;
+    await navigator.clipboard.writeText(storage.target.assetsDirectory);
+    uiMessage.success("角色资产目录的绝对路径已复制");
+  } catch (error) {
+    uiMessage.error(
+      error instanceof Error ? error.message : "复制绝对路径失败"
+    );
+  } finally {
+    copyingPath.value = false;
   }
 }
 async function saveLabel() {
@@ -158,7 +186,9 @@ watch(
     deleteTarget.value = null;
   }
 );
-defineExpose({ isBusy: computed(() => pending.value || copying.value) });
+defineExpose({
+  isBusy: computed(() => pending.value || copying.value || copyingPath.value)
+});
 </script>
 <template>
   <section class="asset-gallery">
@@ -167,14 +197,24 @@ defineExpose({ isBusy: computed(() => pending.value || copying.value) });
         <strong>形象图片描述</strong
         ><span>{{ images.length }} 张角色资产图</span>
       </div>
-      <button
-        type="button"
-        class="character-save"
-        :disabled="disabled || pending"
-        @click="upload"
-      >
-        {{ pending ? "处理中…" : "上传图片" }}
-      </button>
+      <div class="asset-gallery-actions">
+        <button
+          type="button"
+          class="character-save"
+          :disabled="disabled || pending || copyingPath"
+          @click="upload"
+        >
+          {{ pending ? "处理中…" : "上传图片" }}
+        </button>
+        <button
+          type="button"
+          :disabled="disabled || pending || copyingPath"
+          title="复制角色资产图片目录的绝对路径"
+          @click="copyAbsolutePath"
+        >
+          {{ copyingPath ? "正在复制…" : "复制绝对路径" }}
+        </button>
+      </div>
     </header>
     <div class="asset-grid" aria-label="角色资产图，右键可设置图片标签或删除">
       <button
