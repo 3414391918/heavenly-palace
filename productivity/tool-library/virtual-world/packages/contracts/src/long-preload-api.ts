@@ -1,5 +1,7 @@
 import type {
   LongGetCharacterAppearanceReferencesInput,
+  LongPrepareCharacterAppearanceDirectoryInput,
+  LongPrepareCharacterAppearanceDirectoryResult,
   LongDeleteCharacterAppearanceInput,
   LongDeleteCharacterAppearanceResult,
   LongGetCharacterAppearanceReferencesResult
@@ -60,6 +62,9 @@ import type {
   LongResolveConflictsResult
 } from "./long-project-recovery";
 export interface LongPreloadApi {
+  prepareCharacterAppearanceDirectory(
+    input: LongPrepareCharacterAppearanceDirectoryInput
+  ): Promise<LongPrepareCharacterAppearanceDirectoryResult>;
   getCharacterAppearanceReferences(
     input: LongGetCharacterAppearanceReferencesInput
   ): Promise<LongGetCharacterAppearanceReferencesResult>;

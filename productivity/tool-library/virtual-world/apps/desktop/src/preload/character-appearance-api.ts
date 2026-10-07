@@ -3,12 +3,33 @@ import {
   createEnvelope,
   LongGetCharacterAppearanceReferencesInputSchema,
   LongGetCharacterAppearanceReferencesResultSchema,
+  LongPrepareCharacterAppearanceDirectoryInputSchema,
+  LongPrepareCharacterAppearanceDirectoryResultSchema,
+  type LongPrepareCharacterAppearanceDirectoryInput,
   LongDeleteCharacterAppearanceInputSchema,
   LongDeleteCharacterAppearanceResultSchema,
   type LongDeleteCharacterAppearanceInput,
   type LongGetCharacterAppearanceReferencesInput
 } from "@deepwrite/contracts";
 import { browserId, invokeCommand } from "./invoke";
+
+export async function prepareCharacterAppearanceDirectory(
+  raw: LongPrepareCharacterAppearanceDirectoryInput
+) {
+  const input = LongPrepareCharacterAppearanceDirectoryInputSchema.parse(raw);
+  const id = browserId("cmd_appearance_directory");
+  return LongPrepareCharacterAppearanceDirectoryResultSchema.parse(
+    await invokeCommand<unknown>(
+      CommandEnvelopeSchema.parse(
+        createEnvelope("long.prepareCharacterAppearanceDirectory", input, {
+          id,
+          correlationId: id,
+          context: { resourceId: input.bookId }
+        })
+      )
+    )
+  );
+}
 
 export async function getCharacterAppearanceReferences(
   raw: LongGetCharacterAppearanceReferencesInput

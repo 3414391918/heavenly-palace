@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/productivity/tool-library/deepseek-harness" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/productivity/tool-library/deepwrite" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/productivity/tool-library/joy-desk" vcs="Git" />
+  </component>
+</project>

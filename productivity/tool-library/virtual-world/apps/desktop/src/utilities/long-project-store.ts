@@ -3,6 +3,7 @@ import {
   saveCharacterProfile
 } from "./long-project-store/character-profiles";
 import { deleteCharacterAppearance } from "./long-project-store/character-appearance-delete";
+import { prepareCharacterAppearanceDirectory } from "./long-project-store/character-appearance-directory";
 import {
   readChapterImage,
   replaceChapterImage
@@ -20,6 +21,7 @@ import type {
   LongRenameCharacterAssetInput,
   LongDeleteCharacterAssetInput,
   LongDeleteCharacterAppearanceInput,
+  LongPrepareCharacterAppearanceDirectoryInput,
   LongReadChapterImageInput,
   LongReplaceChapterImageInput,
   LongAddChapterImageInput
@@ -164,6 +166,16 @@ export class LongProjectStore {
     input: LongReadCharacterProfileInput
   ) {
     return await readCharacterProfile(this.context, projectDirectory, input);
+  }
+  async prepareCharacterAppearanceDirectory(
+    projectDirectory: string,
+    input: LongPrepareCharacterAppearanceDirectoryInput
+  ) {
+    return await prepareCharacterAppearanceDirectory(
+      this.context,
+      projectDirectory,
+      input
+    );
   }
   async saveCharacterProfile(
     projectDirectory: string,

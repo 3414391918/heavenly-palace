@@ -99,6 +99,24 @@ async function confirm() {
   const selectedMode = mode.value;
   busy.value = true;
   try {
+    await characterApi().prepareCharacterAppearanceDirectory({
+      bookId: props.bookId,
+      characterId: source.characterId,
+      appearanceId: appearance.id
+    });
+    const latest = await characterApi().getCharacterAppearanceReferences({
+      bookId: props.bookId,
+      characterId: props.characterId
+    });
+    if (!alive) return;
+    const currentSource = latest.characters.find(
+      (item) => item.characterId === source.characterId
+    );
+    const currentAppearance = currentSource?.appearances.find(
+      (item) => item.id === appearance.id
+    );
+    if (!currentSource || !currentAppearance?.assetsDirectory)
+      throw new Error("参考形象已更新，请重新选择参考资料");
     const result = await props.create(name.value);
     if (!result || !alive) return;
     const created = result.snapshot.profile.appearances.find(
@@ -110,9 +128,9 @@ async function confirm() {
       targetName: result.snapshot.profile.name,
       faceDescription: result.snapshot.profile.faceDescription,
       appearance: created,
-      target: inventory.target,
-      reference: source,
-      referenceAppearance: appearance
+      target: latest.target,
+      reference: currentSource,
+      referenceAppearance: currentAppearance
     });
   } catch (error) {
     if (alive)

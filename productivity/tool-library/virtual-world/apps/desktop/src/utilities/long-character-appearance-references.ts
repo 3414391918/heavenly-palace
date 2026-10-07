@@ -6,6 +6,7 @@ import {
 } from "@deepwrite/contracts";
 import { characterAppearanceStorage } from "./long-character-appearance-paths";
 import type { LongWorkspaceService } from "./long-workspace-service";
+import { join } from "node:path";
 
 /** Read-only reference inventory; absolute paths come only from a registered book. */
 export async function getCharacterAppearanceReferences(
@@ -45,20 +46,38 @@ export async function getCharacterAppearanceReferences(
         characterId: character.id
       }
     );
+    const paths = await characterAppearanceStorage(
+      opened.projectDirectory,
+      files.coreProfile.path,
+      snapshot.assets.map(
+        (asset) =>
+          `${asset.directory ? `${asset.directory}/` : ""}${asset.filename}`
+      )
+    );
     const appearances = snapshot.profile.appearances.flatMap((appearance) => {
       const assets = snapshot.assets
         .filter((asset) => asset.appearanceId === appearance.id)
-        .map(({ label, filename }) => ({ label, filename }));
+        .map(({ label, filename, directory }) => ({
+          label,
+          filename,
+          ...(directory ? { directory } : {})
+        }));
       return assets.length
-        ? [{ id: appearance.id, name: appearance.name, assets }]
+        ? [
+            {
+              id: appearance.id,
+              name: appearance.name,
+              assets,
+              ...(assets.every((a) => a.directory === appearance.id)
+                ? {
+                    assetsDirectory: join(paths.assetsDirectory, appearance.id)
+                  }
+                : {})
+            }
+          ]
         : [];
     });
     if (appearances.length) {
-      const paths = await characterAppearanceStorage(
-        opened.projectDirectory,
-        files.coreProfile.path,
-        snapshot.assets.map((asset) => asset.filename)
-      );
       characters.push({
         characterId: character.id,
         name: snapshot.profile.name,

@@ -4,6 +4,7 @@ import {
   createEnvelope,
   LongCharacterProfileSnapshotSchema,
   LongGetCharacterAppearanceReferencesResultSchema,
+  LongPrepareCharacterAppearanceDirectoryResultSchema,
   LongDeleteCharacterAppearanceResultSchema,
   LongCopyCharacterAssetResultSchema,
   LONG_CHARACTER_IMAGE_MAX_BYTES,
@@ -18,6 +19,7 @@ export async function handleCharacterAssetCommands(
   command: CommandEnvelope
 ): Promise<CommandResult | undefined> {
   if (
+    command.type !== "long.prepareCharacterAppearanceDirectory" &&
     command.type !== "long.getCharacterAppearanceReferences" &&
     command.type !== "long.deleteCharacterAppearance" &&
     command.type !== "long.readCharacterProfile" &&
@@ -97,13 +99,17 @@ export async function handleCharacterAssetCommands(
       status: "accepted",
       requestId: command.id,
       payload:
-        command.type === "long.getCharacterAppearanceReferences"
-          ? LongGetCharacterAppearanceReferencesResultSchema.parse(
+        command.type === "long.prepareCharacterAppearanceDirectory"
+          ? LongPrepareCharacterAppearanceDirectoryResultSchema.parse(
               result.payload
             )
-          : command.type === "long.deleteCharacterAppearance"
-            ? LongDeleteCharacterAppearanceResultSchema.parse(result.payload)
-            : LongCharacterProfileSnapshotSchema.parse(result.payload)
+          : command.type === "long.getCharacterAppearanceReferences"
+            ? LongGetCharacterAppearanceReferencesResultSchema.parse(
+                result.payload
+              )
+            : command.type === "long.deleteCharacterAppearance"
+              ? LongDeleteCharacterAppearanceResultSchema.parse(result.payload)
+              : LongCharacterProfileSnapshotSchema.parse(result.payload)
     };
   } catch (error) {
     return {

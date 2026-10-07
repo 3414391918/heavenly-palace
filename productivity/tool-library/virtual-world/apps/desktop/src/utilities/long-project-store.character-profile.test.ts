@@ -216,7 +216,10 @@ describe("LongProjectStore character profiles and assets", () => {
     expect(asset.filename).toMatch(/^[a-f0-9]{32}\.png$/);
     const assetPath = join(
       f.created.projectDirectory,
-      f.coreProfile.path.replace("core-profile.md", `assets/${asset.filename}`)
+      f.coreProfile.path.replace(
+        "core-profile.md",
+        `assets/${asset.directory}/${asset.filename}`
+      )
     );
     expect(await readFile(assetPath)).toEqual(png);
     const renamed = await f.projectStore.renameCharacterAsset(
@@ -339,7 +342,7 @@ describe("LongProjectStore character profiles and assets", () => {
       f.created.projectDirectory,
       f.coreProfile.path.replace(
         "core-profile.md",
-        `assets/${imported.assets[0]!.filename}`
+        `assets/${imported.assets[0]!.directory}/${imported.assets[0]!.filename}`
       )
     );
     const batch = {

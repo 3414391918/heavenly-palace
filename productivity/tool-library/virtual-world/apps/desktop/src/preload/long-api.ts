@@ -1,6 +1,7 @@
 import type { DeepWriteApi } from "@deepwrite/contracts";
 import {
   getCharacterAppearanceReferences,
+  prepareCharacterAppearanceDirectory,
   deleteCharacterAppearance
 } from "./character-appearance-api";
 import {
@@ -49,6 +50,7 @@ import {
 } from "./long-document-api";
 import { resolveLongConflicts } from "./long-recovery-api";
 export const long: DeepWriteApi["long"] = {
+  prepareCharacterAppearanceDirectory,
   addChapterImage,
   deleteCharacterAppearance,
   getCharacterAppearanceReferences,

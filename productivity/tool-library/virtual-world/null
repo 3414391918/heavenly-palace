@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <script type="module" src="/@vite/client"></script>
+
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>小叮当</title>
+    <style>
+      /* xj 埋点 SDK 注入的脚本 iframe 不属于应用界面。 */
+      iframe#xj-qd-iframe { display: none !important; }
+    </style>
+
+    <!-- 🔧 Content Security Policy - 允许必要的资源 -->
+    <meta http-equiv="Content-Security-Policy" content="
+      default-src 'self' https: http: data: blob: ws: wss:;
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' https: http:;
+      style-src 'self' 'unsafe-inline' https: http:;
+      img-src 'self' data: https: http: blob: file:;
+      font-src 'self' data: https: http:;
+      connect-src 'self' ws: wss: https: http:;
+      media-src 'self' data: https: http: blob:;
+      object-src blob:;
+      frame-src 'self' https: http: blob:;
+      child-src 'self' https: http: blob:;
+      worker-src 'self' blob:;
+    ">
+
+    <!-- 🚀 AKS 加密库（本地，不走 CDN）- 使用 defer 延迟加载，不阻塞首屏渲染 -->
+    <script type="text/javascript" src="/shims/summer-cryptico-h5-2.0.1.min.js" defer></script>
+
+    <!-- 外部 SDK / 脚本：统一在 DOMContentLoaded 后按环境加载 -->
+    <script>
+      // 🔧 检测是否在 Electron 环境，如果是则完全跳过 SDK 加载
+      (function(){
+        function onReady(fn) {
+          if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', fn);
+          } else {
+            fn();
+          }
+        }
+        /** 异步加载外部脚本 */
+        function loadScript(src, opts) {
+          var s = document.createElement('script');
+          s.async = true;
+          if (opts) Object.keys(opts).forEach(function (k) { s[k] = opts[k]; });
+          s.src = src;
+          s.onerror = function () { console.warn('⚠️ 脚本加载失败:', src); };
+          document.head.appendChild(s);
+        }
+        onReady(function () {
+            // ── 奇点 SDK（仅浏览器环境） ──
+            var _ = window;
+            // 🔧 Desk 环境下 polyfill：qd-2.1.20-desk.js 内部会调用 ReportH5Object.noticeQDH5AllData，
+            //    但 desk 版未提供该方法，导致控制台报错。提前注入空实现以消除报错。
+            if (!_.ReportH5Object || typeof _.ReportH5Object.noticeQDH5AllData !== 'function') {
+              _.ReportH5Object = _.ReportH5Object || {};
+              _.ReportH5Object.noticeQDH5AllData = function () { /* no-op for desk */ };
+            }
+            _.__qd__ || (_.__qd__ = {
+              config: {
+                sid: '882VT',
+                pageId: 'xiaodingdang',
+                userType: 'erp',
+                userId: function () {
+                  // 动态获取用户ID，支持登录后实时更新
+                  // 优先级：window.__qd__userId > localStorage 缓存
+                  if (window.__qd__userId) {
+                    return window.__qd__userId;
+                  }
+
+                  // 兜底：从 localStorage 获取（30天缓存）
+                  try {
+                    const cached = localStorage.getItem('__qd__user_cache');
+                    if (cached) {
+                      const data = JSON.parse(cached);
+                      // 检查是否过期（30天）
+                      if (data.userId && data.expiresAt && Date.now() < data.expiresAt) {
+                        return data.userId;
+                      }
+                    }
+                  } catch (error) {
+                    console.error('❌ [奇点SDK] 从 localStorage 读取用户ID失败:', error);
+                  }
+
+                  return '';
+                },
+                clsHook: (el, cls, v, abid, spj) => {
+                  try {
+                    // 🔧 获取真实的 userId（与 main.ts 保持一致）
+                    let userId = window.__qd__userId || '';
+                    if (!userId) {
+                      try {
+                        const cached = localStorage.getItem('__qd__user_cache');
+                        if (cached) {
+                          const data = JSON.parse(cached);
+                          if (data.userId && data.expiresAt && Date.now() < data.expiresAt) {
+                            userId = data.userId;
+                          }
+                        }
+                      } catch (error) {
+                        // 静默失败
+                      }
+                    }
+
+                    // 获取 loginType，带 localStorage 兜底
+                    let loginType = window.__qd__loginType || 'erp';
+                    if (!window.__qd__loginType) {
+                      try {
+                        const cached = localStorage.getItem('__qd__user_cache');
+                        if (cached) {
+                          const data = JSON.parse(cached);
+                          if (data.loginType && data.expiresAt && Date.now() < data.expiresAt) {
+                            loginType = data.loginType;
+                          }
+                        }
+                      } catch (error) {
+                        // 静默失败，使用默认值 'erp'
+                      }
+                    }
+
+                    return {
+                      cls,
+                      v: {
+                        ...v,
+                        // 动态获取登录类型：erp（ERP登录）
+                        loginType: loginType,
+                        s_ver: window.__qd__s_ver
+                      },
+                      abid
+                    };
+                  } catch (e) {
+                    return {
+                      cls,
+                      v,
+                      spj,
+                      abid
+                    };
+                  }
+                },
+                delay: false,
+              }
+            });
+            loadScript('https://storage.jd.com/jdt-cdn/qd/js/qd-2.1.20-desk.js?t=3');
+          // ── 京东外部脚本（仅浏览器环境） ──
+            loadScript('https://storage.360buyimg.com/bi-test/xj/xj-1.0.0.js');
+        });
+      })();
+    </script>
+    <!-- 平台标记：让首屏骨架屏的窗控避让与运行时一致（mac 左侧让交通灯 / win 右上让三键） -->
+    <script>
+      (function () {
+        try {
+          var p = (navigator.platform || '').toLowerCase();
+          var c = document.documentElement.classList;
+          if (p.indexOf('mac') >= 0) c.add('is-mac-chrome');
+          else if (p.indexOf('win') >= 0) c.add('is-win-chrome');
+        } catch (e) {}
+      })();
+    </script>
+
+    <!-- 骨架屏 + 错误浮层样式 -->
+    <style>
+      /* ── 容器 ── */
+      #loading-indicator {
+        position: fixed; inset: 0;
+        background: #ededee;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        z-index: 9999;
+        display: flex; flex-direction: column; overflow: hidden;
+      }
+      #loading-indicator.hidden { display: none; }
+
+      /* ── 骨架色块通用 ── */
+      .sk-bone     { border-radius: 5px; background: #d7dade; }
+      .sk-bone-sub { border-radius: 5px; background: #e1e3e7; }
+      /* 白色聊天面板里对比度需略提 */
+      .sk-thread .sk-bone     { background: #dadde2; }
+      .sk-thread .sk-bone-sub { background: #e7e9ed; }
+
+      /* ── 微光动画 ── */
+      .sk-shimmer { position: relative; overflow: hidden; }
+      .sk-shimmer::after {
+        content: ''; position: absolute; inset: 0; left: -100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent);
+        animation: sk-shimmer 1.6s ease-in-out infinite;
+      }
+      @keyframes sk-shimmer { to { left: 100%; } }
+
+      /* ── 主体（对齐当前 ThreadShellLayout：灰侧栏 + 白聊天面板 + 底部输入） ── */
+      .sk-body {
+        display: flex; flex: 1; min-height: 0;
+        background: #ededee;
+      }
+
+      .sk-sidebar {
+        width: 240px; background: rgba(237, 238, 240, .85);
+        --joydesk-glass-backdrop: blur(20px) saturate(180%);
+        backdrop-filter: var(--joydesk-glass-backdrop);
+        -webkit-backdrop-filter: var(--joydesk-glass-backdrop);
+        flex-shrink: 0; display: flex; flex-direction: column; overflow: hidden;
+      }
+      .sk-sidebar-header {
+        height: 44px; padding: 0 10px; flex-shrink: 0;
+        display: flex; align-items: center; gap: 8px;
+        -webkit-app-region: drag;
+      }
+      /* mac: 顶部 hidden titlebar，左侧为原生交通灯让位 */
+      html.is-mac-chrome .sk-sidebar-header { height: 50px; padding-left: 84px; }
+      /* 侧栏品牌文字 Logo（vite transformIndexHtml 按 edition 注入路径） */
+      .sk-logo {
+        width: 96px; height: 20px; margin-right: auto;
+        background: url('/jingle_logo_text.png') left center / contain no-repeat;
+      }
+      .sk-icon-btn { width: 26px; height: 26px; border-radius: 7px; -webkit-app-region: no-drag; }
+
+      .sk-sidebar-nav {
+        padding: 8px 10px 2px;
+        display: flex; flex-direction: column; gap: 3px;
+      }
+      .sk-nav-item { display: flex; align-items: center; gap: 10px; height: 32px; padding: 0 8px; }
+      .sk-nav-icon { width: 16px; height: 16px; border-radius: 5px; flex-shrink: 0; }
+      .sk-nav-text { height: 11px; }
+
+      .sk-section-label { height: 9px; width: 34px; margin: 14px 0 8px 18px; }
+
+      .sk-convos { padding: 0 10px; display: flex; flex-direction: column; gap: 1px; overflow: hidden; }
+      .sk-convo { display: flex; align-items: center; gap: 10px; height: 30px; padding: 0 8px; }
+      .sk-convo-icon { width: 14px; height: 14px; border-radius: 4px; flex-shrink: 0; }
+      .sk-convo-text { height: 10px; flex: 1; }
+      .sk-convo-time { width: 22px; height: 9px; flex-shrink: 0; }
+
+      .sk-sidebar-footer {
+        margin-top: auto; height: 52px; padding: 0 14px; flex-shrink: 0;
+        display: flex; align-items: center; gap: 10px;
+      }
+      .sk-avatar { width: 28px; height: 28px; border-radius: 8px; }
+      .sk-footer-name { width: 38px; height: 11px; margin-right: auto; }
+      .sk-footer-icon { width: 16px; height: 16px; border-radius: 5px; }
+
+      /* ── 主面板（空会话 = 新对话欢迎界面，对齐 home-welcome-content） ── */
+      /* 左栏展开（默认态）时面板左侧为平角（对齐 .shell-thread-surface:not(.is-menu-collapsed)），
+         仅保留 1px 左缘分隔线（--shell-panel-left-edge），不加圆角。 */
+      .sk-thread {
+        flex: 1; min-width: 0; display: flex; flex-direction: column;
+        background: #fff;
+        box-shadow: -1px 0 0 rgba(17, 24, 39, .10);
+        overflow: hidden;
+      }
+      /* 空会话态：标题栏无标题/无分隔线，仅保留拖拽 + 右上一个图标 */
+      .sk-thread-header {
+        height: 44px; padding: 0 18px; flex-shrink: 0;
+        display: flex; align-items: center; gap: 12px;
+        -webkit-app-region: drag;
+      }
+      /* win: 顶部 hidden titlebar，右上为原生三键让位 */
+      html.is-win-chrome .sk-thread-header { padding-right: 146px; }
+      .sk-header-icon { width: 18px; height: 18px; border-radius: 5px; margin-left: auto; }
+
+      /* 欢迎内容：垂直居中一列（logo + 输入框 + 场景卡） */
+      .sk-welcome {
+        flex: 1; min-height: 0;
+        display: flex; flex-direction: column; justify-content: center; align-items: stretch;
+        padding: 24px max(24px, calc((100% - 880px) / 2)) 52px;
+      }
+      .sk-welcome-col { display: flex; flex-direction: column; gap: 12px; }
+      .sk-welcome-brand {
+        display: flex; flex-direction: column; align-items: center; gap: 8px;
+        padding: 10px 0 6px;
+      }
+      .sk-welcome-logo {
+        width: 200px; height: 64px;
+        background: url('/jingle_logo_large.png') center / contain no-repeat;
+      }
+      .sk-welcome-slogan { width: 190px; height: 11px; border-radius: 5px; }
+
+      /* 输入框（SearchInputBox 形态） */
+      .sk-welcome-composer {
+        border: 1px solid #e6e7ea; border-radius: 16px; background: #fff;
+        box-shadow: 0 1px 2px rgba(17, 24, 39, .04);
+        padding: 16px 16px 12px;
+        display: flex; flex-direction: column; gap: 16px;
+      }
+      .sk-composer-input { height: 12px; width: 46%; border-radius: 5px; }
+      .sk-composer-toolbar { display: flex; align-items: center; gap: 8px; }
+      .sk-tool-pill { height: 24px; border-radius: 8px; }
+      .sk-tool-send { margin-left: auto; width: 30px; height: 30px; border-radius: 9px; }
+
+      /* 场景卡：3 列 × 2 行 = 6 卡（gap 6/8、radius 8、min-height 50，对齐 SceneCardSection） */
+      .sk-scene-grid {
+        display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px 8px; margin-top: 2px;
+      }
+      .sk-scene-card {
+        display: flex; align-items: center; gap: 9px;
+        min-height: 50px; padding: 8px 10px;
+        border-radius: 8px; background: rgba(120, 120, 128, .04);
+      }
+      .sk-scene-ic { width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0; }
+      .sk-scene-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+      .sk-scene-l1 { height: 11px; width: 48%; border-radius: 4px; }
+      .sk-scene-l2 { height: 9px; width: 78%; border-radius: 4px; }
+
+      /* ── 错误浮层 ── */
+      #error-message {
+        display: none; position: absolute; top: 50%; left: 50%;
+        transform: translate(-50%, -50%); text-align: center;
+        max-width: 500px; padding: 32px; background: #fff;
+        border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,.1); z-index: 10;
+      }
+      #error-message.show { display: block; }
+      #error-message h2   { margin: 0 0 12px; font-size: 18px; color: #333; }
+      #error-message p    { color: #666; font-size: 14px; line-height: 1.6; }
+      #error-message button {
+        margin-top: 20px; padding: 10px 24px; background: #409eff;
+        color: #fff; border: none; border-radius: 6px; cursor: pointer;
+        font-size: 14px; transition: background .2s;
+      }
+      #error-message button:hover { background: #66b1ff; }
+
+      /* ── 暗色模式 ── */
+      @media (prefers-color-scheme: dark) {
+        #loading-indicator { background: #161616; }
+        .sk-body { background: #1a1a1b; }
+        .sk-sidebar { background: rgba(28, 28, 30, .85); }
+        .sk-thread { background: #1e1e1f; box-shadow: -1px 0 0 rgba(255, 255, 255, .05); }
+        .sk-bone     { background: #34343a; }
+        .sk-bone-sub { background: #2c2c30; }
+        .sk-thread .sk-bone     { background: #34343a; }
+        .sk-thread .sk-bone-sub { background: #2c2c30; }
+        .sk-logo { background-image: url('/jingle_logo_text_dark.png'); }
+        .sk-welcome-logo { background-image: url('/jingle_logo_large_dark.png'); }
+        .sk-welcome-composer { background: #232325; border-color: #34343a; box-shadow: none; }
+        .sk-scene-card { background: rgba(120, 120, 128, .18); }
+        .sk-shimmer::after { background: linear-gradient(90deg, transparent, rgba(255,255,255,.06), transparent); }
+        #error-message    { background: #2a2a2a; }
+        #error-message h2 { color: #eee; }
+        #error-message p  { color: #aaa; }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 骨架屏（对齐当前 ThreadShellLayout：灰侧栏 + 新对话欢迎界面 logo/输入框/场景卡） -->
+    <div id="loading-indicator">
+      <div class="sk-body">
+        <aside class="sk-sidebar">
+          <div class="sk-sidebar-header">
+            <div class="sk-logo" aria-hidden="true"></div>
+            <div class="sk-icon-btn sk-bone-sub sk-shimmer"></div>
+            <div class="sk-icon-btn sk-bone-sub sk-shimmer"></div>
+          </div>
+          <!-- 功能入口：新对话 / 技能 / 插件 / 专家 / 自动化 -->
+          <div class="sk-sidebar-nav">
+            <div class="sk-nav-item"><div class="sk-nav-icon sk-bone-sub sk-shimmer"></div><div class="sk-nav-text sk-bone-sub sk-shimmer" style="width:52px"></div></div>
+            <div class="sk-nav-item"><div class="sk-nav-icon sk-bone-sub sk-shimmer"></div><div class="sk-nav-text sk-bone-sub sk-shimmer" style="width:38px"></div></div>
+            <div class="sk-nav-item"><div class="sk-nav-icon sk-bone-sub sk-shimmer"></div><div class="sk-nav-text sk-bone-sub sk-shimmer" style="width:38px"></div></div>
+            <div class="sk-nav-item"><div class="sk-nav-icon sk-bone-sub sk-shimmer"></div><div class="sk-nav-text sk-bone-sub sk-shimmer" style="width:38px"></div></div>
+            <div class="sk-nav-item"><div class="sk-nav-icon sk-bone-sub sk-shimmer"></div><div class="sk-nav-text sk-bone-sub sk-shimmer" style="width:48px"></div></div>
+          </div>
+          <!-- 项目 / 会话历史 -->
+          <div class="sk-section-label sk-bone-sub sk-shimmer"></div>
+          <div class="sk-convos">
+            <div class="sk-convo"><div class="sk-convo-icon sk-bone-sub sk-shimmer"></div><div class="sk-convo-text sk-bone-sub sk-shimmer" style="max-width:64px"></div></div>
+            <div class="sk-convo"><div class="sk-convo-icon sk-bone-sub sk-shimmer"></div><div class="sk-convo-text sk-bone-sub sk-shimmer" style="max-width:120px"></div><div class="sk-convo-time sk-bone-sub sk-shimmer"></div></div>
+            <div class="sk-convo"><div class="sk-convo-icon sk-bone-sub sk-shimmer"></div><div class="sk-convo-text sk-bone-sub sk-shimmer" style="max-width:96px"></div><div class="sk-convo-time sk-bone-sub sk-shimmer"></div></div>
+            <div class="sk-convo"><div class="sk-convo-icon sk-bone-sub sk-shimmer"></div><div class="sk-convo-text sk-bone-sub sk-shimmer" style="max-width:140px"></div><div class="sk-convo-time sk-bone-sub sk-shimmer"></div></div>
+            <div class="sk-convo"><div class="sk-convo-icon sk-bone-sub sk-shimmer"></div><div class="sk-convo-text sk-bone-sub sk-shimmer" style="max-width:80px"></div><div class="sk-convo-time sk-bone-sub sk-shimmer"></div></div>
+            <div class="sk-convo"><div class="sk-convo-icon sk-bone-sub sk-shimmer"></div><div class="sk-convo-text sk-bone-sub sk-shimmer" style="max-width:128px"></div><div class="sk-convo-time sk-bone-sub sk-shimmer"></div></div>
+            <div class="sk-convo"><div class="sk-convo-icon sk-bone-sub sk-shimmer"></div><div class="sk-convo-text sk-bone-sub sk-shimmer" style="max-width:104px"></div><div class="sk-convo-time sk-bone-sub sk-shimmer"></div></div>
+          </div>
+          <!-- 底部用户区 -->
+          <div class="sk-sidebar-footer">
+            <div class="sk-avatar sk-bone sk-shimmer"></div>
+            <div class="sk-footer-name sk-bone-sub sk-shimmer"></div>
+            <div class="sk-footer-icon sk-bone-sub sk-shimmer"></div>
+            <div class="sk-footer-icon sk-bone-sub sk-shimmer"></div>
+          </div>
+        </aside>
+        <section class="sk-thread">
+          <div class="sk-thread-header">
+            <div class="sk-header-icon sk-bone-sub sk-shimmer"></div>
+          </div>
+          <!-- 新对话欢迎界面：logo + 输入框 + 场景卡（垂直居中） -->
+          <div class="sk-welcome">
+            <div class="sk-welcome-col">
+              <div class="sk-welcome-brand">
+                <div class="sk-welcome-logo"></div>
+                <div class="sk-welcome-slogan sk-bone-sub sk-shimmer"></div>
+              </div>
+              <div class="sk-welcome-composer">
+                <div class="sk-composer-input sk-bone-sub sk-shimmer"></div>
+                <div class="sk-composer-toolbar">
+                  <div class="sk-tool-pill sk-bone-sub sk-shimmer" style="width:30px"></div>
+                  <div class="sk-tool-pill sk-bone-sub sk-shimmer" style="width:74px"></div>
+                  <div class="sk-tool-pill sk-bone-sub sk-shimmer" style="width:56px"></div>
+                  <div class="sk-tool-pill sk-bone-sub sk-shimmer" style="width:64px"></div>
+                  <div class="sk-tool-send sk-bone sk-shimmer"></div>
+                </div>
+              </div>
+              <div class="sk-scene-grid">
+                <div class="sk-scene-card"><div class="sk-scene-ic sk-bone-sub sk-shimmer"></div><div class="sk-scene-tx"><div class="sk-scene-l1 sk-bone-sub sk-shimmer"></div><div class="sk-scene-l2 sk-bone-sub sk-shimmer"></div></div></div>
+                <div class="sk-scene-card"><div class="sk-scene-ic sk-bone-sub sk-shimmer"></div><div class="sk-scene-tx"><div class="sk-scene-l1 sk-bone-sub sk-shimmer"></div><div class="sk-scene-l2 sk-bone-sub sk-shimmer"></div></div></div>
+                <div class="sk-scene-card"><div class="sk-scene-ic sk-bone-sub sk-shimmer"></div><div class="sk-scene-tx"><div class="sk-scene-l1 sk-bone-sub sk-shimmer"></div><div class="sk-scene-l2 sk-bone-sub sk-shimmer"></div></div></div>
+                <div class="sk-scene-card"><div class="sk-scene-ic sk-bone-sub sk-shimmer"></div><div class="sk-scene-tx"><div class="sk-scene-l1 sk-bone-sub sk-shimmer"></div><div class="sk-scene-l2 sk-bone-sub sk-shimmer"></div></div></div>
+                <div class="sk-scene-card"><div class="sk-scene-ic sk-bone-sub sk-shimmer"></div><div class="sk-scene-tx"><div class="sk-scene-l1 sk-bone-sub sk-shimmer"></div><div class="sk-scene-l2 sk-bone-sub sk-shimmer"></div></div></div>
+                <div class="sk-scene-card"><div class="sk-scene-ic sk-bone-sub sk-shimmer"></div><div class="sk-scene-tx"><div class="sk-scene-l1 sk-bone-sub sk-shimmer"></div><div class="sk-scene-l2 sk-bone-sub sk-shimmer"></div></div></div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+      <div id="error-message">
+        <h2>应用加载失败</h2>
+        <p id="error-text"></p>
+        <button onclick="window.location.reload()">重新加载</button>
+      </div>
+    </div>
+
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+
+    <!-- Vue 应用挂载检测 & 全局错误处理 -->
+    <script>
+      function hideLoadingIndicator() {
+        var el = document.getElementById('loading-indicator');
+        if (el) el.classList.add('hidden');
+        var box = document.getElementById('error-message');
+        if (box) box.classList.remove('show');
+      }
+
+      function showError(msg) {
+        var box = document.getElementById('error-message');
+        var txt = document.getElementById('error-text');
+        if (box && txt) { txt.textContent = msg; box.classList.add('show'); }
+      }
+
+      // 主路径：Vue 主动派发 vue-app-mounted 事件
+      var vueMounted = false;
+      window.addEventListener('vue-app-mounted', function () {
+        vueMounted = true;
+        requestAnimationFrame(hideLoadingIndicator);
+      });
+
+      // 备用轮询：事件未触发时兜底。冷启动/依赖预热可能超过 10s，避免误报。
+      window.addEventListener('load', function () {
+        var startedAt = Date.now();
+        var maxWaitMs = 30000;
+        var timer = setInterval(function () {
+          var app = document.getElementById('app');
+          if (vueMounted || (app && app.innerHTML.trim())) {
+            clearInterval(timer);
+            requestAnimationFrame(hideLoadingIndicator);
+          } else if (Date.now() - startedAt >= maxWaitMs) {
+            clearInterval(timer);
+            showError('Vue 应用未能成功挂载，请检查控制台。');
+          }
+        }, 200);
+      });
+
+      // 全局错误捕获
+      window.addEventListener('error', function (e) {
+        if (e.message && e.message.includes('ResizeObserver')) return; // 无害
+        if (!e.error && !e.message) return; // 扩展/无关脚本
+        console.error('❌ Global error:', e.error);
+        if (e.error && e.error.message) showError('加载错误: ' + e.error.message);
+      });
+
+      window.addEventListener('unhandledrejection', function (e) {
+        var reason = e.reason;
+        var msg;
+        if (reason instanceof Error) { msg = reason.stack || reason.message; }
+        else if (reason && typeof reason === 'object') {
+          try { msg = JSON.stringify(reason); } catch (_) { msg = String(reason); }
+        } else { msg = String(reason); }
+        console.error('❌ Unhandled rejection:', msg);
+        if (reason && reason.message) showError('加载错误: ' + reason.message);
+      });
+    </script>
+  </body>
+</html>

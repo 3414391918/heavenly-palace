@@ -88,7 +88,10 @@ export async function deleteCharacterAppearance(
       });
     }
     for (const asset of assets)
-      operations.push({ action: "delete", path: paths.binary(asset.filename) });
+      operations.push({
+        action: "delete",
+        path: paths.binary(asset.filename, asset.directory)
+      });
     if (manifest.assets.length)
       operations.push({
         path: paths.manifest,
@@ -113,18 +116,23 @@ export async function deleteCharacterAppearance(
       maxFileBytes: MAX_LEDGER_RECORD_BYTES
     });
     let directoryCleanupWarning: string | undefined;
-    // Assets are shared across appearances. Never recursively remove this directory.
-    try {
-      await validateParentDirectories(canonical, directory);
-      await rmdir(directory);
-    } catch (error) {
-      if (
-        !isNodeError(error, "ENOENT") &&
-        !isNodeError(error, "ENOTEMPTY") &&
-        !isNodeError(error, "EEXIST")
-      )
-        directoryCleanupWarning =
-          "形象及图片已永久删除，但空的资产目录未能清理，请检查目录权限。";
+    // Remove only empty selected-appearance/root directories, retaining other images.
+    for (const emptyDirectory of [
+      join(directory, parsed.appearanceId),
+      directory
+    ]) {
+      try {
+        await validateParentDirectories(canonical, emptyDirectory);
+        await rmdir(emptyDirectory);
+      } catch (error) {
+        if (
+          !isNodeError(error, "ENOENT") &&
+          !isNodeError(error, "ENOTEMPTY") &&
+          !isNodeError(error, "EEXIST")
+        )
+          directoryCleanupWarning =
+            "形象及图片已永久删除，但空的资产目录未能清理，请检查目录权限。";
+      }
     }
     const snapshot = characterProfileSnapshot(
       await loadCharacterProfileState(ctx, canonical, parsed)

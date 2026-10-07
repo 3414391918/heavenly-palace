@@ -173,8 +173,12 @@ export async function runCharacterAppearanceSmoke(
     look.description =
       "发型描述：外部生成的发型描述。\n服装描述：外部生成的服装描述。";
     const id = randomUUID().replaceAll("-", "");
-    await mkdir(inventory.target.assetsDirectory, { recursive: true });
-    await writeFile(join(inventory.target.assetsDirectory, `${id}.png`), png);
+    const outputDirectory = join(
+      inventory.target.assetsDirectory,
+      checked.appearanceId
+    );
+    await mkdir(outputDirectory, { recursive: true });
+    await writeFile(join(outputDirectory, `${id}.png`), png);
     await writeFile(
       inventory.target.assetsManifestPath,
       JSON.stringify({
@@ -184,6 +188,7 @@ export async function runCharacterAppearanceSmoke(
           {
             id,
             appearanceId: checked.appearanceId,
+            directory: checked.appearanceId,
             label: "新图标签",
             filename: `${id}.png`
           }
@@ -202,8 +207,8 @@ export async function runCharacterAppearanceSmoke(
       copiedAssetsDirectory: string;
     };
     if (
-      final.copiedAssetsDirectory !== inventory.target.assetsDirectory ||
-      clipboard.readText() !== inventory.target.assetsDirectory
+      final.copiedAssetsDirectory !== outputDirectory ||
+      clipboard.readText() !== outputDirectory
     )
       throw new Error(
         "Asset directory path did not reach the native clipboard"

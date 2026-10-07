@@ -188,24 +188,34 @@ export async function finishCharacterAppearanceRendererSmoke() {
   image.scrollIntoView();
   await image.decode();
   if (!image.naturalWidth) throw new Error("External asset did not render");
+  clickText(live.host, "复制绝对路径");
+  await until(
+    () =>
+      uiMessageItems.value.some(
+        (item) => item.content === "当前形象资产目录的绝对路径已复制"
+      ),
+    "copy absolute assets path"
+  );
   const storage = await window.deepwrite!.long.getCharacterAppearanceReferences(
     {
       bookId: live.props.bookId,
       characterId: live.props.characterId
     }
   );
-  clickText(live.host, "复制绝对路径");
-  await until(
-    () =>
-      uiMessageItems.value.some(
-        (item) => item.content === "角色资产目录的绝对路径已复制"
-      ),
-    "copy absolute assets path"
-  );
+  const appearance = storage.characters
+    .find((item) => item.characterId === live!.props.characterId)
+    ?.appearances.find((item) => item.name === "雨夜新形象");
+  if (
+    !appearance?.assetsDirectory ||
+    appearance.assetsDirectory === storage.target.assetsDirectory
+  )
+    throw new Error("Copied appearance still shares its character directory");
+  await image.decode();
+
   return {
     refreshed: true,
     rendered: true,
-    copiedAssetsDirectory: storage.target.assetsDirectory
+    copiedAssetsDirectory: appearance.assetsDirectory
   };
 }
 

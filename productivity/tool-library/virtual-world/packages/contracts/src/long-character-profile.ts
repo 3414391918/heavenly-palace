@@ -83,10 +83,16 @@ export const LongCharacterAssetSchema = z
   .object({
     id: LongCharacterAssetIdSchema,
     appearanceId: LongCharacterAppearanceIdSchema,
+    directory: LongCharacterAppearanceIdSchema.optional(),
     label: z.string().trim().min(1).max(256),
     filename: LongCharacterAssetFilenameSchema
   })
   .strict()
+  .refine(
+    (asset) =>
+      asset.directory === undefined || asset.directory === asset.appearanceId,
+    "图片目录必须匹配所属形象。"
+  )
   .refine(
     (asset) => asset.filename.startsWith(`${asset.id}.`),
     "图片文件名必须匹配图片标识。"

@@ -2,6 +2,7 @@ import { z } from "zod";
 import { EnvelopeBaseSchema } from "./envelope";
 import {
   LongGetCharacterAppearanceReferencesInputSchema,
+  LongPrepareCharacterAppearanceDirectoryInputSchema,
   LongDeleteCharacterAppearanceInputSchema
 } from "./long-character-appearance";
 import {
@@ -15,6 +16,10 @@ import {
 } from "./long-character-profile";
 
 export const LongCharacterProfileCommandSchemas = [
+  EnvelopeBaseSchema.extend({
+    type: z.literal("long.prepareCharacterAppearanceDirectory"),
+    payload: LongPrepareCharacterAppearanceDirectoryInputSchema
+  }),
   EnvelopeBaseSchema.extend({
     type: z.literal("long.deleteCharacterAppearance"),
     payload: LongDeleteCharacterAppearanceInputSchema

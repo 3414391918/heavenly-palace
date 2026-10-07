@@ -119,11 +119,15 @@ it("permanently deletes only the selected appearance and registered binaries wit
   expect(after.profile.appearances.map((a) => a.id)).toEqual(["look_rain"]);
   expect(after.profile.settingDescription).toBe("保留设定");
   expect(after.assets).toEqual([kept]);
-  expect(await readFile(join(f.directory, "assets", kept.filename))).toEqual(
-    png
-  );
+  expect(
+    await readFile(
+      join(f.directory, "assets", kept.directory ?? "", kept.filename)
+    )
+  ).toEqual(png);
   await expect(
-    lstat(join(f.directory, "assets", deleted.filename))
+    lstat(
+      join(f.directory, "assets", deleted.directory ?? "", deleted.filename)
+    )
   ).rejects.toMatchObject({ code: "ENOENT" });
   expect(await readFile(f.corePath, "utf8")).not.toContain("待删除描述");
   const reopened = new LongProjectStore({ now: () => FIXED_NOW });
@@ -199,7 +203,12 @@ it("refuses a stale confirmation after more images were added to the appearance"
 it("rejects a symlink asset before deleting any metadata or the external file", async () => {
   const f = await fixture("delete_link");
   const deleted = f.saved.assets.find((a) => a.appearanceId === "look_ice")!;
-  const path = join(f.directory, "assets", deleted.filename);
+  const path = join(
+    f.directory,
+    "assets",
+    deleted.directory ?? "",
+    deleted.filename
+  );
   const { unlink } = await import("node:fs/promises");
   await unlink(path);
   await symlink(f.source, path);
@@ -230,7 +239,14 @@ it("reports successful file deletion with a cleanup warning when the empty direc
   expect(after.assets).toEqual([]);
   expect(after.directoryCleanupWarning).toContain("目录");
   await expect(
-    lstat(join(f.directory, "assets", one.assets[0]!.filename))
+    lstat(
+      join(
+        f.directory,
+        "assets",
+        one.assets[0]!.directory ?? "",
+        one.assets[0]!.filename
+      )
+    )
   ).rejects.toMatchObject({ code: "ENOENT" });
 });
 

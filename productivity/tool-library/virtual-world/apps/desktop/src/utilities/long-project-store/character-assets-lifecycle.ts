@@ -65,10 +65,10 @@ export async function characterAssetCopyOperations(
       });
       for (const asset of manifest.assets)
         operations.push({
-          path: paths.binary(asset.filename),
+          path: paths.binary(asset.filename, asset.directory),
           content: await readCharacterAssetBytes(
             loaded,
-            paths.binary(asset.filename)
+            paths.binary(asset.filename, asset.directory)
           ),
           expectedSha256: null
         });
@@ -101,7 +101,7 @@ export async function characterAssetDeleteOperations(
       for (const asset of manifest.assets)
         operations.push({
           action: "delete",
-          path: paths.binary(asset.filename)
+          path: paths.binary(asset.filename, asset.directory)
         });
       operations.push({ action: "delete", path: paths.manifest });
     }

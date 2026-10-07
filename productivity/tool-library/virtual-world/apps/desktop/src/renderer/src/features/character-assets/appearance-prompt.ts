@@ -38,9 +38,15 @@ export function buildCharacterAppearancePrompt(
     referenceAppearance
   } = input;
   const count = referenceAppearance.assets.length;
+  const outputDirectory = assetPath(target.assetsDirectory, appearance.id);
   const sources = referenceAppearance.assets.map((asset) => ({
     label: asset.label,
-    absolutePath: assetPath(reference.assetsDirectory, asset.filename)
+    absolutePath: assetPath(
+      asset.directory
+        ? assetPath(reference.assetsDirectory, asset.directory)
+        : reference.assetsDirectory,
+      asset.filename
+    )
   }));
   const instructions =
     mode === "make"
@@ -67,7 +73,7 @@ export function buildCharacterAppearancePrompt(
     "二、参考角色资产",
     `参考角色：${reference.name}（${reference.characterId}）`,
     `参考形象：${referenceAppearance.name}（${referenceAppearance.id}）`,
-    `角色资产绝对路径：${reference.assetsDirectory}`,
+    `角色资产绝对路径：${referenceAppearance.assetsDirectory ?? reference.assetsDirectory}`,
     `参考图片清单绝对路径：${reference.assetsManifestPath}`,
     `本次只使用以下共 ${count} 张图片；同目录内其他形象的图片不属于本任务。图片标签以清单为准，存储文件名不是图片标签。`,
     "```json",
@@ -98,8 +104,9 @@ export function buildCharacterAppearancePrompt(
     "```",
     "保留其他形象和角色的脸部身材、关键词、设定及所有文档分区标记，保留文件末尾换行。",
     "",
-    `新图片保存目录的绝对路径：${target.assetsDirectory}`,
+    `新图片保存目录的绝对路径：${outputDirectory}`,
     `目标图片清单的绝对路径：${target.assetsManifestPath}`,
+    "先创建上面指定的新形象图片目录（包含形象 ID 的子目录），所有新图片都写到该目录内。",
     "为每张新图生成唯一的 32 位小写十六进制图片 ID（例如 Python uuid.uuid4().hex），以「图片 ID.png」作为存储文件名。建议 PNG，也支持 jpg/jpeg/webp/gif/avif，扩展名必须与真实编码匹配。每张图不超过 100 MiB。",
     '在目标 assets.json 的 assets 数组中追加新图片记录，保留所有原有记录。文件不存在时先创建 {"version":1,"assets":[]}。每条记录格式如下（示例 ID 必须替换成新生成的唯一 ID）：',
     "```json",
@@ -107,6 +114,7 @@ export function buildCharacterAppearancePrompt(
       {
         id: "0123456789abcdef0123456789abcdef",
         appearanceId: appearance.id,
+        directory: appearance.id,
         label: referenceAppearance.assets[0]?.label ?? "图片标签",
         filename: "0123456789abcdef0123456789abcdef.png"
       },
@@ -114,7 +122,7 @@ export function buildCharacterAppearancePrompt(
       2
     ),
     "```",
-    "label 填写对应的参考图片标签，这是用户以后用于生图的图片标签；id 与 filename 中的 ID 必须一致。新记录统一属于上面指定的新形象 ID。",
+    "label 填写对应的参考图片标签，这是用户以后用于生图的图片标签；id 与 filename 中的 ID 必须一致。新记录统一属于上面指定的新形象 ID，directory 必须填写同一个形象 ID，filename 只填写图片文件名。",
     "先完成新图片写入，再通过同目录临时文件加原子替换保存图片清单和核心档案。不要覆盖或删除参考图片、旧形象图片及其记录，不修改正文、连续性账本或其他角色资料。",
     `完成后核对新形象有 ${count} 条有效图片记录，文件全部存在且可以解码，发型与服装描述已写入正确分区。返回虚拟世界角色页面会重新读取；也可以点击「重新读取」查看。`,
     "最后向用户报告完成数量及实际保存位置；未完成的图片如实说明。"

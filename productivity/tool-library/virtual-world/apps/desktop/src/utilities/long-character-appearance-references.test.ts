@@ -118,6 +118,12 @@ it("returns only image-backed reference appearances and exact registered output 
   ]);
   const references = result.characters[0]!;
   expect(references.appearances[0]?.assets).toHaveLength(1);
+  expect(references.appearances[0]?.assetsDirectory).toBe(
+    join(references.assetsDirectory, "look_one")
+  );
+  expect(references.appearances[1]?.assetsDirectory).toBe(
+    join(references.assetsDirectory, "look_two")
+  );
   expect(references.appearances[1]?.assets[0]?.label).toBe("look_two");
   const core = join(
     f.created.projectDirectory,
@@ -180,7 +186,7 @@ it("rejects a reference image file linked outside its managed directory", async 
     f.created.projectDirectory,
     longCharacterFilePath("character_ref_1", "core-profile.md").replace(
       "core-profile.md",
-      `assets/${reference.assets[0]!.filename}`
+      `assets/${reference.assets[0]!.directory}/${reference.assets[0]!.filename}`
     )
   );
   await unlink(path);

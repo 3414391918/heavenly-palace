@@ -31,16 +31,35 @@ export type LongCharacterAppearanceStorage = z.infer<
   typeof LongCharacterAppearanceStorageSchema
 >;
 
+export const LongPrepareCharacterAppearanceDirectoryInputSchema =
+  LongReadCharacterProfileInputSchema.extend({
+    appearanceId: LongCharacterAppearanceIdSchema
+  }).strict();
+export type LongPrepareCharacterAppearanceDirectoryInput = z.infer<
+  typeof LongPrepareCharacterAppearanceDirectoryInputSchema
+>;
+export const LongPrepareCharacterAppearanceDirectoryResultSchema = z
+  .object({
+    assetsDirectory: AbsolutePathSchema,
+    snapshot: LongCharacterProfileSnapshotSchema
+  })
+  .strict();
+export type LongPrepareCharacterAppearanceDirectoryResult = z.infer<
+  typeof LongPrepareCharacterAppearanceDirectoryResultSchema
+>;
+
 export const LongCharacterAppearanceReferenceSchema = z
   .object({
     id: LongCharacterAppearanceIdSchema,
     name: LongTitleSchema,
+    assetsDirectory: AbsolutePathSchema.optional(),
     assets: z
       .array(
         z
           .object({
             label: z.string().min(1).max(256),
-            filename: LongCharacterAssetFilenameSchema
+            filename: LongCharacterAssetFilenameSchema,
+            directory: LongCharacterAppearanceIdSchema.optional()
           })
           .strict()
       )

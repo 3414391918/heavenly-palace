@@ -370,7 +370,7 @@ describe("character Core review regressions", () => {
         f.coreProfile.path,
         f.relationships.path,
         `${directory}/assets.json`,
-        `${directory}/assets/${imported.assets[0]!.filename}`,
+        `${directory}/assets/${imported.assets[0]!.directory}/${imported.assets[0]!.filename}`,
         `${directory}/core-profile.legacy.md`
       ];
       const originals = await Promise.all(

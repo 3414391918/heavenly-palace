@@ -47,7 +47,7 @@ export async function restoreRetainedCharacterAssets(
         parseJson(content, "角色图片清单")
       );
       for (const asset of manifest.assets)
-        await preserve(paths.binary(asset.filename), true);
+        await preserve(paths.binary(asset.filename, asset.directory), true);
     }
     if (recovery.deletions.has(paths.legacy))
       await preserve(paths.legacy, true);

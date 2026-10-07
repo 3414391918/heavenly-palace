@@ -22,7 +22,8 @@ export function characterAssetPaths(coreProfilePath: string) {
   const directory = posix.dirname(coreProfilePath);
   return {
     manifest: `${directory}/assets.json`,
-    binary: (filename: string) => `${directory}/assets/${filename}`,
+    binary: (filename: string, appearanceDirectory?: string) =>
+      `${directory}/assets/${appearanceDirectory ? `${appearanceDirectory}/` : ""}${filename}`,
     legacy: `${directory}/core-profile.legacy.md`
   };
 }

@@ -92,7 +92,11 @@ async function assetLocation(
   const assetDirectory = join(directory, "assets");
   if ((await realpath(assetDirectory)) !== assetDirectory)
     throw new Error("图片目录不能是符号链接");
-  return { asset, path: join(assetDirectory, asset.filename), root: canonical };
+  return {
+    asset,
+    path: join(assetDirectory, asset.directory ?? "", asset.filename),
+    root: canonical
+  };
 }
 export async function readCharacterAsset(
   userDataPath: string,

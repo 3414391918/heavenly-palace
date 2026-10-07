@@ -123,3 +123,74 @@ it("supports compatible character directory names", async () => {
     Buffer.from([137, 80, 78, 71])
   );
 });
+
+async function nestAsset(
+  f: Awaited<ReturnType<typeof fixture>>,
+  directory = "look_a"
+) {
+  await mkdir(join(f.dir, "assets", directory));
+  await writeFile(
+    join(f.dir, "assets", directory, f.filename),
+    Buffer.from([137, 80, 78, 71])
+  );
+  await rm(join(f.dir, "assets", f.filename));
+  await writeFile(
+    join(f.dir, "assets.json"),
+    JSON.stringify({
+      version: 1,
+      assets: [
+        {
+          id: f.assetId,
+          appearanceId: "look_a",
+          directory,
+          label: "正面",
+          filename: f.filename
+        }
+      ]
+    })
+  );
+}
+
+it("reads a nested appearance image using the same asset URL", async () => {
+  const f = await fixture();
+  await nestAsset(f);
+  expect(await readCharacterAsset(f.user, f)).toEqual(
+    Buffer.from([137, 80, 78, 71])
+  );
+  const response = await characterAssetImageResponse(
+    f.user,
+    new URL(
+      `deepwrite-image://book/${f.bookId}/character/${f.characterId}/${f.filename}`
+    )
+  );
+  expect(response.status).toBe(200);
+  expect(Buffer.from(await response.arrayBuffer())).toEqual(
+    Buffer.from([137, 80, 78, 71])
+  );
+});
+
+it("rejects another appearance's directory or a redirected nested directory", async () => {
+  const f = await fixture();
+  await nestAsset(f, "look_other");
+  await expect(readCharacterAsset(f.user, f)).rejects.toThrow();
+  await writeFile(
+    join(f.dir, "assets.json"),
+    JSON.stringify({
+      version: 1,
+      assets: [
+        {
+          id: f.assetId,
+          appearanceId: "look_a",
+          directory: "look_a",
+          label: "正面",
+          filename: f.filename
+        }
+      ]
+    })
+  );
+  await symlink(
+    join(f.dir, "assets", "look_other"),
+    join(f.dir, "assets", "look_a")
+  );
+  await expect(readCharacterAsset(f.user, f)).rejects.toThrow();
+});

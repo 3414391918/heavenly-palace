@@ -90,16 +90,19 @@ async function copyAbsolutePath() {
   const appearanceId = props.appearanceId;
   copyingPath.value = true;
   try {
-    const storage =
-      await characterApi().getCharacterAppearanceReferences(target);
+    const storage = await characterApi().prepareCharacterAppearanceDirectory({
+      ...target,
+      appearanceId
+    });
     if (
       target.bookId !== props.bookId ||
       target.characterId !== props.characterId ||
       appearanceId !== props.appearanceId
     )
       return;
-    await navigator.clipboard.writeText(storage.target.assetsDirectory);
-    uiMessage.success("角色资产目录的绝对路径已复制");
+    emit("updated", storage.snapshot);
+    await navigator.clipboard.writeText(storage.assetsDirectory);
+    uiMessage.success("当前形象资产目录的绝对路径已复制");
   } catch (error) {
     uiMessage.error(
       error instanceof Error ? error.message : "复制绝对路径失败"
@@ -209,7 +212,7 @@ defineExpose({
         <button
           type="button"
           :disabled="disabled || pending || copyingPath"
-          title="复制角色资产图片目录的绝对路径"
+          title="复制当前形象资产图片目录的绝对路径"
           @click="copyAbsolutePath"
         >
           {{ copyingPath ? "正在复制…" : "复制绝对路径" }}

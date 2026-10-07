@@ -1,6 +1,7 @@
 import {
   LongCharacterProfileSnapshotSchema,
   LongGetCharacterAppearanceReferencesResultSchema,
+  LongPrepareCharacterAppearanceDirectoryResultSchema,
   LongDeleteCharacterAppearanceResultSchema,
   type CommandEnvelope,
   type CommandResult
@@ -12,6 +13,19 @@ export async function handleLongCharacterProfileCoreCommand(
   service: LongWorkspaceService,
   command: CommandEnvelope
 ): Promise<CommandResult | undefined> {
+  if (command.type === "long.prepareCharacterAppearanceDirectory") {
+    const opened = await service.catalog.open(command.payload.bookId);
+    return {
+      status: "accepted",
+      requestId: command.id,
+      payload: LongPrepareCharacterAppearanceDirectoryResultSchema.parse(
+        await service.store.prepareCharacterAppearanceDirectory(
+          opened.projectDirectory,
+          command.payload
+        )
+      )
+    };
+  }
   if (command.type === "long.getCharacterAppearanceReferences") {
     return {
       status: "accepted",

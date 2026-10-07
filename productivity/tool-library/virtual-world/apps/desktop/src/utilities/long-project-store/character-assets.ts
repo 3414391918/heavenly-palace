@@ -82,11 +82,12 @@ export async function importCharacterAssetsAtPaths(
       state.manifest.assets.push({
         id,
         appearanceId: parsed.appearanceId,
+        directory: parsed.appearanceId,
         filename,
         label
       });
       operations.push({
-        path: paths.binary(filename),
+        path: paths.binary(filename, parsed.appearanceId),
         content: source.bytes,
         expectedSha256: null
       });
@@ -135,7 +136,8 @@ export async function deleteCharacterAsset(
       {
         action: "delete",
         path: characterAssetPaths(state.file.reference.path).binary(
-          asset.filename
+          asset.filename,
+          asset.directory
         )
       }
     ]);

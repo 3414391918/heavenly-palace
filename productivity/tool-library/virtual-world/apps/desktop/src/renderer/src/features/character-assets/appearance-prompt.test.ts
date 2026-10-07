@@ -66,3 +66,32 @@ it("includes exact new-appearance markers and append-only asset persistence inst
   expect(prompt).toContain("保留所有原有记录");
   expect(prompt).toContain("重新读取");
 });
+
+it("uses the selected reference subdirectory and a separate new output directory", () => {
+  const referenceAppearance = {
+    ...input.referenceAppearance,
+    assetsDirectory: input.reference.assetsDirectory + "/appearance_template",
+    assets: input.referenceAppearance.assets.map((asset) => ({
+      ...asset,
+      directory: "appearance_template"
+    }))
+  };
+  const prompt = buildCharacterAppearancePrompt({
+    ...input,
+    referenceAppearance
+  });
+  expect(prompt).toContain(
+    `角色资产绝对路径：${referenceAppearance.assetsDirectory}`
+  );
+  expect(prompt).toContain(
+    `${referenceAppearance.assetsDirectory}/${"a".repeat(32)}.png`
+  );
+  expect(prompt).toContain(
+    `新图片保存目录的绝对路径：${input.target.assetsDirectory}/appearance_new`
+  );
+  expect(prompt).toContain('"directory": "appearance_new"');
+  expect(prompt).toContain("先创建上面指定的新形象图片目录");
+  expect(prompt).not.toContain(
+    `${input.reference.assetsDirectory}/${"a".repeat(32)}.png`
+  );
+});
