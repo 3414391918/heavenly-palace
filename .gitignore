@@ -2,6 +2,7 @@
 !/productivity/agents/workflow-agents/stabledifussion/ComfyUI/
 .DS_Store
 /.idea/
+/productivity/tool-library/joy-desk/
 
 # Local novel content, media assets, and backups.
 /entertainment/virtual-world/
