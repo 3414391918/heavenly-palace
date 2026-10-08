@@ -1,14 +1,14 @@
 {
   "main": {
-    "id": "8dfd968df842dfce",
+    "id": "e7b9d57988f320c1",
     "type": "split",
     "children": [
       {
-        "id": "dff78c82076097a2",
+        "id": "03c600dd747549cc",
         "type": "tabs",
         "children": [
           {
-            "id": "bfd7918462d63823",
+            "id": "6e3457a4c61f4e1d",
             "type": "leaf",
             "state": {
               "type": "empty",
@@ -23,15 +23,15 @@
     "direction": "vertical"
   },
   "left": {
-    "id": "a10104cd58580311",
+    "id": "3fd72eed92685486",
     "type": "split",
     "children": [
       {
-        "id": "82efe624ee022e4b",
+        "id": "18ab3ff97513fbfb",
         "type": "tabs",
         "children": [
           {
-            "id": "685db2e97e66bd98",
+            "id": "cf6b2c7325c5c920",
             "type": "leaf",
             "state": {
               "type": "file-explorer",
@@ -46,7 +46,7 @@
             }
           },
           {
-            "id": "302d86bfafbc7207",
+            "id": "7ff6f26ed8adafbb",
             "type": "leaf",
             "state": {
               "type": "search",
@@ -63,7 +63,7 @@
             }
           },
           {
-            "id": "74beba4ba4dca65a",
+            "id": "97c863cbf43b4517",
             "type": "leaf",
             "state": {
               "type": "bookmarks",
@@ -82,20 +82,19 @@
     "width": 300
   },
   "right": {
-    "id": "2d449d2f62c93d9d",
+    "id": "54c0474ef76cc716",
     "type": "split",
     "children": [
       {
-        "id": "d9bb5f75e36ed44d",
+        "id": "9d780bdc812206b8",
         "type": "tabs",
         "children": [
           {
-            "id": "de336783bcabd56d",
+            "id": "1c3bfe40ba8a9d55",
             "type": "leaf",
             "state": {
               "type": "backlink",
               "state": {
-                "file": "1-动态项目/JingleAI/小叮当自定义模型工具指令解析失败与任务循环误结束.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -109,12 +108,11 @@
             }
           },
           {
-            "id": "e421fa347b99ad08",
+            "id": "4f491266bfdcba39",
             "type": "leaf",
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "1-动态项目/JingleAI/小叮当自定义模型工具指令解析失败与任务循环误结束.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
@@ -123,7 +121,7 @@
             }
           },
           {
-            "id": "a8e51e0e9e9504c3",
+            "id": "08abaa33deb067ea",
             "type": "leaf",
             "state": {
               "type": "tag",
@@ -138,7 +136,7 @@
             }
           },
           {
-            "id": "6203a5548432508d",
+            "id": "96b6d74667883d1b",
             "type": "leaf",
             "state": {
               "type": "all-properties",
@@ -152,12 +150,11 @@
             }
           },
           {
-            "id": "c760a25fb36e0e46",
+            "id": "86632e2606e132a8",
             "type": "leaf",
             "state": {
               "type": "outline",
               "state": {
-                "file": "1-动态项目/JingleAI/小叮当自定义模型工具指令解析失败与任务循环误结束.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
@@ -184,38 +181,26 @@
       "bases:新建数据库": false
     }
   },
-  "active": "685db2e97e66bd98",
+  "active": "6e3457a4c61f4e1d",
   "lastOpenFiles": [
-    "1-动态项目/虚拟世界/assets/主智能体运行流程时序图.svg",
-    "1-动态项目/虚拟世界/assets/智能体与资料库关系图.svg",
-    "1-动态项目/虚拟世界/assets/长篇创作流程时序图.svg",
-    "1-动态项目/小叮当/任务中断与聊天400错误.md",
-    "1-动态项目/虚拟世界/架构设计与项目初始化.md",
-    "1-动态项目/虚拟世界/assets/短篇创作流程时序图.svg",
-    "1-动态项目/虚拟世界/assets/剧本创作流程时序图.svg",
-    "1-动态项目/虚拟世界/连续性记录可编辑改造与界面验收.md",
-    "1-动态项目/虚拟世界/角色资产管理.md",
-    "1-动态项目/虚拟世界/assets/分卷与连续性创作流程时序图.svg",
+    "1-动态项目/小叮当/修复PPT组件库缺少包文件.md",
+    "2-长期领域/小叮当/修复PPT组件库缺少包文件.md",
+    "2-长期领域/小叮当",
+    "2-长期领域",
     "操作日志.md",
-    "1-动态项目/虚拟世界/assets/连续性记录可编辑保存时序图.svg",
+    "1-动态项目/小叮当/assets/问题3-问题截图.png",
+    "1-动态项目/小叮当/assets/问题2-问题截图.png",
     "1-动态项目/小叮当/assets/问题2-解决方案.svg",
-    "1-动态项目/小叮当/assets/小叮当普通任务循环示意图.svg",
-    "1-动态项目/小叮当/assets/问题1-解决方案.svg",
-    "1-动态项目/小叮当/assets/未命名.md",
-    "1-动态项目/小叮当/assets/任务中断指定错误重试时序图源文件.md",
-    "1-动态项目/小叮当/assets/聊天400取消工具结果时序图源文件.md",
+    "1-动态项目/小叮当/assets/问题2-根因分析.png",
+    "1-动态项目/小叮当/assets/问题1.3-问题截图.png",
+    "1-动态项目/小叮当/assets/问题1.3-根因3.png",
+    "1-动态项目/小叮当/assets/问题1.3-根因2.png",
+    "1-动态项目/小叮当/assets/问题1.2-根因.png",
+    "1-动态项目/小叮当/assets/问题1.3-根因1.png",
+    "1-动态项目/小叮当/assets/问题1.2-问题截图.png",
+    "1-动态项目/小叮当/任务中断与聊天400错误.md",
     "1-动态项目/小叮当/assets",
-    "1-动态项目/小叮当/asset",
     "1-动态项目/小叮当",
-    "1-动态项目/虚拟世界/assets",
-    "未命名.base",
-    "1-动态项目/虚拟世界/长篇创作流程时序图.md",
-    "1-动态项目/虚拟世界/DeepWrite 智能体与资料库关系图.md",
-    "1-动态项目/小叮当/小叮当自定义模型工具指令解析失败与任务循环误结束.md",
-    "1-动态项目/虚拟世界/架构设计.md",
-    "1-动态项目/虚拟世界",
-    "1-动态项目/DeepWrite",
-    "0-临时文件/待审查",
-    "0-临时文件"
+    "1-动态项目"
   ]
 }
