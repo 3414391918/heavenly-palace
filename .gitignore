@@ -1,6 +1,7 @@
 /productivity/agents/workflow-agents/stabledifussion/*
 !/productivity/agents/workflow-agents/stabledifussion/ComfyUI/
 .DS_Store
+/.idea/
 
 # Local novel content, media assets, and backups.
 /entertainment/virtual-world/
