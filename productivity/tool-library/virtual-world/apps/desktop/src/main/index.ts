@@ -233,7 +233,8 @@ const {
   requireLongAgentConfigStore,
   requireWorkspaceDirectoryStore,
   requireAppearanceService,
-  requireGeneralSettingsStore
+  requireGeneralSettingsStore,
+  requireFishAudioService
 } = createDesktopServiceAccessors(() => desktopServices ?? {});
 function requireMainWindow(): BrowserWindow {
   if (!mainWindow || mainWindow.isDestroyed()) {
@@ -303,6 +304,7 @@ function registerIpc(): void {
       requireWorkspaceDirectoryStore,
       requireAppearanceService,
       requireGeneralSettingsStore,
+      requireFishAudioService,
       exportLongManuscript,
       listRemoteModels: (input) =>
         listRemoteModels(
@@ -312,6 +314,7 @@ function registerIpc(): void {
       remoteFetch: cachedGeneralSettings.useNetworkProxy
         ? fetch
         : electronRemoteFetch,
+      fishAudioFetch: electronRemoteFetch,
       rendererStateFlush,
       resolveDraftApiKey: (...args) =>
         requireModelConfigStore().resolveDraftApiKey(...args),

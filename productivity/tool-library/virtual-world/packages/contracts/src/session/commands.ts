@@ -65,7 +65,7 @@ export const SessionConversationHistorySchema = z
 export const SessionPromptCommandPayloadSchema = z
   .object({
     sessionId: z.string().min(1),
-    message: z.string().trim().min(1).max(20000),
+    message: z.string().trim().min(1),
     conversationHistory: SessionConversationHistorySchema.optional(),
     conversationHistoryMode: z.literal("replace").optional(),
     mode: SessionModeSchema.optional(),

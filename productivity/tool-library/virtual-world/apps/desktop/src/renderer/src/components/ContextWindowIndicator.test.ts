@@ -7,25 +7,17 @@ import modelConfigSource from "./ConversationModelConfigSelect.vue?raw";
 import indicatorSource from "./ContextWindowIndicator.vue?raw";
 
 describe("ContextWindowIndicator", () => {
-  it("places the indicator after the unified model configuration", () => {
-    const modelConfig = composerSource.indexOf(
-      "<ConversationModelConfigSelect"
-    );
-    const indicator = composerSource.indexOf("<ContextWindowIndicator");
-
-    expect(modelConfig).toBeGreaterThan(-1);
-    expect(indicator).toBeGreaterThan(modelConfig);
+  it("removes the usage button while keeping model configuration", () => {
+    expect(composerSource).toContain("<ConversationModelConfigSelect");
+    expect(composerSource).not.toContain("<ContextWindowIndicator");
     expect(modelConfigSource).toContain("思考等级");
     expect(modelConfigSource).toContain("温度");
     expect(composerSource).not.toContain('accessible-label="选择温度"');
   });
 
-  it("is limited to the shared creative composer", () => {
+  it("keeps the shared creative composer without the usage indicator", () => {
     expect(conversationSource).toContain("<ConversationComposer");
-    expect(composerSource).toContain("<ContextWindowIndicator");
-    expect(composerSource).toContain(
-      'v-if="settingsStore.generalSettings.showContextUsage"'
-    );
+    expect(composerSource).not.toContain("<ContextWindowIndicator");
   });
 
   it("teleports a keyboard-accessible tooltip outside the clipped composer", () => {

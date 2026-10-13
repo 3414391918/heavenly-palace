@@ -24,6 +24,7 @@ export interface SettingsFeatureModule {
   language: AppLanguage;
   showContextUsage: boolean;
   showInMenuBar: boolean;
+  useNetworkProxy: boolean;
   workspacePaneLayout: WorkspacePaneLayout;
   defaultTextViewMode: TextViewMode;
   bodyTextFormats: BodyTextFormats;
@@ -77,6 +78,7 @@ export interface ModelsFeatureModule {
 }
 
 export type WorkspaceFeatureModule =
+  | { kind: "voice-manager" }
   | {
       kind: "revision-analysis";
       controller:

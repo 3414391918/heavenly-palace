@@ -4,6 +4,7 @@ import SavedProfileField from "./SavedProfileField.vue";
 import CharacterAssetGallery from "./CharacterAssetGallery.vue";
 import CharacterAssetDialog from "./CharacterAssetDialog.vue";
 import CreateCharacterAppearanceDialog from "./CreateCharacterAppearanceDialog.vue";
+import CharacterVoiceActions from "./CharacterVoiceActions.vue";
 import DeleteCharacterAppearanceDialog from "./DeleteCharacterAppearanceDialog.vue";
 import type { LongDeleteCharacterAppearanceInput } from "@deepwrite/contracts";
 import PopupSelect from "../../components/PopupSelect.vue";
@@ -33,6 +34,8 @@ const {
   createAppearance: saveNewAppearance
 } = useCharacterProfile(props, () => emit("saved"));
 const gallery = ref<InstanceType<typeof CharacterAssetGallery> | null>(null);
+const menuOpen = ref(false);
+const voiceAction = ref(false);
 const disabled = computed(() =>
   Boolean(props.locked || saving.value || loading.value)
 );
@@ -119,8 +122,18 @@ async function confirmDeleteAppearance() {
     deleteTarget.value = null;
 }
 async function reload() {
+  menuOpen.value = false;
   if (dirty.value && !(await prepareLeave())) return;
   await load();
+}
+function openVoiceAction() {
+  menuOpen.value = false;
+  if (!snapshot.value) return;
+  if (dirty.value) {
+    uiMessage.info("请先保存角色档案的修改，再创建声音。");
+    return;
+  }
+  voiceAction.value = true;
 }
 function beforeUnload(event: BeforeUnloadEvent) {
   if (dirty.value) {
@@ -150,9 +163,21 @@ defineExpose({ prepareLeave, saveAll: () => save("all"), dirty });
         <span>人物设计 · 核心档案</span>
         <h1>{{ snapshot?.profile.name ?? "角色档案" }}</h1>
       </div>
-      <button type="button" :disabled="disabled" @click="reload">
-        重新读取
-      </button>
+      <div class="character-profile-more">
+        <button
+          type="button"
+          aria-label="角色操作"
+          :aria-expanded="menuOpen"
+          :disabled="disabled"
+          @click="menuOpen = !menuOpen"
+        >
+          •••
+        </button>
+        <div v-if="menuOpen" class="character-profile-more-menu">
+          <button type="button" @click="reload">重新读取</button>
+          <button type="button" @click="openVoiceAction()">创建声音</button>
+        </div>
+      </div>
     </header>
     <div v-if="loading && !draft" class="character-profile-empty">
       正在读取角色档案…
@@ -162,6 +187,14 @@ defineExpose({ prepareLeave, saveAll: () => save("all"), dirty });
       <button type="button" @click="load">重新读取</button>
     </div>
     <template v-else>
+      <CharacterVoiceActions
+        v-if="voiceAction && snapshot"
+        :key="`${bookId}:${characterId}`"
+        :book-id="bookId"
+        :character-id="characterId"
+        :character-name="snapshot.profile.name"
+        @close="voiceAction = false"
+      />
       <SavedProfileField
         v-model="draft.name"
         label="角色名称"

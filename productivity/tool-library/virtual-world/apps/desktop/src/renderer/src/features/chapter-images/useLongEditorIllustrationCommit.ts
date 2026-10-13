@@ -3,6 +3,7 @@ import type {
   LongAddChapterImageResult,
   LongWriteDocumentResult
 } from "@deepwrite/contracts";
+import { longChapterImageDirectoryFromBodyPath } from "@deepwrite/contracts";
 import type { LongDocumentState } from "../../composables/useLongEditorDocumentSession";
 import type {
   LongWorkspaceSelection,
@@ -29,8 +30,7 @@ export function useLongEditorIllustrationCommit(options: {
   const imageContext = computed(() => {
     const chapterCardId = options.selection()?.chapterCardId;
     const path = options.selectedFile.value?.file.path ?? "";
-    return chapterCardId &&
-      /^long\/chapters\/[a-f0-9]{32}\/body\.md$/u.test(path)
+    return chapterCardId && longChapterImageDirectoryFromBodyPath(path)
       ? { bookId: options.bookId(), chapterCardId }
       : undefined;
   });

@@ -1,3 +1,4 @@
+import { rename } from "node:fs/promises";
 import { dirname } from "node:path";
 import sharp from "sharp";
 import { vi } from "vitest";
@@ -52,6 +53,43 @@ async function fixture(suffix: string) {
 }
 
 describe("chapter illustration insertion", () => {
+  it("adds an image to a chapter whose indexed directory uses its chapter id", async () => {
+    const setup = await fixture("chapter-id-directory");
+    const directory = "chapter_071894ed";
+    const previousDirectory = dirname(setup.bodyPath);
+    const nextDirectory = join(dirname(previousDirectory), directory);
+    await rename(previousDirectory, nextDirectory);
+    const indexPath = join(
+      setup.created.projectDirectory,
+      LONG_WORKSPACE_INDEX_PATH
+    );
+    const index = JSON.parse(await readFile(indexPath, "utf8")) as {
+      chapters: Array<Record<string, unknown>>;
+    };
+    const chapter = index.chapters[0]!;
+    for (const field of ["body", "card", "characterState", "handoff"]) {
+      const file = chapter[field] as { path: string } | undefined;
+      if (file)
+        file.path = file.path.replace(
+          /long\/chapters\/[^/]+\//u,
+          `long/chapters/${directory}/`
+        );
+    }
+    await writeFile(indexPath, JSON.stringify(index));
+
+    const result = await setup.projectStore.addChapterImage(
+      setup.created.projectDirectory,
+      setup.input
+    );
+    expect(result.filename).toBe("001.png");
+    expect(result.document.file.path).toBe(
+      `long/chapters/${directory}/body.md`
+    );
+    expect(
+      (await readFile(join(nextDirectory, "images", "001.png"))).byteLength
+    ).toBeGreaterThan(0);
+  });
+
   it("atomically saves 001.png and its reference at the requested offset", async () => {
     const setup = await fixture("first");
     const result = await setup.projectStore.addChapterImage(

@@ -57,6 +57,8 @@ export function buildWorkspaceFeatureModule(
         models: modelSelectionSettings?.models ?? [],
         catalogSnapshot: options.catalogSnapshot.value
       };
+    case "voice-manager":
+      return { kind: "voice-manager" };
     case "conversation":
     case "long-workspace":
       return null;

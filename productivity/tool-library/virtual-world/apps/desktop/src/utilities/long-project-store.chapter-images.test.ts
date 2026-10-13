@@ -1,4 +1,4 @@
-import { link, readdir, realpath, truncate } from "node:fs/promises";
+import { link, readdir, realpath, rename, truncate } from "node:fs/promises";
 import { dirname } from "node:path";
 import { crc32 } from "node:zlib";
 import sharp from "sharp";
@@ -71,6 +71,51 @@ async function fixture(extension = "png") {
 }
 
 describe("chapter image storage", () => {
+  it("reads and replaces an image in a chapter-id directory", async () => {
+    const setup = await fixture();
+    const directory = "chapter_071894ed";
+    const previousDirectory = dirname(setup.bodyPath);
+    const nextDirectory = join(dirname(previousDirectory), directory);
+    await rename(previousDirectory, nextDirectory);
+    const indexPath = join(
+      setup.created.projectDirectory,
+      LONG_WORKSPACE_INDEX_PATH
+    );
+    const index = JSON.parse(await readFile(indexPath, "utf8")) as {
+      chapters: Array<Record<string, unknown>>;
+    };
+    const chapter = index.chapters[0]!;
+    for (const field of ["body", "card", "characterState", "handoff"]) {
+      const file = chapter[field] as { path: string } | undefined;
+      if (file)
+        file.path = file.path.replace(
+          /long\/chapters\/[^/]+\//u,
+          `long/chapters/${directory}/`
+        );
+    }
+    await writeFile(indexPath, JSON.stringify(index));
+
+    const snapshot = await setup.projectStore.readChapterImage(
+      setup.created.projectDirectory,
+      setup.input
+    );
+    expect(snapshot.revision).toBe(
+      projectTransactionContentSha256(setup.original)
+    );
+    const replacement = await image("png", 200);
+    await setup.projectStore.replaceChapterImage(
+      setup.created.projectDirectory,
+      {
+        ...setup.input,
+        pngDataUrl: dataUrl(replacement),
+        expectedRevision: snapshot.revision
+      }
+    );
+    expect(await readFile(join(nextDirectory, "images", "sample.png"))).toEqual(
+      replacement
+    );
+  });
+
   it("copies JPEG pixels using the same EXIF orientation as the preview", async () => {
     const setup = await fixture("jpg");
     const oriented = await sharp(setup.original)

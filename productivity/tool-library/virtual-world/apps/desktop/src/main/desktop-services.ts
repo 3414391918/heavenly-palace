@@ -4,6 +4,7 @@ import { AppearanceService } from "./appearance-service";
 import { ChatAssistantProjectConfigStore } from "./chat-assistant-project-config-store";
 import { RevisionAnalysisConfigStore } from "./extras/revision-analysis/config-store";
 import { GeneralSettingsStore } from "./general-settings-store";
+import { FishAudioService } from "./fish-audio-service";
 import { LibraryAgentConfigStore } from "./library-agent-config-store";
 import { LongAgentConfigStore } from "./long-agent-config-store";
 import { ModelConfigStore } from "./model-config-store";
@@ -39,6 +40,7 @@ export function createDesktopServices(options: DesktopServiceOptions) {
     workspaceDirectoryStore,
     appearanceService: new AppearanceService(userDataPath),
     generalSettingsStore: new GeneralSettingsStore(userDataPath),
+    fishAudioService: new FishAudioService(userDataPath),
     chatAssistantProjectConfigStore: new ChatAssistantProjectConfigStore(
       userDataPath
     ),

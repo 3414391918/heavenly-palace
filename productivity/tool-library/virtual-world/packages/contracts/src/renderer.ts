@@ -8,6 +8,8 @@ export type * from "./chat-assistant";
 export type * from "./envelope";
 export type * from "./expert-draft";
 export type * from "./general-settings";
+export type * from "./fish-audio";
+export { fishAudioPageUrl } from "./fish-audio";
 export type * from "./body-text-format";
 export type * from "./library-agent";
 export type * from "./long-agent-settings";
@@ -317,7 +319,9 @@ export * from "./long-character-appearance";
 export * from "./long-character-profile-markdown";
 export {
   LONG_CHAPTER_IMAGE_MAX_BYTES,
-  LONG_CHAPTER_IMAGE_MAX_PIXELS
+  LONG_CHAPTER_IMAGE_MAX_PIXELS,
+  isLongChapterImageDirectory,
+  longChapterImageDirectoryFromBodyPath
 } from "./long-chapter-image";
 export type {
   LongAddChapterImageInput,

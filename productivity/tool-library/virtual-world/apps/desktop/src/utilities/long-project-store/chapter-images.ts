@@ -2,6 +2,7 @@ import { dirname, extname, posix, resolve } from "node:path";
 import {
   LONG_CHAPTER_IMAGE_MAX_BYTES,
   LONG_WORKSPACE_INDEX_PATH,
+  longChapterImageDirectoryFromBodyPath,
   LongReadChapterImageInputSchema,
   LongReadChapterImageResultSchema,
   LongReplaceChapterImageInputSchema,
@@ -42,7 +43,7 @@ async function loadChapterImage(
     ({ chapterCardId }) => chapterCardId === input.chapterCardId
   );
   if (!chapter) throw new Error("正文图片对应的章节正文不存在。");
-  if (!/^long\/chapters\/[a-f0-9]{32}\/body\.md$/u.test(chapter.body.path))
+  if (!longChapterImageDirectoryFromBodyPath(chapter.body.path))
     throw new Error("正文图片只能位于规范章节正文的 images 目录。");
   const body = await readSecureTextFile(
     loaded.projectDirectory,

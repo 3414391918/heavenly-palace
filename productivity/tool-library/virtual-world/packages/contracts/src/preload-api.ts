@@ -59,6 +59,7 @@ import type {
 } from "./catalog";
 import type { ChatAssistantConfigApi } from "./chat-assistant-config-api";
 import type { ConversationExportApi } from "./conversation-export";
+import type { FishAudioPreloadApi } from "./fish-audio";
 import type {
   GeneralSettings,
   GeneralSettingsSnapshot
@@ -102,6 +103,7 @@ import type {
 } from "./writing-context";
 export interface DeepWriteApi
   extends TextContextMenuPreloadApi, ChatAssistantConfigApi {
+  fishAudio: FishAudioPreloadApi;
   windowFrame?: WindowFrameApi;
   system: {
     health(): Promise<SystemHealthPayload>;

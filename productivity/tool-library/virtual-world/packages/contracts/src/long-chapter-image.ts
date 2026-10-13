@@ -8,6 +8,22 @@ import {
 
 export const LONG_CHAPTER_IMAGE_MAX_BYTES = 100 * 1024 * 1024;
 export const LONG_CHAPTER_IMAGE_MAX_PIXELS = 40_000_000;
+/** Chapter files can use either a hashed storage directory or their stable id. */
+export function isLongChapterImageDirectory(value: string): boolean {
+  return (
+    /^[a-f0-9]{32}$/u.test(value) ||
+    LongChapterCardIdSchema.safeParse(value).success
+  );
+}
+
+export function longChapterImageDirectoryFromBodyPath(
+  path: string
+): string | undefined {
+  const directory = /^long\/chapters\/([^/]+)\/body\.md$/u.exec(path)?.[1];
+  return directory && isLongChapterImageDirectory(directory)
+    ? directory
+    : undefined;
+}
 const pngDataUrl = z
   .string()
   .max(Math.ceil(LONG_CHAPTER_IMAGE_MAX_BYTES / 3) * 4 + 32)

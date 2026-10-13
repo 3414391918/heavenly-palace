@@ -19,7 +19,7 @@ afterEach(async () => {
   );
 });
 
-async function fixture(): Promise<{
+async function fixture(chapterDirectory = chapter): Promise<{
   userData: string;
   imageDirectory: string;
 }> {
@@ -27,7 +27,13 @@ async function fixture(): Promise<{
   roots.push(root);
   const userData = join(root, "user-data");
   const book = join(root, "book");
-  const imageDirectory = join(book, "long", "chapters", chapter, "images");
+  const imageDirectory = join(
+    book,
+    "long",
+    "chapters",
+    chapterDirectory,
+    "images"
+  );
   await mkdir(userData);
   await mkdir(imageDirectory, { recursive: true });
   await writeFile(
@@ -38,7 +44,9 @@ async function fixture(): Promise<{
     join(book, "long", "index.json"),
     JSON.stringify({
       bookId,
-      chapters: [{ body: { path: `long/chapters/${chapter}/body.md` } }]
+      chapters: [
+        { body: { path: `long/chapters/${chapterDirectory}/body.md` } }
+      ]
     })
   );
   await writeFile(
@@ -86,6 +94,19 @@ describe("long image protocol", () => {
     expect(result.headers.get("Content-Type")).toBe("image/png");
     expect(result.headers.get("X-Content-Type-Options")).toBe("nosniff");
     expect(Buffer.from(await result.arrayBuffer())).toEqual(
+      Buffer.from([137, 80, 78, 71])
+    );
+  });
+  it("streams an image from an indexed chapter-id directory", async () => {
+    const chapterDirectory = "chapter_071894ed";
+    const { userData } = await fixture(chapterDirectory);
+    const response = await createLongImageProtocolHandler(userData)(
+      new Request(
+        `deepwrite-image://book/${bookId}/${chapterDirectory}/001.png`
+      )
+    );
+    expect(response.status).toBe(200);
+    expect(Buffer.from(await response.arrayBuffer())).toEqual(
       Buffer.from([137, 80, 78, 71])
     );
   });

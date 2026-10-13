@@ -2,6 +2,7 @@ import { lstat, readdir } from "node:fs/promises";
 import { dirname, join, posix } from "node:path";
 import {
   LONG_WORKSPACE_INDEX_PATH,
+  longChapterImageDirectoryFromBodyPath,
   LongAddChapterImageInputSchema,
   LongAddChapterImageResultSchema,
   LongProjectManifestSchema,
@@ -103,10 +104,7 @@ export async function addChapterImage(
     const chapter = loaded.index.chapters.find(
       ({ chapterCardId }) => chapterCardId === input.chapterCardId
     );
-    if (
-      !chapter ||
-      !/^long\/chapters\/[a-f0-9]{32}\/body\.md$/u.test(chapter.body.path)
-    )
+    if (!chapter || !longChapterImageDirectoryFromBodyPath(chapter.body.path))
       throw new Error("新增插画只能用于规范的章节正文。");
     const body = await readSecureTextFile(
       canonical,

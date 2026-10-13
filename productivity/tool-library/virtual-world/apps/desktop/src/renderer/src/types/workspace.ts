@@ -274,4 +274,5 @@ export interface EditorDraftState {
   baseProjectRevision?: number;
 }
 
-export type DialogMode = "directory" | "models" | "revision-analysis";
+export type DialogMode =
+  "directory" | "models" | "revision-analysis" | "voice-manager";

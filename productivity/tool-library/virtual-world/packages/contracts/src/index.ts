@@ -8,6 +8,7 @@ export * from "./chat-assistant-config-api";
 export * from "./envelope";
 export * from "./expert-draft";
 export * from "./general-settings";
+export * from "./fish-audio";
 export * from "./body-text-format";
 export * from "./library-agent";
 export * from "./long-agent-settings";

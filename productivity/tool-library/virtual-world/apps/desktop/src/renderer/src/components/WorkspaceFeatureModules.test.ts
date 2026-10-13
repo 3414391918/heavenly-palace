@@ -8,7 +8,13 @@ import source from "./WorkspaceFeatureModules.vue?raw";
 
 describe("WorkspaceFeatureModules boundary", () => {
   it("owns the mutually exclusive non-writing feature branches", () => {
-    for (const kind of ["settings", "agent-team", "directory", "models"]) {
+    for (const kind of [
+      "settings",
+      "agent-team",
+      "directory",
+      "models",
+      "voice-manager"
+    ]) {
       expect(source).toContain(`module.kind === '${kind}'`);
     }
     expect(source).toContain("<SettingsPage");
@@ -50,7 +56,7 @@ describe("WorkspaceFeatureModules boundary", () => {
   });
 
   it("keeps settings whole and reads authoring refs below the shell boundary", () => {
-    expect(source).toContain("v-if=\"module.kind === 'settings'\"");
+    expect(source).toContain("v-else-if=\"module.kind === 'settings'\"");
     expect(source).toContain(':initial-category="module.initialCategory"');
     expect(source).toContain(
       ':authoring-generating="module.authoring.isBusy.value"'

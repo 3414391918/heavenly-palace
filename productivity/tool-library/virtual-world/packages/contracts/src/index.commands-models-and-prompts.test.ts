@@ -15,7 +15,10 @@ import {
   it,
   runtime
 } from "./index.test-support";
-import { SessionPromptCommandPayloadSchema } from "./session/commands";
+import {
+  SessionPromptCommandEnvelopeSchema,
+  SessionPromptCommandPayloadSchema
+} from "./session/commands";
 
 describe("desktop contracts: commands and prompts", () => {
   it("creates a versioned command envelope with a correlation id", () => {
@@ -104,6 +107,21 @@ describe("desktop contracts: commands and prompts", () => {
         writeApprovalMode: "auto-approve"
       }
     });
+  });
+
+  it("accepts a long generated prompt without dropping character records", () => {
+    const message = "人物关系：" + "关系".repeat(12_000);
+    const envelope = createEnvelope(
+      "session.prompt",
+      { sessionId: "session_character", message },
+      {
+        id: "cmd_character_prompt",
+        context: { sessionId: "session_character" }
+      }
+    );
+    expect(
+      SessionPromptCommandEnvelopeSchema.parse(envelope).payload.message
+    ).toBe(message);
   });
 
   it("accepts only the explicit replace conversation-history mode", () => {

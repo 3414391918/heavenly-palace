@@ -26,6 +26,7 @@ import {
 } from "./lazyAppComponents";
 import type { WorkspaceFeatureModule } from "./WorkspaceFeatureModules.types";
 import WorkspaceFeatureFrame from "./WorkspaceFeatureFrame.vue";
+import FishAudioManager from "./FishAudioManager.vue";
 import {
   generateWorkspaceFeatureSubagent,
   resetWorkspaceFeatureSubagent,
@@ -84,8 +85,16 @@ const emit = defineEmits<{
 </script>
 
 <template>
+  <WorkspaceFeatureFrame
+    v-if="module.kind === 'voice-manager'"
+    :left-collapsed="leftCollapsed"
+    expand-button-class="fish-manager-expand-sidebar"
+    label="声音管理"
+    @expand-left="emit('expandLeft')"
+    ><FishAudioManager
+  /></WorkspaceFeatureFrame>
   <SettingsPage
-    v-if="module.kind === 'settings'"
+    v-else-if="module.kind === 'settings'"
     :initial-category="module.initialCategory"
     :permission-mode="module.permissionMode"
     :auto-approve-cross-stage-operations="
@@ -95,6 +104,7 @@ const emit = defineEmits<{
     :language="module.language"
     :show-context-usage="module.showContextUsage"
     :show-in-menu-bar="module.showInMenuBar"
+    :use-network-proxy="module.useNetworkProxy"
     :workspace-pane-layout="module.workspacePaneLayout"
     :default-text-view-mode="module.defaultTextViewMode"
     :body-text-formats="module.bodyTextFormats"
@@ -123,6 +133,7 @@ const emit = defineEmits<{
     @update-language="emit('updateLanguage', $event)"
     @update-show-context-usage="emit('updateShowContextUsage', $event)"
     @update-show-in-menu-bar="emit('updateShowInMenuBar', $event)"
+    @update-use-network-proxy="emit('updateUseNetworkProxy', $event)"
     @update-workspace-pane-layout="emit('updateWorkspacePaneLayout', $event)"
     @update-default-text-view-mode="emit('updateDefaultTextViewMode', $event)"
     @update-body-text-format="emit('updateBodyTextFormat', $event)"

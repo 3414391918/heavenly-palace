@@ -36,7 +36,6 @@ import ConversationMessageList from "./ConversationMessageList.vue";
 import ConversationPromptTemplates from "./ConversationPromptTemplates.vue";
 import ConversationTurnNavigator from "./ConversationTurnNavigator.vue";
 import { AGENT_ACTIVITY_CONTEXT_KEY } from "../composables/agentActivityContext";
-import { WORKSPACE_WEB_SEARCH_DISABLED_REASON } from "../composables/agent-conversation/web-search";
 
 const props = withDefaults(
   defineProps<{
@@ -211,8 +210,6 @@ function applySuggestion(value: string): void {
 }
 
 const {
-  selectedModel,
-  webSearchAvailable,
   availableThinkingOptions,
   modelOptions,
   showsTemperature,
@@ -369,16 +366,11 @@ const {
       :can-stop="canStop"
       :runtime-available="runtimeAvailable"
       :current-session-id="currentSessionId"
-      :messages="messages"
       :messages-empty="messages.length === 0"
       :book-title="bookTitle"
       :stage-label="stageLabel"
       :selected-model-id="selectedModelId"
-      :selected-model="selectedModel"
       :thinking-level="thinkingLevel"
-      :web-search-enabled="webSearchEnabled"
-      :web-search-available="webSearchAvailable"
-      :web-search-disabled-reason="WORKSPACE_WEB_SEARCH_DISABLED_REASON"
       :temperature="temperature"
       :approval-mode="approvalMode"
       :agent-team-mode="agentTeamMode"
@@ -402,7 +394,6 @@ const {
       @locate-editor-reference="locateComposerReference"
       @select-model="emit('selectModel', $event)"
       @select-thinking="emit('selectThinking', $event)"
-      @toggle-web-search="emit('toggleWebSearch', $event)"
       @select-temperature="emit('selectTemperature', $event)"
       @select-approval="emit('selectApproval', $event)"
       @select-agent-team-mode="emit('selectAgentTeamMode', $event)"

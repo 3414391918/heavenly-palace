@@ -548,12 +548,8 @@ describe("AgentConversation edit proposal placement", () => {
       'class="conversation-model-config-footer"'
     );
     expect(modelConfigSource).toContain('aria-label="思考等级"');
-    expect(modelConfigSource).toContain('aria-label="联网"');
-    expect(modelConfigSource).toContain(':aria-pressed="webSearchEnabled"');
-    expect(modelConfigSource).toContain(
-      ':disabled="responding || !webSearchAvailable"'
-    );
-    expect(modelConfigSource).toContain("emit('toggleWebSearch'");
+    expect(modelConfigSource).not.toContain('aria-label="联网"');
+    expect(modelConfigSource).not.toContain("emit('toggleWebSearch'");
     expect(modelConfigSource).toContain("function revealCurrentSelection");
     expect(modelConfigSource).toContain(
       "scrollSelectedIntoView(scroller, selected)"
@@ -566,9 +562,7 @@ describe("AgentConversation edit proposal placement", () => {
     expect(modelConfigSource.slice(openMenuStart, openMenuEnd)).toContain(
       "revealCurrentSelection()"
     );
-    expect(conversationSource).toContain(
-      "@toggle-web-search=\"emit('toggleWebSearch', $event)\""
-    );
+    expect(conversationSource).not.toContain("@toggle-web-search=");
     expect(writingWorkspaceSource).toContain(
       '@toggle-web-search="conversationController.selectWebSearchEnabled($event)"'
     );

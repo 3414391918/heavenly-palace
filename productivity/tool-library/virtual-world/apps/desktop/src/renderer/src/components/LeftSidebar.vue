@@ -86,7 +86,7 @@ const navItems: Array<{
 
 const moreExpanded = ref(false);
 
-function activateMoreFeature(id: "revision-analysis"): void {
+function activateMoreFeature(id: "revision-analysis" | "voice-manager"): void {
   emit("openDialog", id);
 }
 

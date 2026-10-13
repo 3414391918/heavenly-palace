@@ -30,6 +30,8 @@ publish:
   channel: latest
 
 mac:
+  extendInfo:
+    NSMicrophoneUsageDescription: "用于与小说角色进行实时语音对话。"
   target:
     - dmg
     - zip

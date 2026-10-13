@@ -9,6 +9,7 @@ import type { LongAgentConfigStore } from "./long-agent-config-store";
 import type { WorkspaceDirectoryStore } from "./workspace-directory-store";
 import type { AppearanceService } from "./appearance-service";
 import type { GeneralSettingsStore } from "./general-settings-store";
+import type { FishAudioService } from "./fish-audio-service";
 type DesktopServices = ReturnType<typeof createDesktopServices>;
 export function createDesktopServiceAccessors(
   getServices: () => Partial<DesktopServices>
@@ -84,6 +85,11 @@ export function createDesktopServiceAccessors(
     }
     return generalSettingsStore;
   }
+  function requireFishAudioService(): FishAudioService {
+    const service = getServices().fishAudioService;
+    if (!service) throw new Error("FishAudio 服务尚未初始化。");
+    return service;
+  }
   return {
     requireModelConfigStore,
     requireModelUsageStore,
@@ -94,6 +100,7 @@ export function createDesktopServiceAccessors(
     requireLongAgentConfigStore,
     requireWorkspaceDirectoryStore,
     requireAppearanceService,
-    requireGeneralSettingsStore
+    requireGeneralSettingsStore,
+    requireFishAudioService
   };
 }

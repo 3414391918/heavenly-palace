@@ -1,4 +1,8 @@
 import { ChatAssistantRoleplayCommandSchemas } from "./chat-assistant-config-api";
+import {
+  FishAudioCommandEnvelopeSchema,
+  FishAudioProgressEventEnvelopeSchema
+} from "./fish-audio";
 import { ConversationExportCommandEnvelopeSchemas } from "./conversation-export";
 import { SiteOfficialModelCommandSchemas } from "./site-official-models";
 import { AgentTeamsSaveBuiltinsCommandEnvelopeSchema } from "./builtin-subagents";
@@ -167,6 +171,7 @@ export const SystemHealthCommandEnvelopeSchema = EnvelopeBaseSchema.extend({
   payload: z.object({})
 });
 export const CommandEnvelopeSchema = z.discriminatedUnion("type", [
+  FishAudioCommandEnvelopeSchema,
   CatalogQueryMaterialsCommandEnvelopeSchema,
   SystemHealthCommandEnvelopeSchema,
   ...RendererStateCommandEnvelopeSchemas,
@@ -296,6 +301,7 @@ export const SystemWorkerRestartingEventEnvelopeSchema =
     })
   });
 export const SystemEventEnvelopeSchema = z.discriminatedUnion("type", [
+  FishAudioProgressEventEnvelopeSchema,
   RendererStateFlushRequestedEventEnvelopeSchema,
   SystemReadyEventEnvelopeSchema,
   SystemWorkerRestartingEventEnvelopeSchema,
@@ -348,6 +354,7 @@ export type SystemWorkerRestartingEventEnvelope = Envelope<
   "system.worker_restarting"
 >;
 export type SystemEventEnvelope =
+  | z.infer<typeof FishAudioProgressEventEnvelopeSchema>
   | RevisionAnalysisResultEvent
   | z.infer<typeof RendererStateFlushRequestedEventEnvelopeSchema>
   | SystemReadyEventEnvelope

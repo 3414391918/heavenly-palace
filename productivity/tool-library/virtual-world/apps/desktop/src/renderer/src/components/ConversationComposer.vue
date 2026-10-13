@@ -3,13 +3,11 @@ import type {
   AgentTeamRunMode,
   LibraryAgentDomain,
   LongAgentId,
-  ModelConfig,
   ThinkingLevel,
   UserPromptAttachment
 } from "@deepwrite/contracts";
 import type {
   AgentApprovalMode,
-  ChatMessage,
   ComposerReferenceOption,
   EditorTextReference
 } from "../types/conversation";
@@ -21,16 +19,12 @@ import {
   formatFileSize
 } from "../composables/useConversationAttachments";
 import { useConversationComposer } from "../composables/useConversationComposer";
-import { useSettingsStore } from "../stores/settingsStore";
 import AppIcon from "./AppIcon.vue";
 import AgentTeamModeSelect from "./AgentTeamModeSelect.vue";
-import ContextWindowIndicator from "./ContextWindowIndicator.vue";
 import ConversationModelConfigSelect from "./ConversationModelConfigSelect.vue";
 import PopupSelect from "./PopupSelect.vue";
 import ComposerContextBar from "./ComposerContextBar.vue";
 import ComposerMoreSettings from "./ComposerMoreSettings.vue";
-
-const settingsStore = useSettingsStore();
 
 const props = defineProps<{
   draft: string;
@@ -40,12 +34,10 @@ const props = defineProps<{
   canStop: boolean;
   runtimeAvailable: boolean;
   currentSessionId: string;
-  messages: ChatMessage[];
   messagesEmpty: boolean;
   bookTitle: string;
   stageLabel: string;
   selectedModelId: string;
-  selectedModel: ModelConfig | undefined;
   thinkingLevel: ThinkingLevel;
   temperature: number;
   approvalMode: AgentApprovalMode;
@@ -63,9 +55,6 @@ const props = defineProps<{
     providerLabel: string;
   }>;
   availableThinkingOptions: Array<{ value: ThinkingLevel; label: string }>;
-  webSearchEnabled: boolean;
-  webSearchAvailable: boolean;
-  webSearchDisabledReason: string;
   showsTemperature: boolean;
   temperatureSelectOptions: Array<{ value: number; label: string }>;
   approvalOptions: Array<{
@@ -85,7 +74,6 @@ const emit = defineEmits<{
   locateEditorReference: [reference: EditorTextReference];
   selectModel: [modelId: string];
   selectThinking: [level: ThinkingLevel];
-  toggleWebSearch: [enabled: boolean];
   selectTemperature: [temperature: number];
   selectApproval: [mode: AgentApprovalMode];
   selectAgentTeamMode: [mode: AgentTeamRunMode];
@@ -361,23 +349,13 @@ defineExpose({ focusInput });
                 :temperature="temperature"
                 :temperature-options="temperatureSelectOptions"
                 :shows-temperature="showsTemperature"
-                :web-search-enabled="webSearchEnabled"
-                :web-search-available="webSearchAvailable"
-                :web-search-disabled-reason="webSearchDisabledReason"
-                :responding="responding"
                 @select-model="emit('selectModel', $event)"
                 @select-thinking="emit('selectThinking', $event)"
                 @select-temperature="emit('selectTemperature', $event)"
-                @toggle-web-search="emit('toggleWebSearch', $event)"
               />
             </div>
             <div class="composer-actions">
               <ComposerMoreSettings>
-                <ContextWindowIndicator
-                  v-if="settingsStore.generalSettings.showContextUsage"
-                  :messages="messages"
-                  :model="selectedModel"
-                />
                 <AgentTeamModeSelect
                   v-if="agentWorkspaceType && agentId"
                   :model-value="agentTeamMode"

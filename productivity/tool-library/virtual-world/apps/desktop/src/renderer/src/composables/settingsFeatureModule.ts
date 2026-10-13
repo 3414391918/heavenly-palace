@@ -15,6 +15,7 @@ export function buildSettingsFeatureModule(
     language: settingsStore.generalSettings.language,
     showContextUsage: settingsStore.generalSettings.showContextUsage,
     showInMenuBar: settingsStore.generalSettings.showInMenuBar,
+    useNetworkProxy: settingsStore.generalSettings.useNetworkProxy,
     workspacePaneLayout: settingsStore.generalSettings.workspacePaneLayout,
     defaultTextViewMode: settingsStore.generalSettings.defaultTextViewMode,
     bodyTextFormats: settingsStore.generalSettings.bodyTextFormats,

@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, watch, nextTick } from "vue";
-import type { LongReadChapterImageInput } from "@deepwrite/contracts";
+import {
+  isLongChapterImageDirectory,
+  type LongReadChapterImageInput
+} from "@deepwrite/contracts";
 import ChapterImagePasteDialog from "./ChapterImagePasteDialog.vue";
 import { uiMessage } from "../../ui-feedback";
 import {
@@ -35,10 +38,15 @@ function onContextMenu(event: MouseEvent) {
   const element = event.target;
   if (!(element instanceof HTMLImageElement) || !props.context) return;
   const match =
-    /^deepwrite-image:\/\/book\/([^/]+)\/([a-f0-9]{32})\/([A-Za-z0-9][A-Za-z0-9._-]*\.(?:png|jpe?g|webp|gif|avif))(?:\?v=[a-f0-9]{64})?$/iu.exec(
+    /^deepwrite-image:\/\/book\/([^/]+)\/([^/]+)\/([A-Za-z0-9][A-Za-z0-9._-]*\.(?:png|jpe?g|webp|gif|avif))(?:\?v=[a-f0-9]{64})?$/iu.exec(
       element.getAttribute("src") ?? ""
     );
-  if (!match || match[1] !== props.context.bookId) return;
+  if (
+    !match ||
+    match[1] !== props.context.bookId ||
+    !isLongChapterImageDirectory(match[2] ?? "")
+  )
+    return;
   event.preventDefault();
   event.stopPropagation();
   if (props.disabled) return;

@@ -66,6 +66,7 @@ import {
 import { conversationExport } from "./conversation-export-api";
 import { conversationPersistence } from "./conversation-persistence-api";
 import { desktopEvents } from "./desktop-events-api";
+import { fishAudio } from "./fish-audio-api";
 import { browserId, invokeCommand } from "./invoke";
 import {
   deleteBook,
@@ -104,6 +105,7 @@ async function getHealth(): Promise<SystemHealthPayload> {
   );
 }
 const api: DeepWriteApi = {
+  fishAudio,
   textContextMenu,
   system: {
     health: getHealth

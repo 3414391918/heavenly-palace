@@ -12,6 +12,7 @@ import { isForbiddenRendererCommand } from "./forbidden-commands";
 import { handleLongCommands } from "./long-commands";
 import { handleCharacterAssetCommands } from "./character-asset-commands";
 import { handleChapterImageCommands } from "./chapter-image-commands";
+import { handleFishAudioCommands } from "./fish-audio-commands";
 import { handleManuscriptCommands } from "./manuscript-commands";
 import { handleModelCommands } from "./model-commands";
 import { handleRendererStateCommands } from "./renderer-state-commands";
@@ -44,6 +45,7 @@ export async function dispatchCommand(
 
   const result =
     ctx.rendererStateFlush.handleCommand(ctx.senderWebContentsId, command) ??
+    (await handleFishAudioCommands(ctx, command)) ??
     (await handleChapterImageCommands(ctx, command)) ??
     (await handleCharacterAssetCommands(ctx, command)) ??
     (command.type.startsWith("revisionAnalysisSettings.")

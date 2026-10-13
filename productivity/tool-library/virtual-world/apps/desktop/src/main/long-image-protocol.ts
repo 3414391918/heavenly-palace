@@ -2,7 +2,10 @@ import { constants } from "node:fs";
 import { lstat, open, realpath } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { Readable } from "node:stream";
-import { LongBookIdSchema } from "@deepwrite/contracts";
+import {
+  LongBookIdSchema,
+  isLongChapterImageDirectory
+} from "@deepwrite/contracts";
 import { protocol } from "electron";
 import { characterAssetImageResponse } from "./character-asset-access";
 
@@ -127,10 +130,14 @@ export function createLongImageProtocolHandler(
       return await characterAssetImageResponse(userDataPath, url);
     }
     const match =
-      /^\/([^/]+)\/([a-f0-9]{32})\/([A-Za-z0-9][A-Za-z0-9._-]*\.(png|jpe?g|webp|gif|avif))$/i.exec(
+      /^\/([^/]+)\/([^/]+)\/([A-Za-z0-9][A-Za-z0-9._-]*\.(png|jpe?g|webp|gif|avif))$/i.exec(
         url.pathname
       );
-    if (!match || !LongBookIdSchema.safeParse(match[1]).success) {
+    if (
+      !match ||
+      !LongBookIdSchema.safeParse(match[1]).success ||
+      !isLongChapterImageDirectory(match[2] ?? "")
+    ) {
       return new Response(null, { status: 400 });
     }
     const [, bookId = "", chapter = "", filename = "", extension = ""] = match;

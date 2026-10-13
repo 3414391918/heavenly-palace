@@ -13,6 +13,7 @@ defineProps<{
   language: AppLanguage;
   showContextUsage: boolean;
   showInMenuBar: boolean;
+  useNetworkProxy: boolean;
   workspacePaneLayout: WorkspacePaneLayout;
 }>();
 
@@ -23,6 +24,7 @@ const emit = defineEmits<{
   updateLanguage: [language: AppLanguage];
   updateShowContextUsage: [enabled: boolean];
   updateShowInMenuBar: [enabled: boolean];
+  updateUseNetworkProxy: [enabled: boolean];
   updateWorkspacePaneLayout: [layout: WorkspacePaneLayout];
 }>();
 
@@ -121,24 +123,6 @@ const workspacePaneLayoutOptions: Array<{
             "
         /></span>
       </label>
-      <label class="settings-item">
-        <span class="settings-item-text"
-          ><strong>上下文使用显示</strong
-          ><small>在创作输入框中显示当前模型的上下文占用进度</small></span
-        >
-        <span class="settings-toggle"
-          ><input
-            type="checkbox"
-            :checked="showContextUsage"
-            aria-label="上下文使用显示"
-            @change="
-              emit(
-                'updateShowContextUsage',
-                ($event.target as HTMLInputElement).checked
-              )
-            "
-        /></span>
-      </label>
       <div class="settings-item settings-select-item">
         <span class="settings-item-text"
           ><strong>页面布局</strong
@@ -191,6 +175,26 @@ const workspacePaneLayoutOptions: Array<{
               )
             " /></span
       ></label>
+      <label class="settings-item">
+        <span class="settings-item-text"
+          ><strong>使用系统代理</strong
+          ><small
+            >开启后，Fish Audio 等网络请求使用电脑当前的系统代理设置</small
+          ></span
+        >
+        <span class="settings-toggle"
+          ><input
+            type="checkbox"
+            :checked="useNetworkProxy"
+            aria-label="使用系统代理"
+            @change="
+              emit(
+                'updateUseNetworkProxy',
+                ($event.target as HTMLInputElement).checked
+              )
+            "
+        /></span>
+      </label>
     </div>
   </section>
 </template>

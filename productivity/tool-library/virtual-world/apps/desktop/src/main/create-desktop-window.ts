@@ -61,6 +61,24 @@ export function createDesktopWindow(
   });
   installTextContextMenu(window);
   installWindowFrame(window);
+  window.webContents.session.setPermissionRequestHandler(
+    (sender, permission, callback, details) => {
+      if (sender !== window.webContents) {
+        callback(false);
+        return;
+      }
+      if (permission === "media") {
+        callback(
+          "mediaTypes" in details && details.mediaTypes.includes("audio")
+        );
+        return;
+      }
+      callback(
+        permission === "clipboard-sanitized-write" ||
+          permission === "clipboard-read"
+      );
+    }
+  );
 
   applyNativeAppearanceChrome(appearance, [window]);
 

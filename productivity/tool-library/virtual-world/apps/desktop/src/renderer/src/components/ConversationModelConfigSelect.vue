@@ -34,17 +34,12 @@ const props = defineProps<{
   temperature: number;
   temperatureOptions: Array<{ value: number; label: string }>;
   showsTemperature: boolean;
-  webSearchEnabled: boolean;
-  webSearchAvailable: boolean;
-  webSearchDisabledReason: string;
-  responding: boolean;
 }>();
 
 const emit = defineEmits<{
   selectModel: [modelId: string];
   selectThinking: [level: ThinkingLevel];
   selectTemperature: [temperature: number];
-  toggleWebSearch: [enabled: boolean];
 }>();
 
 const trigger = ref<HTMLButtonElement | null>(null);
@@ -111,12 +106,6 @@ const selectedSubmenuValue = computed<ConfigValue>(() => {
   if (page.value === "thinking") return props.thinkingLevel;
   return props.temperature;
 });
-const webSearchTitle = computed(() => {
-  if (props.responding) return "当前回复完成或停止后，才能切换联网";
-  if (!props.webSearchAvailable) return props.webSearchDisabledReason;
-  return props.webSearchEnabled ? "关闭联网" : "开启联网";
-});
-
 function positionMenu(): void {
   if (!open.value || !trigger.value) return;
   const rect = trigger.value.getBoundingClientRect();
@@ -296,15 +285,7 @@ onBeforeUnmount(() => {
       @click="toggleMenu"
       @keydown="handleTriggerKeydown"
     >
-      <span class="conversation-model-config-icons">
-        <AppIcon name="model" :size="14" />
-        <AppIcon
-          v-if="webSearchEnabled"
-          class="conversation-model-config-network-indicator"
-          name="globe"
-          :size="11"
-        />
-      </span>
+      <AppIcon name="model" :size="14" />
       <span class="conversation-model-config-label">{{
         selectedModelLabel
       }}</span>
@@ -388,27 +369,6 @@ onBeforeUnmount(() => {
                   temperatureLabel
                 }}</span>
                 <AppIcon name="chevron" :size="16" />
-              </button>
-              <div class="conversation-model-config-divider" />
-              <button
-                class="conversation-model-config-network"
-                type="button"
-                :disabled="responding || !webSearchAvailable"
-                :title="webSearchTitle"
-                aria-label="联网"
-                :aria-pressed="webSearchEnabled"
-                @click="emit('toggleWebSearch', !webSearchEnabled)"
-              >
-                <span>联网</span>
-                <span class="conversation-model-config-value">
-                  {{ webSearchEnabled ? "开启" : "关闭" }}
-                </span>
-                <span
-                  class="conversation-model-config-switch"
-                  :class="{ 'is-active': webSearchEnabled }"
-                >
-                  <span />
-                </span>
               </button>
             </div>
           </div>

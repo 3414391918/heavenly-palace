@@ -26,6 +26,7 @@ import LibraryAgentSettingsPanel from "./LibraryAgentSettingsPanel.vue";
 import ModelSettingsFeature from "./ModelSettingsFeature.vue";
 import ModelUsagePanel from "./ModelUsagePanel.vue";
 import LongAgentSettingsPanel from "./LongAgentSettingsPanel.vue";
+import FishAudioSettingsPanel from "./FishAudioSettingsPanel.vue";
 
 interface SettingsCategory {
   id: string;
@@ -57,6 +58,7 @@ const props = defineProps<{
   language: AppLanguage;
   showContextUsage: boolean;
   showInMenuBar: boolean;
+  useNetworkProxy: boolean;
   workspacePaneLayout: WorkspacePaneLayout;
   defaultTextViewMode: TextViewMode;
   bodyTextFormats: BodyTextFormats;
@@ -86,6 +88,7 @@ const emit = defineEmits<{
   updateLanguage: [language: AppLanguage];
   updateShowContextUsage: [enabled: boolean];
   updateShowInMenuBar: [enabled: boolean];
+  updateUseNetworkProxy: [enabled: boolean];
   updateWorkspacePaneLayout: [layout: WorkspacePaneLayout];
   updateDefaultTextViewMode: [mode: TextViewMode];
   updateBodyTextFormat: [change: BodyTextFormatChange];
@@ -126,6 +129,11 @@ const sections: SettingsSection[] = [
       { id: "body-text", label: "正文文本", icon: "wand" },
       { id: "appearance", label: "外观", icon: "sparkles" }
     ]
+  },
+  {
+    id: "third-party",
+    label: "第三方平台",
+    categories: [{ id: "fish-audio", label: "FishAudio", icon: "model" }]
   }
 ];
 
@@ -275,6 +283,7 @@ async function selectCategory(id: string): Promise<void> {
           :language="language"
           :show-context-usage="showContextUsage"
           :show-in-menu-bar="showInMenuBar"
+          :use-network-proxy="useNetworkProxy"
           :workspace-pane-layout="workspacePaneLayout"
           @update-permission-mode="emit('updatePermissionMode', $event)"
           @update-auto-approve-cross-stage-operations="
@@ -284,6 +293,7 @@ async function selectCategory(id: string): Promise<void> {
           @update-language="emit('updateLanguage', $event)"
           @update-show-context-usage="emit('updateShowContextUsage', $event)"
           @update-show-in-menu-bar="emit('updateShowInMenuBar', $event)"
+          @update-use-network-proxy="emit('updateUseNetworkProxy', $event)"
           @update-workspace-pane-layout="
             emit('updateWorkspacePaneLayout', $event)
           "
@@ -300,6 +310,8 @@ async function selectCategory(id: string): Promise<void> {
         />
 
         <AppearanceSettingsPanel v-else-if="activeCategory === 'appearance'" />
+
+        <FishAudioSettingsPanel v-else-if="activeCategory === 'fish-audio'" />
 
         <section v-else class="settings-group">
           <div class="settings-card">

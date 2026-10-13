@@ -9,7 +9,6 @@ import {
 import { MODEL_PROVIDER_OPTIONS } from "../components/modelProviderPresets";
 import type { AgentApprovalMode } from "../types/conversation";
 import type { IconName } from "../types/workspace";
-import { isWorkspaceWebSearchAvailable } from "./agent-conversation/web-search";
 
 const MODEL_GROUPS = [
   { provider: "official", providerLabel: "官方小站" },
@@ -35,9 +34,6 @@ export function useConversationModelOptions(options: {
 }) {
   const selectedModel = computed(() =>
     options.models.find((model) => model.id === options.selectedModelId)
-  );
-  const webSearchAvailable = computed(() =>
-    isWorkspaceWebSearchAvailable(selectedModel.value)
   );
   const builtInThinkingLabels: Record<BuiltInReasoningLevel, string> = {
     minimal: "最低",
@@ -122,8 +118,6 @@ export function useConversationModelOptions(options: {
     options.approvalMode === "request-approval" ? "user" : "check"
   );
   return {
-    selectedModel,
-    webSearchAvailable,
     availableThinkingOptions,
     modelOptions,
     showsTemperature,

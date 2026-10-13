@@ -10,6 +10,16 @@ describe("longChapterImageUrl", () => {
     ).toBe(`deepwrite-image://book/longbook_example/${"a".repeat(32)}/001.png`);
   });
 
+  it("resolves images from an indexed chapter-id directory", () => {
+    expect(
+      longChapterImageUrl(
+        "longbook_example",
+        "long/chapters/chapter_071894ed/body.md",
+        "images/001.png"
+      )
+    ).toBe("deepwrite-image://book/longbook_example/chapter_071894ed/001.png");
+  });
+
   it("rejects paths outside the selected chapter images directory", () => {
     expect(
       longChapterImageUrl("longbook_example", body, "../secret.png")

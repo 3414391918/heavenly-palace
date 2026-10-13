@@ -18,7 +18,7 @@ describe("unified creation entry points", () => {
     expect(settings).not.toContain("ShortAgentSettingsPanel");
     expect(settings).toContain("主智能体配置");
   });
-  it("exposes the subagent team and only revision analysis in more features", () => {
+  it("exposes the subagent team, revision analysis and voice management", () => {
     expect(sidebar).toContain("子智能体团队");
     expect(moreFeatures).toEqual([
       {
@@ -26,6 +26,12 @@ describe("unified creation entry points", () => {
         label: "修改分析",
         description: "从文稿修改中学习可复用技能",
         icon: "file"
+      },
+      {
+        id: "voice-manager",
+        label: "声音管理",
+        description: "查看和管理 FishAudio 平台上的声音",
+        icon: "model"
       }
     ]);
   });

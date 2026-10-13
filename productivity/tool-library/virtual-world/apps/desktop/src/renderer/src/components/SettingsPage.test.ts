@@ -28,23 +28,8 @@ describe("SettingsPage", () => {
     expectSourceToContain(generalSettingsSource, "emit('updateAutoSave'");
   });
 
-  it("offers a persisted context usage visibility switch in general settings", () => {
-    expectSourceToContain(
-      generalSettingsSource,
-      "<strong>上下文使用显示</strong>"
-    );
-    expect(generalSettingsSource).toContain(':checked="showContextUsage"');
-    expect(generalSettingsSource).toContain("'updateShowContextUsage'");
-    expect(source).toContain(':show-context-usage="showContextUsage"');
-    expect(featureModulesSource).toContain(
-      ':show-context-usage="module.showContextUsage"'
-    );
-    expect(featureHostSource).toContain(
-      "settingsStore.generalSettings.showContextUsage"
-    );
-    expect(appSource).toContain(
-      '@update-show-context-usage="updateShowContextUsage"'
-    );
+  it("hides the context usage visibility switch from general settings", () => {
+    expect(generalPanelSource).not.toContain("<strong>上下文使用显示</strong>");
   });
 
   it("keeps only the requested general controls and makes permission modes exclusive", () => {
@@ -94,11 +79,15 @@ describe("SettingsPage", () => {
     expectSourceToContain(generalSettingsSource, "emit('updateShowInMenuBar'");
   });
 
-  it("removes network controls from general settings", () => {
-    expect(generalSettingsSource).not.toContain("网络设置");
-    expect(generalSettingsSource).not.toContain("网络代理");
-    expect(source).not.toContain("useNetworkProxy");
-    expect(featureModulesSource).not.toContain(
+  it("offers a manually enabled system proxy under personal general settings", () => {
+    expectSourceToContain(
+      generalSettingsSource,
+      "<strong>使用系统代理</strong>"
+    );
+    expect(generalSettingsSource).toContain(':checked="useNetworkProxy"');
+    expect(generalSettingsSource).toContain("'updateUseNetworkProxy'");
+    expect(source).toContain(':use-network-proxy="useNetworkProxy"');
+    expect(featureModulesSource).toContain(
       ':use-network-proxy="module.useNetworkProxy"'
     );
   });

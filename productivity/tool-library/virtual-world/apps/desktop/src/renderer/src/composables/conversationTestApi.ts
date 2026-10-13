@@ -15,6 +15,11 @@ export function createConversationTestApi(
   session: DeepWriteApi["session"]
 ): DeepWriteApi {
   return {
+    fishAudio: {
+      async execute() {
+        return {};
+      }
+    },
     session,
     system: {
       async health() {

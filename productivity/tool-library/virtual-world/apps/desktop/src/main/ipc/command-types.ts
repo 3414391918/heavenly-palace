@@ -12,6 +12,7 @@ import type { ChatAssistantProjectConfigStore } from "../chat-assistant-project-
 import type { ContinuationImportPreviewRegistry } from "../continuation-import-preview-registry";
 import type { readExternalLibraryEntries } from "../external-library-import";
 import type { GeneralSettingsStore } from "../general-settings-store";
+import type { FishAudioService } from "../fish-audio-service";
 import type {
   authorizeMainInternalCommand,
   MainInternalCommandActiveRun
@@ -67,9 +68,11 @@ export interface IpcCommandContext {
   requireWorkspaceDirectoryStore: () => WorkspaceDirectoryStore;
   requireAppearanceService: () => AppearanceService;
   requireGeneralSettingsStore: () => GeneralSettingsStore;
+  requireFishAudioService: () => FishAudioService;
   exportLongManuscript: typeof exportLongManuscript;
   listRemoteModels: typeof listRemoteModels;
   remoteFetch?: (input: string, init?: RequestInit) => Promise<Response>;
+  fishAudioFetch?: (input: string, init?: RequestInit) => Promise<Response>;
   rendererStateFlush: ReturnType<typeof createRendererStateFlushCoordinator>;
   resolveDraftApiKey: ModelConfigStore["resolveDraftApiKey"];
   readExternalLibraryEntries: typeof readExternalLibraryEntries;
