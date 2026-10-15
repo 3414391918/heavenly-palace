@@ -22,11 +22,7 @@ describe("MarkdownContent", () => {
     expect(messageSource).not.toContain("annotate-headings");
   });
 
-  it("renders both long-form preview surfaces through the shared component", () => {
-    expect(longEditorSource).toContain(
-      'import MarkdownContent from "./MarkdownContent.vue"'
-    );
-    expect(longEditorSource.match(/<MarkdownContent/g)).toHaveLength(2);
-    expect(longEditorSource).not.toContain("previewParagraphs");
+  it("does not mount a Markdown preview in the long-form editor", () => {
+    expect(longEditorSource).not.toContain("<MarkdownContent");
   });
 });

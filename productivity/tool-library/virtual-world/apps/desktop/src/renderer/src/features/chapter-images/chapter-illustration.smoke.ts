@@ -135,6 +135,12 @@ export async function runChapterIllustrationRendererSmoke(
       "load editable manuscript"
     );
     mark("editor ready");
+    const writingViewport = host.querySelector<HTMLElement>(
+      ".long-document-preview"
+    )!;
+    writingViewport.style.height = "300px";
+    writingViewport.style.maxHeight = "300px";
+    writingViewport.style.overflowY = "auto";
     const beforeVisualEdit = editor().value;
     const lastText = [
       ...host.querySelectorAll<HTMLTextAreaElement>(".chapter-visual-text")
@@ -197,6 +203,15 @@ export async function runChapterIllustrationRendererSmoke(
     for (const filename of ["001.png", "002.png"]) {
       const before = editor().value;
       await open(offset);
+      const preview = host.querySelector<HTMLElement>(
+        ".long-document-preview"
+      )!;
+      preview.scrollTop = 820;
+      preview.dispatchEvent(new Event("scroll"));
+      if (preview.scrollTop !== 820)
+        throw new Error(
+          `Illustration fixture is not scrollable: ${preview.scrollHeight}/${preview.clientHeight}`
+        );
       const confirm = button(
         "取消",
         dialog()!
@@ -227,6 +242,10 @@ export async function runChapterIllustrationRendererSmoke(
         );
       } else button("粘贴图片", dialog()!).click();
       await wait(() => !confirm.disabled, `paste ${filename}`);
+      if (Math.abs(preview.scrollTop - 820) > 1)
+        throw new Error(
+          `Preparing an illustration displaced the writing view: ${preview.scrollTop}`
+        );
       mark(`confirm ${filename}`);
       confirm.click();
       await wait(
@@ -241,6 +260,11 @@ export async function runChapterIllustrationRendererSmoke(
       });
       if (saved.content !== editor().value)
         throw new Error("Inserted Markdown was not saved");
+      await nextTick();
+      if (Math.abs(preview.scrollTop - 820) > 1)
+        throw new Error(
+          `Adding an illustration displaced the writing view: ${preview.scrollTop}`
+        );
       mark(`saved ${filename}`);
       if (filename === "001.png") {
         const undo = host.querySelector<HTMLButtonElement>(
@@ -254,6 +278,8 @@ export async function runChapterIllustrationRendererSmoke(
         await nextTick();
         if (editor().value !== before)
           throw new Error("Undo lost the original manuscript");
+        if (Math.abs(preview.scrollTop - 820) > 1)
+          throw new Error("Undoing an illustration displaced the writing view");
         const redo = host.querySelector<HTMLButtonElement>(
           'button[aria-label="还原"]'
         )!;
@@ -261,6 +287,8 @@ export async function runChapterIllustrationRendererSmoke(
         await nextTick();
         if (editor().value !== saved.content)
           throw new Error("Redo lost the image reference");
+        if (Math.abs(preview.scrollTop - 820) > 1)
+          throw new Error("Redoing an illustration displaced the writing view");
       }
     }
     const expected = editor().value;

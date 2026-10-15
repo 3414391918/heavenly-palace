@@ -11,12 +11,12 @@ describe("LongWorkspaceEditor continuity text-file integration", () => {
       'import LongContinuityWorkspace from "./LongContinuityWorkspace.vue"'
     );
     expect(source).not.toContain("<LongContinuityWorkspace");
-    expect(source).toContain("<MarkdownContent");
-    expect(source).toContain(`v-if="viewMode === 'edit'"`);
+    expect(source).not.toContain("<MarkdownContent");
+    expect(source).not.toContain(`v-if="viewMode === 'edit'"`);
     expect(source).toContain(
       ':readonly="currentReadOnly || isDocumentContentBusy"'
     );
-    expect(source).toContain('class="long-document-preview"');
+    expect(source).not.toContain('class="long-document-preview"');
   });
 
   it("selects ledger entries by file id even when records share a role", () => {

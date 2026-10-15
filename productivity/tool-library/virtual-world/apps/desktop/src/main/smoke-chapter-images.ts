@@ -96,7 +96,8 @@ export async function runChapterImageSmoke(
   await writeFile(
     body,
     "# 测试正文\n\n![测试图](images/sample.png)\n\n" +
-      "用于检查预览位置保留的测试段落。\n\n".repeat(300)
+      "用于检查预览位置保留的测试段落。\n\n".repeat(300) +
+      "唯一查找锚点\n"
   );
   const original = largeSmokePng(20, SMOKE_IMAGE_WIDTH + 1);
   if (original.length < 8 * 1024 * 1024)

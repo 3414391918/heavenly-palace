@@ -22,6 +22,7 @@ export function useLongEditorViewSession(options: {
   documentKey(): string;
   defaultMode(): TextViewMode;
   readOnly(): boolean;
+  editOnly?: boolean;
   viewMode: Ref<TextViewMode>;
   setViewMode(mode: TextViewMode): void;
   resetToDefault(forcePreview?: boolean): unknown;
@@ -30,28 +31,50 @@ export function useLongEditorViewSession(options: {
   watch(
     options.documentKey,
     (key, previous) => {
-      if (previous !== undefined) remember(previous, options.viewMode.value);
+      if (previous !== undefined && !options.editOnly)
+        remember(previous, options.viewMode.value);
       options.setViewMode(
-        options.readOnly()
-          ? "preview"
-          : (modes.get(key) ?? options.defaultMode())
+        options.editOnly
+          ? "edit"
+          : options.readOnly()
+            ? "preview"
+            : (modes.get(key) ?? options.defaultMode())
       );
       options.onDocumentChange();
     },
     { immediate: true, flush: "sync" }
   );
-  watch(options.viewMode, (mode) => remember(options.documentKey(), mode), {
-    flush: "sync"
-  });
-  watch(options.defaultMode, () => options.resetToDefault(options.readOnly()), {
-    flush: "sync"
-  });
+  watch(
+    options.viewMode,
+    (mode) => {
+      if (options.editOnly) {
+        if (mode !== "edit") options.setViewMode("edit");
+        return;
+      }
+      remember(options.documentKey(), mode);
+    },
+    {
+      flush: "sync"
+    }
+  );
+  watch(
+    options.defaultMode,
+    () => {
+      if (!options.editOnly) options.resetToDefault(options.readOnly());
+    },
+    {
+      flush: "sync"
+    }
+  );
   watch(
     options.readOnly,
     (readOnly) => {
-      if (readOnly) options.setViewMode("preview");
+      if (readOnly && !options.editOnly) options.setViewMode("preview");
     },
     { flush: "sync" }
   );
-  onScopeDispose(() => remember(options.documentKey(), options.viewMode.value));
+  onScopeDispose(() => {
+    if (!options.editOnly)
+      remember(options.documentKey(), options.viewMode.value);
+  });
 }

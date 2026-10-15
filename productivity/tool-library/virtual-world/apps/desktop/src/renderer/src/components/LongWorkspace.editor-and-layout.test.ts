@@ -280,7 +280,7 @@ describe("long-form renderer vertical slice: editor-and-layout", () => {
   it("uses the shared writing-editor layout without exposing internal revisions", () => {
     expect(editorSource).toContain('class="long-editor-breadcrumbs"');
     expect(editorSource).toContain('class="long-editor-file-tabs"');
-    expect(editorSource).toContain('class="long-editor-view-tabs"');
+    expect(editorSource).not.toContain('class="long-editor-view-tabs"');
     expect(editorSource).toContain('class="long-document-title"');
     expect(editorSource).toContain('class="long-editor-footer"');
     expect(editorSource).toContain("已保存到本机");

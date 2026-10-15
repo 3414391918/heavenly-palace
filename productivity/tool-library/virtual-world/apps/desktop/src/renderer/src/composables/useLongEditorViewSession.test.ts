@@ -13,7 +13,8 @@ afterEach(() => scopes.splice(0).forEach((scope) => scope.stop()));
 function mount(
   bookId = "book_a",
   fileId = "file_a",
-  defaultMode: TextViewMode = "edit"
+  defaultMode: TextViewMode = "edit",
+  editOnly = false
 ) {
   const props = reactive({
     bookId,
@@ -30,6 +31,7 @@ function mount(
       documentKey: () => `${props.bookId}:${props.file.id}`,
       defaultMode: () => props.defaultMode,
       readOnly: () => props.readOnly,
+      editOnly,
       ...mode,
       onDocumentChange: changed
     })
@@ -77,5 +79,14 @@ describe("long editor view session", () => {
     expect(editor.mode.viewMode.value).toBe("edit");
     editor.props.readOnly = true;
     expect(editor.mode.viewMode.value).toBe("preview");
+  });
+  it("keeps an edit-only workspace in edit mode across refreshes and read-only files", () => {
+    const editor = mount("book_a", "file_a", "preview", true);
+    expect(editor.mode.viewMode.value).toBe("edit");
+    editor.mode.setViewMode("preview");
+    expect(editor.mode.viewMode.value).toBe("edit");
+    editor.props.readOnly = true;
+    editor.props.file = { id: "file_b", updatedAt: 1 };
+    expect(editor.mode.viewMode.value).toBe("edit");
   });
 });

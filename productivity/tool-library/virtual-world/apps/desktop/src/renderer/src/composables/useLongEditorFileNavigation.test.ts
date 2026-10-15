@@ -39,7 +39,10 @@ function selection(characterId = "character_one"): LongWorkspaceSelection {
   };
 }
 
-function setup(saveAllChanges = vi.fn(async () => true)) {
+function setup(
+  saveAllChanges = vi.fn(async () => true),
+  characterCoreOnly = false
+) {
   const props = reactive({
     bookId: "longbook_one",
     selection: selection(),
@@ -63,6 +66,7 @@ function setup(saveAllChanges = vi.fn(async () => true)) {
   scopes.push(scope);
   const editor = scope.run(() =>
     useLongEditorStructureSelection({
+      characterCoreOnly,
       props,
       host: {
         currentReadOnly: computed(() => false),
@@ -111,6 +115,15 @@ function deferred<T>() {
 }
 
 describe("角色核心档案内部导航", () => {
+  it("可将人物设计界面固定在核心档案，而不移除底层人物文件", () => {
+    const { props, editor } = setup(
+      vi.fn(async () => true),
+      true
+    );
+    props.selection = { ...props.selection, preferredRole: "relationships" };
+    expect(editor.currentSelectionFile.value?.role).toBe("core-profile");
+    expect(props.selection.files).toHaveLength(2);
+  });
   it.each(["file", "role", "focus-file", "focus-target"] as const)(
     "%s 在取消或操作忙碌时保留当前档案",
     async (route) => {

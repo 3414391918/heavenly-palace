@@ -99,6 +99,12 @@ export async function runLongEditorPreviewSmoke(
     );
     const preview = host.querySelector<HTMLElement>(".long-document-preview")!;
     await until(() => loadedChapterText(preview), host, "loaded chapter text");
+    for (const input of preview.querySelectorAll<HTMLTextAreaElement>(
+      ".chapter-visual-text"
+    )) {
+      if (input.scrollHeight > input.clientHeight + 2)
+        throw new Error("Chapter textarea clips part of its content");
+    }
     if (host.querySelector(".long-editor-view-tabs"))
       throw new Error("Unified chapter still shows separate edit/preview tabs");
     await decodeImages(preview);
@@ -109,6 +115,57 @@ export async function runLongEditorPreviewSmoke(
       throw new Error(
         `Preview smoke content is not scrollable: ${preview.scrollHeight}/${preview.clientHeight}`
       );
+
+    const input = preview.querySelector<HTMLTextAreaElement>(
+      ".chapter-visual-text"
+    )!;
+    const caret = input.value.indexOf("用于检查预览位置保留", 300);
+    input.focus({ preventScroll: true });
+    input.setSelectionRange(caret, caret);
+    preview.scrollTop = position;
+    input.dispatchEvent(
+      new InputEvent("beforeinput", {
+        bubbles: true,
+        inputType: "insertText",
+        data: "新"
+      })
+    );
+    input.setRangeText("新", caret, caret, "end");
+    input.dispatchEvent(
+      new InputEvent("input", {
+        bubbles: true,
+        inputType: "insertText",
+        data: "新"
+      })
+    );
+    await settle();
+    assertPreview(host, position, "typing inside chapter body");
+    const undo = new InputEvent("beforeinput", {
+      bubbles: true,
+      cancelable: true,
+      inputType: "historyUndo"
+    });
+    input.dispatchEvent(undo);
+    if (!undo.defaultPrevented)
+      throw new Error("Chapter editor did not intercept native undo");
+    await settle();
+    assertPreview(host, position, "undo inside chapter body");
+
+    host.querySelector<HTMLButtonElement>('button[aria-label="查找"]')!.click();
+    await settle();
+    const find = host.querySelector<HTMLInputElement>(
+      'input[aria-label="查找文字"]'
+    )!;
+    find.value = "唯一查找锚点";
+    find.dispatchEvent(new Event("input", { bubbles: true }));
+    await settle();
+    if (preview.scrollTop <= position)
+      throw new Error("Searching did not reveal the chapter caret");
+    host
+      .querySelector<HTMLButtonElement>('button[aria-label="关闭查找"]')
+      ?.click();
+    preview.scrollTop = position;
+    preview.dispatchEvent(new Event("scroll"));
 
     // Window-focus refresh publishes newly allocated index and selection objects
     // while retaining exactly the same book, file, and content.

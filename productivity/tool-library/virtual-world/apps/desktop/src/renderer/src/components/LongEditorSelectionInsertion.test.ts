@@ -9,9 +9,9 @@ describe("long editor selection insertion", () => {
     expect(
       editorSource.match(/@contextmenu="handleEditorContextMenu"/g)
     ).toHaveLength(3);
-    expect(
-      editorSource.match(/@contextmenu="handlePreviewContextMenu"/g)
-    ).toHaveLength(2);
+    expect(editorSource).not.toContain(
+      '@contextmenu="handlePreviewContextMenu"'
+    );
     expect(editorSource).toContain(
       '@preview-contextmenu="handlePreviewContextMenu"'
     );

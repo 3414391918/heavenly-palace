@@ -39,7 +39,6 @@ import {
   type LongWorkspaceSelection
 } from "../types/longWorkspace";
 import AppIcon from "./AppIcon.vue";
-import EditorTextTools from "./EditorTextTools.vue";
 import { useBodyTextFormatting } from "../composables/useBodyTextFormatting";
 import { longBodyTextKind } from "../utils/bodyTextTarget";
 import DocumentMetaRow from "./DocumentMetaRow.vue";
@@ -49,13 +48,12 @@ import CharacterCoreProfile from "../features/character-assets/CharacterCoreProf
 import { useCharacterCoreEditor } from "../features/character-assets/useCharacterCoreEditor";
 import LongContinuityLedgerNavigation from "./LongContinuityLedgerNavigation.vue";
 import LongEditorDeleteDialogs from "./LongEditorDeleteDialogs.vue";
-import LongEditorFindReplaceBar from "./LongEditorFindReplaceBar.vue";
+import LongEditorToolControls from "./LongEditorToolControls.vue";
 import LongForeshadowingWorkspace from "./LongForeshadowingWorkspace.vue";
 import LongManuscriptEditor from "./LongManuscriptEditor.vue";
 import LongManuscriptNavigation from "./LongManuscriptNavigation.vue";
 import LongPlotStoryListPane from "./LongPlotStoryListPane.vue";
 import LongWorldbuildingNavigation from "./LongWorldbuildingNavigation.vue";
-import MarkdownContent from "./MarkdownContent.vue";
 import {
   useLongEditorDeleteDialogs,
   type LongNavigationDeleteTarget
@@ -181,7 +179,7 @@ const manuscriptEditor = ref<InstanceType<typeof LongManuscriptEditor> | null>(
 );
 const editorToolsElement = ref<HTMLElement>();
 const { resetToDefault, setViewMode, viewMode } = useTextViewMode({
-  defaultMode: () => props.defaultViewMode
+  defaultMode: () => "edit"
 });
 function setEditorInputElement(element: HTMLTextAreaElement | null): void {
   editorInput.value = element;
@@ -718,6 +716,7 @@ const currentUsesAnyRightEntryList = computed(
 const showGenericFileTabs = computed(
   () =>
     Boolean(props.selection && props.selection.files.length > 1) &&
+    !currentIsCharacterDocument.value &&
     !currentIsWorldbuildingList.value &&
     !currentIsPlotPointWorkspace.value &&
     !currentIsBookLineWorkspace.value &&
@@ -1016,6 +1015,7 @@ const {
   captureNavigationSelection,
   requestSelectCharacter
 } = useLongEditorStructureSelection({
+  characterCoreOnly: true,
   props,
   emit,
   host: structureHost,
@@ -1026,7 +1026,7 @@ const {
   orderedBookLineVolumes,
   currentCharacterNavigationItems,
   documentStates,
-  resetTextViewMode: resetToDefault,
+  resetTextViewMode: () => resetToDefault(false),
   stateKey
 });
 
@@ -1036,8 +1036,8 @@ const currentIsDraftBody = computed(
     currentSelectionFile.value?.role === "body"
 );
 const visualSelection = () => manuscriptEditor.value?.getSelection();
-const focusVisualRange = (start: number, end: number) =>
-  manuscriptEditor.value?.focusRange(start, end);
+const focusVisualRange = (start: number, end: number, reveal = false) =>
+  manuscriptEditor.value?.focusRange(start, end, reveal);
 
 const {
   workspaceSavePending,
@@ -1267,7 +1267,7 @@ const findApi = useLongEditorFindReplace({
   editorInput,
   visualMode: () => currentIsDraftBody.value,
   visualSelection,
-  visualFocusRange: focusVisualRange,
+  visualFocusRange: (start, end) => focusVisualRange(start, end, true),
   editorToolsElement,
   updateVisibleContent: (content) => historyHost.updateVisibleContent(content),
   updateVisibleCharacterCount,
@@ -1406,7 +1406,7 @@ async function locateEditorReference(
     reference
   );
   if (currentIsDraftBody.value) {
-    focusVisualRange(range.start, range.end);
+    focusVisualRange(range.start, range.end, true);
     return true;
   }
   const input = editorInput.value;
@@ -1498,8 +1498,9 @@ watch(
 
 useLongEditorViewSession({
   documentKey: () => activeEditorScrollMemoryKey.value,
-  defaultMode: () => props.defaultViewMode,
+  defaultMode: () => "edit",
   readOnly: () => Boolean(currentSelectionFile.value?.readOnly),
+  editOnly: true,
   viewMode,
   setViewMode,
   resetToDefault,
@@ -1879,47 +1880,6 @@ onBeforeUnmount(() => {
           v-if="
             !currentIsForeshadowingView &&
             !currentIsPlotPointStoryline &&
-            !currentIsCharacterCoreProfile &&
-            !currentIsDraftBody
-          "
-          class="long-editor-view-tabs"
-          role="tablist"
-          aria-label="文本视图"
-        >
-          <button
-            type="button"
-            role="tab"
-            :aria-selected="viewMode === 'edit'"
-            :class="{ 'is-active': viewMode === 'edit' }"
-            :disabled="!canUseTextTools || currentReadOnly"
-            @click="setViewMode('edit')"
-          >
-            编辑
-          </button>
-          <button
-            type="button"
-            role="tab"
-            :aria-selected="viewMode === 'preview'"
-            :class="{ 'is-active': viewMode === 'preview' }"
-            :disabled="!canUseTextTools"
-            @click="setViewMode('preview')"
-          >
-            预览
-          </button>
-        </div>
-        <span
-          v-if="
-            !currentIsForeshadowingView &&
-            !currentIsPlotPointStoryline &&
-            !currentIsCharacterCoreProfile &&
-            !currentIsDraftBody
-          "
-          class="long-toolbar-separator"
-        />
-        <div
-          v-if="
-            !currentIsForeshadowingView &&
-            !currentIsPlotPointStoryline &&
             !currentIsCharacterCoreProfile
           "
           ref="editorToolsElement"
@@ -1927,25 +1887,16 @@ onBeforeUnmount(() => {
           role="group"
           aria-label="文本操作"
         >
-          <EditorTextTools
+          <LongEditorToolControls
+            v-model:find-panel-element="findPanelElement"
+            v-model:find-input="findInput"
             :can-undo="canUndo"
             :can-redo="canRedo"
-            :disabled="!canUseTextTools"
+            :can-use-text-tools="canUseTextTools"
             :find-panel-open="findPanelOpen"
             :find-panel-mode="findPanelMode"
             :format-visible="bodyFormatVisible"
             :format-disabled="bodyFormatDisabled"
-            @undo="undo"
-            @redo="redo"
-            @toggle-find="toggleFindPanel"
-            @format="formatBody"
-          />
-
-          <LongEditorFindReplaceBar
-            v-if="findPanelOpen"
-            v-model:find-panel-element="findPanelElement"
-            v-model:find-input="findInput"
-            :find-panel-mode="findPanelMode"
             :search-query="searchQuery"
             :replacement-text="replacementText"
             :search-result-label="searchResultLabel"
@@ -1955,6 +1906,10 @@ onBeforeUnmount(() => {
             :active-entry-search-index="activeEntrySearchIndex"
             :entry-search-pending="entrySearchPending"
             :entry-search-result-label="entrySearchResultLabel"
+            @undo="undo"
+            @redo="redo"
+            @toggle-find="toggleFindPanel"
+            @format="formatBody"
             @update:search-query="searchQuery = $event"
             @update:replacement-text="replacementText = $event"
             @update:entry-search-query="entrySearchQuery = $event"
@@ -2094,57 +2049,21 @@ onBeforeUnmount(() => {
                 />
                 <div class="long-story-plot-text-toolbar">
                   <div
-                    class="long-editor-view-tabs"
-                    role="tablist"
-                    aria-label="文本视图"
-                  >
-                    <button
-                      type="button"
-                      role="tab"
-                      :aria-selected="viewMode === 'edit'"
-                      :class="{ 'is-active': viewMode === 'edit' }"
-                      :disabled="!canUseTextTools"
-                      @click="setViewMode('edit')"
-                    >
-                      编辑
-                    </button>
-                    <button
-                      type="button"
-                      role="tab"
-                      :aria-selected="viewMode === 'preview'"
-                      :class="{ 'is-active': viewMode === 'preview' }"
-                      :disabled="!canUseTextTools"
-                      @click="setViewMode('preview')"
-                    >
-                      预览
-                    </button>
-                  </div>
-                  <span class="long-toolbar-separator" />
-                  <div
                     ref="editorToolsElement"
                     class="long-editor-text-tools"
                     role="group"
                     aria-label="文本操作"
                   >
-                    <EditorTextTools
+                    <LongEditorToolControls
+                      v-model:find-panel-element="findPanelElement"
+                      v-model:find-input="findInput"
                       :can-undo="canUndo"
                       :can-redo="canRedo"
-                      :disabled="!canUseTextTools"
+                      :can-use-text-tools="canUseTextTools"
                       :find-panel-open="findPanelOpen"
                       :find-panel-mode="findPanelMode"
                       :format-visible="bodyFormatVisible"
                       :format-disabled="bodyFormatDisabled"
-                      @undo="undo"
-                      @redo="redo"
-                      @toggle-find="toggleFindPanel"
-                      @format="formatBody"
-                    />
-
-                    <LongEditorFindReplaceBar
-                      v-if="findPanelOpen"
-                      v-model:find-panel-element="findPanelElement"
-                      v-model:find-input="findInput"
-                      :find-panel-mode="findPanelMode"
                       :search-query="searchQuery"
                       :replacement-text="replacementText"
                       :search-result-label="searchResultLabel"
@@ -2154,6 +2073,10 @@ onBeforeUnmount(() => {
                       :active-entry-search-index="activeEntrySearchIndex"
                       :entry-search-pending="entrySearchPending"
                       :entry-search-result-label="entrySearchResultLabel"
+                      @undo="undo"
+                      @redo="redo"
+                      @toggle-find="toggleFindPanel"
+                      @format="formatBody"
                       @update:search-query="searchQuery = $event"
                       @update:replacement-text="replacementText = $event"
                       @update:entry-search-query="entrySearchQuery = $event"
@@ -2169,7 +2092,6 @@ onBeforeUnmount(() => {
                   </div>
                 </div>
                 <EditorSearchHighlight
-                  v-if="viewMode === 'edit'"
                   :content="currentVisibleContent"
                   :matches="searchMatches"
                   :active-index="currentMatchIndex"
@@ -2189,20 +2111,6 @@ onBeforeUnmount(() => {
                     @scroll="handleEditorScroll"
                   />
                 </EditorSearchHighlight>
-                <article
-                  v-else
-                  ref="documentPreview"
-                  class="long-document-preview long-story-plot-editor"
-                  @contextmenu="handlePreviewContextMenu"
-                  @scroll="handleEditorScroll"
-                >
-                  <MarkdownContent
-                    v-if="currentVisibleContent.trim()"
-                    :content="currentVisibleContent"
-                    annotate-headings
-                  />
-                  <p v-else class="is-empty">暂无故事情节正文</p>
-                </article>
               </div>
               <div v-else class="long-story-plot-detail-empty">
                 <AppIcon name="sparkles" :size="26" />
@@ -2420,7 +2328,6 @@ onBeforeUnmount(() => {
               {{ currentDocumentTitle }}
             </h1>
             <EditorSearchHighlight
-              v-if="viewMode === 'edit'"
               :content="currentVisibleContent"
               :matches="searchMatches"
               :active-index="currentMatchIndex"
@@ -2448,32 +2355,6 @@ onBeforeUnmount(() => {
                 @scroll="handleEditorScroll"
               />
             </EditorSearchHighlight>
-            <article
-              v-else
-              ref="documentPreview"
-              class="long-document-preview"
-              @contextmenu="handlePreviewContextMenu"
-              @scroll="handleEditorScroll"
-            >
-              <MarkdownContent
-                v-if="currentVisibleContent.trim()"
-                :content="currentVisibleContent"
-                annotate-headings
-              />
-              <p v-else class="is-empty">
-                {{
-                  currentIsPlotPointStoryline
-                    ? "暂无故事情节"
-                    : currentIsPlotPointSummary
-                      ? "暂无概要"
-                      : currentIsChapterCardContent
-                        ? "暂无章卡内容"
-                        : currentIsVolumeOutline
-                          ? "暂无卷纲"
-                          : "暂无正文"
-                }}
-              </p>
-            </article>
           </template>
         </div>
         <div
@@ -2933,8 +2814,7 @@ onBeforeUnmount(() => {
   background: var(--surface-muted);
 }
 
-.long-editor-file-tabs,
-.long-editor-view-tabs {
+.long-editor-file-tabs {
   display: flex;
   align-items: center;
   padding: 2px;
@@ -2952,8 +2832,7 @@ onBeforeUnmount(() => {
   display: none;
 }
 
-.long-editor-file-tabs button,
-.long-editor-view-tabs button {
+.long-editor-file-tabs button {
   flex: 0 0 auto;
   height: max(25px, 1.85em);
   padding: 0 9px;
@@ -2964,15 +2843,13 @@ onBeforeUnmount(() => {
   cursor: pointer;
 }
 
-.long-editor-file-tabs button.is-active,
-.long-editor-view-tabs button.is-active {
+.long-editor-file-tabs button.is-active {
   background: var(--surface-main);
   color: var(--text-primary);
   box-shadow: 0 1px 2px rgb(24 26 28 / 8%);
 }
 
-.long-editor-file-tabs button:disabled,
-.long-editor-view-tabs button:disabled {
+.long-editor-file-tabs button:disabled {
   cursor: default;
   opacity: 0.45;
 }
@@ -3182,8 +3059,7 @@ onBeforeUnmount(() => {
   color: var(--text-primary);
 }
 
-.long-document-editor,
-.long-document-preview {
+.long-document-editor {
   width: 100%;
   min-height: 0;
   padding: 0 var(--long-document-inline-padding) 80px;
@@ -3197,9 +3073,6 @@ onBeforeUnmount(() => {
   font-size: 1.07143rem;
   line-height: 1.95;
   letter-spacing: 0.025em;
-}
-
-.long-document-editor {
   resize: none;
   white-space: pre-wrap;
 }
@@ -3217,14 +3090,6 @@ onBeforeUnmount(() => {
 
 .long-document-editor[readonly] {
   color: var(--text-secondary);
-}
-
-.long-document-preview :deep(.markdown-content) {
-  white-space: normal;
-}
-
-.long-document-preview .is-empty {
-  color: var(--text-tertiary);
 }
 
 .long-worldbuilding-empty {

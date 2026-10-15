@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import {
   replaceChapterVisualText,
   splitChapterVisualSegments,
@@ -7,6 +7,7 @@ import {
   type ChapterVisualSelection,
   type ChapterVisualSegment
 } from "./chapterVisualSegments";
+import { revealChapterCaret } from "./revealChapterCaret";
 
 const props = defineProps<{
   content: string;
@@ -38,17 +39,6 @@ function textareaFor(index: number): HTMLTextAreaElement | null {
       `textarea[data-segment-index="${index}"]`
     ) ?? null
   );
-}
-
-function resize(input: HTMLTextAreaElement): void {
-  input.style.height = "auto";
-  input.style.height = `${Math.max(input.scrollHeight, 38)}px`;
-}
-
-function resizeAll(): void {
-  root.value
-    ?.querySelectorAll("textarea")
-    .forEach((element) => resize(element));
 }
 
 function sourceSelection(
@@ -88,7 +78,6 @@ function onInput(segment: ChapterVisualSegment, event: Event): void {
   const before = selectionBefore ?? lastSelection;
   selectionBefore = undefined;
   lastSelection = after;
-  resize(input);
   if (content === props.content) return;
   localContent = content;
   emit("input", {
@@ -101,7 +90,7 @@ function onInput(segment: ChapterVisualSegment, event: Event): void {
   emit("selection", after);
 }
 
-function focusRange(start: number, end = start): void {
+function focusRange(start: number, end = start, reveal = false): void {
   const index = segments.value.findIndex(
     (segment) =>
       segment.kind === "text" && segment.start <= start && start <= segment.end
@@ -122,7 +111,7 @@ function focusRange(start: number, end = start): void {
     Math.max(0, Math.min(start - part.start, part.source.length)),
     Math.max(0, Math.min(end - part.start, part.source.length))
   );
-  input.scrollIntoView({ block: "nearest" });
+  if (reveal) revealChapterCaret(input, input.selectionStart);
   lastSelection = sourceSelection(part, input);
   emit("selection", lastSelection);
 }
@@ -133,17 +122,14 @@ function getSelection(): ChapterVisualSelection {
 
 watch(
   () => props.content,
-  async (content) => {
+  (content) => {
     if (content === localContent) {
       localContent = undefined;
       return;
     }
     lastSelection = { start: 0, end: 0 };
-    await nextTick();
-    resizeAll();
   }
 );
-onMounted(resizeAll);
 defineExpose({ focusRange, getSelection });
 </script>
 

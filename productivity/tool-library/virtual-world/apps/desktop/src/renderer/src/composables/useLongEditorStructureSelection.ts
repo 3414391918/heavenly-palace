@@ -62,6 +62,7 @@ export interface LongEditorStructureHost {
 }
 
 export function useLongEditorStructureSelection(options: {
+  characterCoreOnly?: boolean;
   props: {
     bookId: string;
     selection: LongWorkspaceSelection | null;
@@ -257,6 +258,12 @@ export function useLongEditorStructureSelection(options: {
     () => {
       const selection = props.selection;
       if (!selection) return undefined;
+      if (
+        options.characterCoreOnly &&
+        selection.root === "character_design" &&
+        selection.characterId
+      )
+        return selection.files.find(({ role }) => role === "core-profile");
       const explicitlySelectedFile = selection.preferredFileId
         ? selection.files.find(
             ({ file }) => file.id === selection.preferredFileId

@@ -6,7 +6,6 @@ import type {
 import { nextTick, onBeforeUnmount, ref, watch } from "vue";
 import DocumentMetaRow from "./DocumentMetaRow.vue";
 import EditorSearchHighlight from "./EditorSearchHighlight.vue";
-import MarkdownContent from "./MarkdownContent.vue";
 import ChapterImageActions from "../features/chapter-images/ChapterImageActions.vue";
 import type { ChapterImageContext } from "../features/chapter-images/useChapterImageActions";
 import ChapterImagePasteDialog from "../features/chapter-images/ChapterImagePasteDialog.vue";
@@ -68,10 +67,7 @@ const insertion = useChapterIllustrationInsertion({
   documentKey: () => props.documentKey,
   content: () => props.content,
   savedContent: () => props.savedContent,
-  blocked: () =>
-    props.readOnly ||
-    props.busy ||
-    (!props.visual && props.viewMode !== "edit"),
+  blocked: () => props.readOnly || props.busy,
   api: () => {
     const api = window.deepwrite?.long;
     if (!api) throw new Error("桌面图片服务不可用。");
@@ -112,8 +108,8 @@ function handleVisualSelection(selection: ChapterVisualSelection) {
   editorElement.value?.setSelectionRange(selection.start, selection.end);
 }
 
-function focusRange(start: number, end = start) {
-  visualEditor.value?.focusRange(start, end);
+function focusRange(start: number, end = start, reveal = false) {
+  visualEditor.value?.focusRange(start, end, reveal);
 }
 
 function getSelection(): ChapterVisualSelection | undefined {
@@ -191,7 +187,7 @@ function updateTitle(event: Event): void {
       readonly
     />
     <EditorSearchHighlight
-      v-else-if="viewMode === 'edit'"
+      v-else
       :content="content"
       :matches="searchMatches"
       :active-index="activeSearchIndex"
@@ -212,21 +208,19 @@ function updateTitle(event: Event): void {
       />
     </EditorSearchHighlight>
     <article
-      v-if="visual || viewMode === 'preview'"
+      v-if="visual"
       ref="previewElement"
       class="long-document-preview"
       @contextmenu="emit('previewContextmenu', $event)"
       @scroll="emit('editorScroll', $event)"
     >
       <ChapterImageActions
-        v-if="visual || content.trim()"
         :context="imageContext"
         :disabled="busy || readOnly"
         :resolve-image-url="resolveImageUrl"
         v-slot="{ resolveUrl }"
       >
         <ChapterVisualEditor
-          v-if="visual"
           ref="visualEditor"
           :content="content"
           :disabled="readOnly || busy || insertion.busy.value"
@@ -238,14 +232,7 @@ function updateTitle(event: Event): void {
           @keydown="emit('keydown', $event)"
           @text-contextmenu="handleVisualContextMenu"
         />
-        <MarkdownContent
-          v-else
-          :content="content"
-          :resolve-image-url="resolveUrl"
-          annotate-headings
-        />
       </ChapterImageActions>
-      <p v-else class="is-empty">暂无正文</p>
     </article>
   </section>
   <ChapterImagePasteDialog

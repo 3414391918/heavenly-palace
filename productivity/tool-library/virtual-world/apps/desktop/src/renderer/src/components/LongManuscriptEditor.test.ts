@@ -9,13 +9,12 @@ const editorImplementationSource = [editorSource, documentSessionSource].join(
 );
 
 describe("LongManuscriptEditor", () => {
-  it("owns the chapter body writing and preview surface", () => {
+  it("owns the chapter body writing surface", () => {
     expect(source).toContain('aria-label="章节正文编辑区"');
     expect(source).toContain('class="long-document-title-input"');
     expect(source).toContain('class="long-document-editor"');
     expect(source).toContain('class="long-document-preview"');
-    expect(source).toContain("<MarkdownContent");
-    expect(source).toContain("暂无正文");
+    expect(source).not.toContain("<MarkdownContent");
   });
 
   it("accepts a narrow manuscript projection and emits user intent", () => {
@@ -96,7 +95,7 @@ describe("LongManuscriptEditor", () => {
 
   it("keeps chapter text visible when editing is temporarily locked", () => {
     expect(source).toContain(`v-if="visual"`);
-    expect(source).toContain(`v-else-if="viewMode === 'edit'"`);
+    expect(source).toContain(`v-else`);
     expect(source).toContain("<ChapterVisualEditor");
     expect(source).toContain(
       ':disabled="readOnly || busy || insertion.busy.value"'
@@ -104,10 +103,7 @@ describe("LongManuscriptEditor", () => {
     expect(source).toContain(
       ':readonly="readOnly || busy || insertion.busy.value"'
     );
-    expect(editorSource).toContain(`v-if="viewMode === 'edit'"`);
-    expect(editorSource).not.toContain(
-      `v-if="viewMode === 'edit' && !currentReadOnly"`
-    );
+    expect(editorSource).not.toContain(`v-if="viewMode === 'edit'"`);
     expect(editorSource).toContain(
       ':readonly="currentReadOnly || isDocumentContentBusy"'
     );
@@ -124,11 +120,13 @@ describe("LongManuscriptEditor", () => {
     expect(source).toContain('ref="previewElement"');
   });
 
-  it("uses the persisted default mode while keeping read-only files in preview", () => {
+  it("always edits long-form files, including read-only files", () => {
     expect(editorSource).toContain("defaultViewMode: TextViewMode");
-    expect(editorSource).toContain("defaultMode: () => props.defaultViewMode");
     expect(editorSource).toContain("useLongEditorViewSession({");
-    expect(editorSource).toContain("() => props.defaultViewMode");
+    expect(editorSource).toContain("editOnly: true");
+    expect(editorSource).toContain(
+      "resetTextViewMode: () => resetToDefault(false)"
+    );
     expect(fileNavigationSource).toContain(
       "options.resetTextViewMode(selectedFile.readOnly)"
     );

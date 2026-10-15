@@ -34,14 +34,14 @@ describe("preview document outline", () => {
     expect(markdownContentSource).toContain("annotateHeadings: false");
   });
 
-  it("covers short, library, long-form, and story-plot text previews", () => {
+  it("covers short and library previews while long-form files stay editable", () => {
     expect(rightEditorSource).toContain("<EditorDocumentMetadata");
     expect(editorMetadataSource).toContain("<DocumentMetaRow");
     expect(rightEditorSource).toContain("annotate-headings");
     expect(longManuscriptSource).toContain("<DocumentMetaRow");
-    expect(longManuscriptSource).toContain("annotate-headings");
+    expect(longManuscriptSource).not.toContain("annotate-headings");
     expect(longWorkspaceSource.match(/<DocumentMetaRow/g)).toHaveLength(2);
-    expect(longWorkspaceSource.match(/annotate-headings/g)).toHaveLength(2);
+    expect(longWorkspaceSource).not.toContain("annotate-headings");
     expect(longWorkspaceSource).toContain("故事情节正文");
   });
 });

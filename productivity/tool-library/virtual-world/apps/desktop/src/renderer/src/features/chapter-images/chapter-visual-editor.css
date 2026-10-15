@@ -9,6 +9,7 @@
   display: block;
   width: 100%;
   min-height: 38px;
+  field-sizing: content;
   padding: 0;
   overflow: hidden;
   resize: none;
