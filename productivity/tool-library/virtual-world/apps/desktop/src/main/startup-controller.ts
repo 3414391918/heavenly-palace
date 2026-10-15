@@ -4,6 +4,7 @@ export type StartupPhase =
   | "runtime"
   | "services"
   | "workspace"
+  | "prompt-templates"
   | "appearance"
   | "settings"
   | "utilities"

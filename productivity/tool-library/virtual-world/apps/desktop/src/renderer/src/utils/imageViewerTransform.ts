@@ -3,6 +3,7 @@ export interface ImageTransform {
   x: number;
   y: number;
 }
+
 export function zoomTransform(
   current: ImageTransform,
   scale: number,
@@ -17,6 +18,7 @@ export function zoomTransform(
     y: cursorY - (cursorY - current.y) * ratio
   };
 }
+
 export function panTransform(
   current: ImageTransform,
   dx: number,

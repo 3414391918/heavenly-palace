@@ -67,6 +67,13 @@ import { conversationExport } from "./conversation-export-api";
 import { conversationPersistence } from "./conversation-persistence-api";
 import { desktopEvents } from "./desktop-events-api";
 import { fishAudio } from "./fish-audio-api";
+import {
+  copyPromptTemplateImage,
+  deletePromptTemplate,
+  listPromptTemplates,
+  readPromptTemplateImage,
+  savePromptTemplate
+} from "./prompt-template-api";
 import { browserId, invokeCommand } from "./invoke";
 import {
   deleteBook,
@@ -87,7 +94,6 @@ import {
   listGeneralSettings,
   listLibraryAgents,
   listLongAgents,
-  updateLongPromptTemplate,
   listWorkspaceDirectory,
   resetLibraryAgents,
   resetLongAgents,
@@ -179,9 +185,15 @@ const api: DeepWriteApi = {
   chatAssistantRoleplay,
   longAgents: {
     list: listLongAgents,
-    updatePromptTemplate: updateLongPromptTemplate,
     save: saveLongAgents,
     reset: resetLongAgents
+  },
+  promptTemplates: {
+    list: listPromptTemplates,
+    save: savePromptTemplate,
+    delete: deletePromptTemplate,
+    readImage: readPromptTemplateImage,
+    copyImage: copyPromptTemplateImage
   },
   agentTeams: {
     saveBuiltins: saveBuiltinSubagents,

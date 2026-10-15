@@ -59,6 +59,8 @@ export function buildWorkspaceFeatureModule(
       };
     case "voice-manager":
       return { kind: "voice-manager" };
+    case "prompt-templates":
+      return { kind: "prompt-templates" };
     case "conversation":
     case "long-workspace":
       return null;

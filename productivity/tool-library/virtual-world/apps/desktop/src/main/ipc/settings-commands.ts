@@ -10,6 +10,7 @@ import { handleAgentTeamCommands } from "./agent-team-commands";
 import { handleAppearanceCommands } from "./appearance-commands";
 import type { IpcCommandContext } from "./command-types";
 import { safeErrorDetails } from "./errors";
+import { handlePromptTemplateCommands } from "./prompt-template-commands";
 export async function handleSettingsCommands(
   ctx: IpcCommandContext,
   command: CommandEnvelope
@@ -132,30 +133,8 @@ export async function handleSettingsCommands(
       };
     }
   }
-  if (command.type === "longAgents.updatePromptTemplate") {
-    try {
-      return {
-        status: "accepted",
-        requestId: command.id,
-        payload: LongAgentSettingsSchema.parse(
-          await ctx
-            .requireLongAgentConfigStore()
-            .updatePromptTemplate(command.payload)
-        )
-      };
-    } catch (error: unknown) {
-      return {
-        status: "rejected",
-        requestId: command.id,
-        error: {
-          code: "long_agents.template_update_failed",
-          message:
-            error instanceof Error ? error.message : "保存提示词模板失败。",
-          details: safeErrorDetails(error)
-        }
-      };
-    }
-  }
+  const promptTemplateResult = await handlePromptTemplateCommands(ctx, command);
+  if (promptTemplateResult) return promptTemplateResult;
   if (command.type === "longAgents.save") {
     try {
       return {

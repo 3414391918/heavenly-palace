@@ -6,6 +6,7 @@ import type { RevisionAnalysisConfigStore } from "./extras/revision-analysis/con
 import type { AgentTeamConfigStore } from "./agent-team-config-store";
 import type { LibraryAgentConfigStore } from "./library-agent-config-store";
 import type { LongAgentConfigStore } from "./long-agent-config-store";
+import type { PromptTemplateStore } from "./prompt-template-store";
 import type { WorkspaceDirectoryStore } from "./workspace-directory-store";
 import type { AppearanceService } from "./appearance-service";
 import type { GeneralSettingsStore } from "./general-settings-store";
@@ -64,6 +65,11 @@ export function createDesktopServiceAccessors(
     }
     return longAgentConfigStore;
   }
+  function requirePromptTemplateStore(): PromptTemplateStore {
+    const store = getServices().promptTemplateStore;
+    if (!store) throw new Error("提示词模板存储尚未初始化。");
+    return store;
+  }
   function requireWorkspaceDirectoryStore(): WorkspaceDirectoryStore {
     const workspaceDirectoryStore = getServices().workspaceDirectoryStore;
     if (!workspaceDirectoryStore) {
@@ -98,6 +104,7 @@ export function createDesktopServiceAccessors(
     requireAgentTeamConfigStore,
     requireLibraryAgentConfigStore,
     requireLongAgentConfigStore,
+    requirePromptTemplateStore,
     requireWorkspaceDirectoryStore,
     requireAppearanceService,
     requireGeneralSettingsStore,

@@ -10,6 +10,8 @@ export const loadModelSettingsFeature = () =>
   import("./ModelSettingsFeature.vue");
 export const loadWorkspaceDirectoryFeature = () =>
   import("./WorkspaceDirectoryFeature.vue");
+export const loadPromptTemplateManager = () =>
+  import("./PromptTemplateManager.vue");
 export const loadWorkspaceFeatureModules = () =>
   import("./WorkspaceFeatureModules.vue");
 export const loadWorkspaceDialogLayer = () =>

@@ -79,6 +79,7 @@ export interface ModelsFeatureModule {
 
 export type WorkspaceFeatureModule =
   | { kind: "voice-manager" }
+  | { kind: "prompt-templates" }
   | {
       kind: "revision-analysis";
       controller:

@@ -171,6 +171,11 @@ child.on("close", async (code) => {
     !(summary.chapterImages?.imageBytes >= 8 * 1024 * 1024) ||
     summary.unifiedCreation?.created !== true ||
     summary.unifiedCreation?.team !== true ||
+    summary.unifiedCreation?.promptTemplates?.status !== "ok" ||
+    summary.unifiedCreation?.promptTemplates?.create !== true ||
+    summary.unifiedCreation?.promptTemplates?.reopen !== true ||
+    summary.unifiedCreation?.promptTemplates?.imagePreview !== true ||
+    summary.unifiedCreation?.promptTemplates?.delete !== true ||
     summary.unifiedCreation?.retiredApisAbsent !== true ||
     summary.agent?.status !== "ok" ||
     summary.agent?.runtime?.mode !== "local-faux" ||

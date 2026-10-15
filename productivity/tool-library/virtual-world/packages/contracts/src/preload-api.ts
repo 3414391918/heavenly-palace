@@ -198,11 +198,21 @@ export interface DeepWriteApi
   };
   longAgents: {
     list(): Promise<LongAgentSettings>;
-    updatePromptTemplate(
-      input: import("./prompt-templates").PromptTemplateUpdate
-    ): Promise<LongAgentSettings>;
     save(settings: LongAgentSettingsInput): Promise<LongAgentSettings>;
     reset(agentId?: LongAgentId): Promise<LongAgentSettings>;
+  };
+  promptTemplates: {
+    list(): Promise<import("./prompt-templates").PromptTemplate[]>;
+    save(
+      input: import("./prompt-templates").PromptTemplateSave
+    ): Promise<import("./prompt-templates").PromptTemplate[]>;
+    delete(id: string): Promise<import("./prompt-templates").PromptTemplate[]>;
+    readImage(
+      input: import("./prompt-templates").PromptTemplateImageRequest
+    ): Promise<import("./prompt-templates").PromptTemplateImageResult>;
+    copyImage(
+      input: import("./prompt-templates").PromptTemplateCopyImageInput
+    ): Promise<void>;
   };
   agentTeams: {
     saveBuiltins(

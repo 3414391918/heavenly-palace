@@ -37,7 +37,7 @@ it("describes making a new target appearance using only the chosen template asse
     `/tmp/example-book/source/assets/${"a".repeat(32)}.png`
   );
   expect(prompt).toContain("共 2 张");
-  expect(prompt).toContain("一张或多张");
+  expect(prompt).toContain("三、用户上传的参考形象");
   expect(prompt).toContain("特殊说明");
   expect(prompt).toContain("100 字");
   expect(prompt).toContain("1000 字");

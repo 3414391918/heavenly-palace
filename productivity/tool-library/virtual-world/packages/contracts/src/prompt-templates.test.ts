@@ -7,19 +7,27 @@ import {
 } from "./index";
 
 describe("prompt template public commands", () => {
-  it("accepts single-template saves and deletes through the command envelope", () => {
+  it("accepts independent template saves, deletes and image reads", () => {
     const template = {
       id: "template-one",
       name: "检查人物",
       content: "检查当前人物状态。"
     };
-    for (const payload of [
-      { action: "save", template },
-      { action: "delete", id: template.id }
-    ]) {
+    for (const [type, payload] of [
+      ["promptTemplates.save", { template, newImages: [] }],
+      ["promptTemplates.delete", { id: template.id }],
+      [
+        "promptTemplates.readImage",
+        { templateId: template.id, imageId: "image-one" }
+      ],
+      [
+        "promptTemplates.copyImage",
+        { pngDataUrl: "data:image/png;base64,AA==" }
+      ]
+    ] as const) {
       expect(
         CommandEnvelopeSchema.parse(
-          createEnvelope("longAgents.updatePromptTemplate", payload, {
+          createEnvelope(type, payload, {
             id: "cmd_template_test"
           })
         ).payload

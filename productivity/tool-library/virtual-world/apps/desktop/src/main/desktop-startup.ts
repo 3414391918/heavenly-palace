@@ -11,6 +11,7 @@ const phaseLabels: Record<StartupPhase, string> = {
   runtime: "初始化运行环境",
   services: "初始化本地服务",
   workspace: "读取工作目录配置",
+  "prompt-templates": "迁移提示词模板",
   appearance: "读取外观设置",
   settings: "读取常规设置",
   utilities: "启动后台服务",

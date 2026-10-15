@@ -33,7 +33,6 @@ import AgentActivityFloatPanel from "./AgentActivityFloatPanel.vue";
 import AgentUserInputCard from "./AgentUserInputCard.vue";
 import ConversationComposer from "./ConversationComposer.vue";
 import ConversationMessageList from "./ConversationMessageList.vue";
-import ConversationPromptTemplates from "./ConversationPromptTemplates.vue";
 import ConversationTurnNavigator from "./ConversationTurnNavigator.vue";
 import { AGENT_ACTIVITY_CONTEXT_KEY } from "../composables/agentActivityContext";
 
@@ -333,9 +332,7 @@ const {
         @locate-long-proposal="emit('locateLongProposal', $event)"
         @insert-selection="insertConversationReference"
       >
-        <template v-if="agentId" #welcome-actions>
-          <ConversationPromptTemplates @use="applySuggestion" />
-        </template>
+        <template v-if="agentId" #welcome-actions />
       </ConversationMessageList>
 
       <ConversationTurnNavigator

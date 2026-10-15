@@ -231,6 +231,7 @@ const {
   requireAgentTeamConfigStore,
   requireLibraryAgentConfigStore,
   requireLongAgentConfigStore,
+  requirePromptTemplateStore,
   requireWorkspaceDirectoryStore,
   requireAppearanceService,
   requireGeneralSettingsStore,
@@ -301,6 +302,7 @@ function registerIpc(): void {
       requireAgentTeamConfigStore,
       requireLibraryAgentConfigStore,
       requireLongAgentConfigStore,
+      requirePromptTemplateStore,
       requireWorkspaceDirectoryStore,
       requireAppearanceService,
       requireGeneralSettingsStore,
@@ -365,6 +367,15 @@ if (!hasSingleInstanceLock) {
         app.getPath("documents")
       )
     );
+    await desktopStartup.step("prompt-templates", async () => {
+      try {
+        await services.promptTemplateStore.list();
+      } catch (error) {
+        desktopStartup.log.write("prompt-templates.migration_failed", {
+          error
+        });
+      }
+    });
     await desktopStartup.step("appearance", loadAndSyncNativeAppearanceChrome);
     await desktopStartup.step("settings", async () => {
       syncGeneralSettings(

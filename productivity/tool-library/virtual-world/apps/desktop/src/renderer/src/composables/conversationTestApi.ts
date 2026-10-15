@@ -87,11 +87,6 @@ export function createConversationTestApi(
       }
     },
     longAgents: {
-      async updatePromptTemplate() {
-        throw new Error(
-          "Prompt template editing is not used by conversation tests."
-        );
-      },
       async list() {
         return structuredClone(DEFAULT_LONG_AGENT_SETTINGS);
       },
@@ -100,6 +95,23 @@ export function createConversationTestApi(
       },
       async reset() {
         return structuredClone(DEFAULT_LONG_AGENT_SETTINGS);
+      }
+    },
+    promptTemplates: {
+      async list() {
+        return [];
+      },
+      async save() {
+        return [];
+      },
+      async delete() {
+        return [];
+      },
+      async readImage() {
+        return { pngDataUrl: "" };
+      },
+      async copyImage() {
+        return;
       }
     },
     agentTeams: createAgentTeamsTestApi(),

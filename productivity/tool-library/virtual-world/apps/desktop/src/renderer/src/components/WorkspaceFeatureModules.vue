@@ -22,7 +22,8 @@ import {
   RevisionAnalysisPage,
   ModelSettingsFeature,
   SettingsPage,
-  WorkspaceDirectoryFeature
+  WorkspaceDirectoryFeature,
+  PromptTemplateManager
 } from "./lazyAppComponents";
 import type { WorkspaceFeatureModule } from "./WorkspaceFeatureModules.types";
 import WorkspaceFeatureFrame from "./WorkspaceFeatureFrame.vue";
@@ -86,7 +87,16 @@ const emit = defineEmits<{
 
 <template>
   <WorkspaceFeatureFrame
-    v-if="module.kind === 'voice-manager'"
+    v-if="module.kind === 'prompt-templates'"
+    class="workspace-settings-main-view"
+    :left-collapsed="leftCollapsed"
+    expand-button-class="workspace-settings-expand-sidebar"
+    label="提示词模板"
+    @expand-left="emit('expandLeft')"
+    ><PromptTemplateManager
+  /></WorkspaceFeatureFrame>
+  <WorkspaceFeatureFrame
+    v-else-if="module.kind === 'voice-manager'"
     :left-collapsed="leftCollapsed"
     expand-button-class="fish-manager-expand-sidebar"
     label="声音管理"

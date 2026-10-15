@@ -7,6 +7,7 @@ import { GeneralSettingsStore } from "./general-settings-store";
 import { FishAudioService } from "./fish-audio-service";
 import { LibraryAgentConfigStore } from "./library-agent-config-store";
 import { LongAgentConfigStore } from "./long-agent-config-store";
+import { PromptTemplateStore } from "./prompt-template-store";
 import { ModelConfigStore } from "./model-config-store";
 import { ModelUsageStore } from "./model-usage-store";
 import { SoftwareTokenUsageReporter } from "./software-token-usage-reporter";
@@ -36,6 +37,10 @@ export function createDesktopServices(options: DesktopServiceOptions) {
     agentTeamConfigStore: new AgentTeamConfigStore(userDataPath),
     libraryAgentConfigStore: new LibraryAgentConfigStore(userDataPath),
     longAgentConfigStore: new LongAgentConfigStore(userDataPath),
+    promptTemplateStore: new PromptTemplateStore(
+      userDataPath,
+      workspaceDirectoryStore
+    ),
     revisionAnalysisConfigStore: new RevisionAnalysisConfigStore(userDataPath),
     workspaceDirectoryStore,
     appearanceService: new AppearanceService(userDataPath),

@@ -32,6 +32,9 @@ export const ModelSettingsFeature = lazyFeature((features) =>
 export const WorkspaceDirectoryFeature = lazyFeature((features) =>
   features.loadWorkspaceDirectoryFeature()
 );
+export const PromptTemplateManager = lazyFeature((features) =>
+  features.loadPromptTemplateManager()
+);
 export const WorkspaceFeatureModules = lazyFeature((features) =>
   features.loadWorkspaceFeatureModules()
 );

@@ -17,9 +17,15 @@ import {
 import {
   LongAgentsListCommandEnvelopeSchema,
   LongAgentsResetCommandEnvelopeSchema,
-  LongAgentsSaveCommandEnvelopeSchema,
-  LongAgentsUpdatePromptTemplateCommandEnvelopeSchema
+  LongAgentsSaveCommandEnvelopeSchema
 } from "./long-agent-settings";
+import {
+  PromptTemplatesCopyImageCommandEnvelopeSchema,
+  PromptTemplatesDeleteCommandEnvelopeSchema,
+  PromptTemplatesListCommandEnvelopeSchema,
+  PromptTemplatesReadImageCommandEnvelopeSchema,
+  PromptTemplatesSaveCommandEnvelopeSchema
+} from "./prompt-templates";
 import {
   WorkspaceDirectoryChooseCommandEnvelopeSchema,
   WorkspaceDirectoryListCommandEnvelopeSchema
@@ -28,7 +34,11 @@ import {
 export const SettingsCommandEnvelopeSchemas = [
   LongAgentsListCommandEnvelopeSchema,
   LongAgentsSaveCommandEnvelopeSchema,
-  LongAgentsUpdatePromptTemplateCommandEnvelopeSchema,
+  PromptTemplatesListCommandEnvelopeSchema,
+  PromptTemplatesSaveCommandEnvelopeSchema,
+  PromptTemplatesDeleteCommandEnvelopeSchema,
+  PromptTemplatesReadImageCommandEnvelopeSchema,
+  PromptTemplatesCopyImageCommandEnvelopeSchema,
   LongAgentsResetCommandEnvelopeSchema,
   LibraryAgentsListCommandEnvelopeSchema,
   LibraryAgentsSaveCommandEnvelopeSchema,

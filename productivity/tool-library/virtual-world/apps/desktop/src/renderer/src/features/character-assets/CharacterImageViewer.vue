@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import CharacterAssetDialog from "./CharacterAssetDialog.vue";
-import { zoomTransform, panTransform } from "./viewer-transform";
+import { zoomTransform, panTransform } from "../../utils/imageViewerTransform";
 const props = defineProps<{ src: string; label: string; copying: boolean }>();
 const emit = defineEmits<{ close: []; copy: [] }>();
 const transform = ref({ scale: 1, x: 0, y: 0 });

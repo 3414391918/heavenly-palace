@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { zoomTransform, panTransform } from "./viewer-transform";
+import { zoomTransform, panTransform } from "../../utils/imageViewerTransform";
 
 describe("image viewer transforms", () => {
   it("keeps the image point under the cursor while zooming", () => {

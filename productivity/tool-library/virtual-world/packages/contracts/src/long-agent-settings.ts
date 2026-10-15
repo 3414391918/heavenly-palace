@@ -1,10 +1,6 @@
 import { z } from "zod";
 import { EnvelopeBaseSchema } from "./envelope";
 import {
-  PromptTemplatesSchema,
-  PromptTemplateUpdateSchema
-} from "./prompt-templates";
-import {
   DEFAULT_LONG_AGENT_PROFILES,
   LONG_AGENT_IDS,
   LongAgentIdSchema,
@@ -72,7 +68,6 @@ function validateImmutableLongAgentFields(
 export const LongAgentSettingsSchema = z
   .object({
     workspaceType: z.literal("long"),
-    promptTemplates: PromptTemplatesSchema.optional(),
     agents: z.array(LongAgentProfileSchema).length(LONG_AGENT_IDS.length)
   })
   .strict()
@@ -148,12 +143,6 @@ export const LongAgentsResetCommandEnvelopeSchema = EnvelopeBaseSchema.extend({
     })
     .strict()
 });
-
-export const LongAgentsUpdatePromptTemplateCommandEnvelopeSchema =
-  EnvelopeBaseSchema.extend({
-    type: z.literal("longAgents.updatePromptTemplate"),
-    payload: PromptTemplateUpdateSchema
-  });
 
 export type LongAgentsListCommandEnvelope = z.infer<
   typeof LongAgentsListCommandEnvelopeSchema

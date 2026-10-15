@@ -6,6 +6,7 @@ export type WorkspaceMainView =
   | "models"
   | "revision-analysis"
   | "voice-manager"
+  | "prompt-templates"
   | "agent-team";
 
 export type PrimaryFeature =
@@ -13,6 +14,7 @@ export type PrimaryFeature =
   | "models"
   | "revision-analysis"
   | "voice-manager"
+  | "prompt-templates"
   | "agent-teams";
 
 export function primaryFeatureForView(
@@ -25,6 +27,7 @@ export function primaryFeatureForView(
     case "models":
     case "revision-analysis":
     case "voice-manager":
+    case "prompt-templates":
       return view;
     default:
       return undefined;
