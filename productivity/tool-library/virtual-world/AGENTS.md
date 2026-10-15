@@ -28,7 +28,8 @@ virtual-world/
 ├── packages/contracts/           # 命令、事件、领域模型的 Zod 契约
 ├── packages/pi-runtime-adapter/  # Agent Runtime 与受控工具适配
 ├── packages/shared/              # 无业务语义的 ID / 时间工具
-├── tools/                        # 边界检查、Electron 运行时、测试包编排
+├── toolkit/                      # 工作目录可编辑工具模板、独立 CLI 引擎入口
+├── tools/                        # 边界检查、Electron 运行时、工具构建、测试包编排
 └── docs/images/                  # README 配图
 ```
 
@@ -38,6 +39,17 @@ virtual-world/
 - 本地作品以文件夹为单位，清单文件固定为 `deepwrite.json`，正文与设定使用 UTF-8 Markdown。小说统一走 `long-project-store` 与 `long-workspace-service`；素材库/技能库走 `folder-catalog-store`。已有小说的 `deepwrite.json`、`long/` 路径和技术标识保持兼容；不再创建短篇或剧本工作区。Core 必须原子写入，智能体对文稿的修改先以 proposal 事件展示差异，用户接受后才由 Core 落盘；不得让 Agent 或 Renderer 静默覆盖较新版本。
 - Renderer 以 `WorkspaceShell.vue` 为工作台壳：默认三栏写作面留在入口 chunk，设置、小说工作区、修改分析等用 `lazyAppComponents` 按需加载。界面状态放 `stores/`，跨组件编排放 `composables/`，领域页面可放 `features/` 或 `extras/`。主进程可选能力（如修改分析）放 `apps/desktop/src/extras/`，对应界面放 `renderer/src/extras/`，由 Main 注册专用 IPC，并复用同一套 contracts。新增功能先扩现有 coordinator / store / Utility handler；只有新的可选能力才新增 extras，不得把业务写入逻辑放进组件或 Preload。
 - electron-vite 的打包入口固定为 Main `src/main/index.ts`、三个 Utility（`core-entry` / `agent-entry` / `tool-entry`）、Preload 与 Renderer。改进程边界、新增 Utility 或调整 `files` 时，必须同步 `apps/desktop/electron.vite.config.ts`、supervisor 启动路径、冒烟脚本和边界检查；不得把运行时依赖改回塞进 ASAR 的 pnpm 树，除非同时更新 before-build 钩子并补安装包内验证。
+
+## 当前手动界面与外部工具边界
+
+本节替代上文关于三栏界面、内置智能体审批和修改分析的旧描述。界面采用左侧目录加全宽手动编辑；主智能体 UI、子智能体团队 UI、修改分析和设置中的创作分组已删除。模型配置与独立模型调用保留，用于声音创建等界面功能。
+
+- 应用内写入仍由 Core 管理。外部 Agent 通过工作目录的独立 CLI 直接管理小说和资料库，复用相同领域实现，不依赖 Electron、IPC、桌面注册表或内置审批 UI。结构变更保留 preview/expectedImpact 合同；Markdown 沿用现有保存语义，CLI 可用读取的哈希额外检查外部修改。
+- 工作目录 `tools/<id>/tool.json` 定义名称、入口和关联工具；说明、CLI 和 runtime 均可在工具管理中编辑。编辑器展示正向关联和反向引用并可逐级跳转，不在 Electron 中执行用户脚本。
+- `toolkit/defaults` 与 `toolkit/src` 是默认工具的构建源；`tools/build-toolkit.mjs` 输出到 desktop/out/toolkit，首次使用时复制进工作目录。初始化后不得覆盖用户文件或恢复用户删除的工具；原提示词仅在首次安装时迁入。
+- 独立工具要求 Node.js 24+，可单独复制运行，无需 node_modules、模型密钥或桌面 userData。新增操作先定义 contracts schema，再复用小说/资料库领域实现，禁止另建小说文件格式。
+- CLI 新建小说/资料库留下待发现标记，应用读取目录时注册，成功后移除；不重新注册已移除且无标记的旧项目。工具编辑保存校验文件哈希；路径拒绝目录穿越与符号链接。删除工具需用户确认，有其它工具引用时先解除关联。
+- `pnpm verify` 包含独立工具冒烟，验证脱离 Electron 与 node_modules 的工具副本仍可工作。
 
 ## 代码体量、拆分与耦合
 

@@ -170,7 +170,10 @@ child.on("close", async (code) => {
     summary.chapterImages?.illustration?.reopened !== true ||
     !(summary.chapterImages?.imageBytes >= 8 * 1024 * 1024) ||
     summary.unifiedCreation?.created !== true ||
-    summary.unifiedCreation?.team !== true ||
+    summary.unifiedCreation?.tools?.status !== "ok" ||
+    summary.unifiedCreation?.tools?.linkedNavigation !== true ||
+    summary.unifiedCreation?.tools?.scriptEdit !== true ||
+    summary.unifiedCreation?.tools?.confirmedDelete !== true ||
     summary.unifiedCreation?.promptTemplates?.status !== "ok" ||
     summary.unifiedCreation?.promptTemplates?.create !== true ||
     summary.unifiedCreation?.promptTemplates?.reopen !== true ||
@@ -197,6 +200,6 @@ child.on("close", async (code) => {
   }
 
   console.log(
-    `Electron smoke passed: utilities, Pi/Faux completion, conversation persistence, unified novel/team creation, large chapter-image (${summary.chapterImages.imageBytes} bytes) clipboard/replace/reopen/render through real IPC with unchanged references, chapter illustration add/cancel/numbering/undo/redo/preview/reopen, editor preview mode/scroll preservation, and character appearance create/copy/refresh/render/permanent-delete/cancel/lock/other-appearance retention.`
+    `Electron smoke passed: utilities, model calling, unified novel creation, independent tool editor/save/linked navigation/script edit/confirmed deletion, templates, large chapter-image (${summary.chapterImages.imageBytes} bytes) clipboard/replace/reopen/render through real IPC with unchanged references, chapter illustration add/cancel/numbering/undo/redo/preview/reopen, editor preview mode/scroll preservation, and character appearance create/copy/refresh/render/permanent-delete/cancel/lock/other-appearance retention.`
   );
 });

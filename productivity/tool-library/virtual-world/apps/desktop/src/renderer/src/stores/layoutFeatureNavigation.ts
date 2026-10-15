@@ -1,6 +1,7 @@
 export type AppView = "workspace" | "settings";
 
 export type WorkspaceMainView =
+  | "tools"
   | "conversation"
   | "directory"
   | "models"
@@ -10,6 +11,7 @@ export type WorkspaceMainView =
   | "agent-team";
 
 export type PrimaryFeature =
+  | "tools"
   | "directory"
   | "models"
   | "revision-analysis"
@@ -21,6 +23,8 @@ export function primaryFeatureForView(
   view: WorkspaceMainView
 ): PrimaryFeature | undefined {
   switch (view) {
+    case "tools":
+      return "tools";
     case "agent-team":
       return "agent-teams";
     case "directory":

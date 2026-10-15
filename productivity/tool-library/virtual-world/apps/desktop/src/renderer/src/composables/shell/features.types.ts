@@ -1,22 +1,8 @@
-import { useBookAnalysisFeatures } from "../../composables/useBookAnalysisFeatures";
-import { useLazySubagentAuthoringController } from "../../composables/useLazyFeatureControllers";
 import { useSettingsFeatureCoordinator } from "../../composables/useSettingsFeatureCoordinator";
 import { useWorkspaceDialogModuleCoordinator } from "../../composables/useWorkspaceDialogModuleCoordinator";
 import { useWorkspaceFeatureHostCoordinator } from "../../composables/useWorkspaceFeatureHostCoordinator";
 import { useCreativeBookCreation } from "../../composables/useCreativeBookCreation";
 export interface FeaturesRuntime {
-  revisionAnalysisFeature: ReturnType<
-    typeof useBookAnalysisFeatures
-  >["revisionAnalysisFeature"];
-  revisionAnalysisRunning: ReturnType<
-    typeof useBookAnalysisFeatures
-  >["revisionAnalysisRunning"];
-  disposeAnalysisFeatures: ReturnType<
-    typeof useBookAnalysisFeatures
-  >["disposeAnalysisFeatures"];
-  subagentAuthoringFeature: ReturnType<
-    typeof useLazySubagentAuthoringController
-  >;
   featureHost: ReturnType<typeof useWorkspaceFeatureHostCoordinator>;
   isLongWorkspaceActive: ReturnType<
     typeof useWorkspaceFeatureHostCoordinator

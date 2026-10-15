@@ -18,6 +18,8 @@ import { handleModelCommands } from "./model-commands";
 import { handleRendererStateCommands } from "./renderer-state-commands";
 import { handleSessionCommands } from "./session-commands";
 import { handleSettingsCommands } from "./settings-commands";
+import { handleToolLibraryCommands } from "./tool-library-commands";
+import { discoverToolCreatedProjects } from "../tool-created-projects";
 
 export async function dispatchCommand(
   ctx: IpcCommandContext,
@@ -43,14 +45,13 @@ export async function dispatchCommand(
     };
   }
 
+  await discoverToolCreatedProjects(ctx, command);
   const result =
     ctx.rendererStateFlush.handleCommand(ctx.senderWebContentsId, command) ??
+    (await handleToolLibraryCommands(ctx, command)) ??
     (await handleFishAudioCommands(ctx, command)) ??
     (await handleChapterImageCommands(ctx, command)) ??
     (await handleCharacterAssetCommands(ctx, command)) ??
-    (command.type.startsWith("revisionAnalysisSettings.")
-      ? await ctx.requireRevisionAnalysisConfigStore().handle(command)
-      : undefined) ??
     (await handleAgentTeamCommands(ctx, command)) ??
     (await handleManuscriptCommands(ctx, command)) ??
     (await handleSettingsCommands(ctx, command)) ??

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, ref } from "vue";
+import { onBeforeUnmount } from "vue";
 import type {
   BookResourceDialogMode,
   CatalogResourceNodeActionPayload,
@@ -11,7 +11,6 @@ import type {
   ResourceTreeNode,
   ResourceTreeSection
 } from "../types/workspace";
-import { moreFeatures } from "./sidebarMoreFeatures";
 import AppIcon from "./AppIcon.vue";
 import SidebarResourceList from "./SidebarResourceList.vue";
 import SidebarProfileMenu from "./SidebarProfileMenu.vue";
@@ -20,7 +19,6 @@ import { createTransientScrollbarController } from "../utils/transientScrollbar"
 const props = defineProps<{
   sections: ResourceTreeSection[];
   selectedId: string;
-  revisionAnalysisRunning?: boolean;
   libraryEntryClipboardDomain?: "skill" | "material" | undefined;
   activePrimaryFeature: PrimaryFeatureId | undefined;
   longTreeActionsDisabled?: boolean;
@@ -30,7 +28,6 @@ const emit = defineEmits<{
   collapse: [];
   createBook: [];
   openDialog: [mode: DialogMode];
-  openAgentTeams: [];
   openSettings: [];
   selectResource: [node: ResourceTreeNode];
   bookAction: [mode: BookResourceDialogMode, node: ResourceTreeNode];
@@ -78,28 +75,19 @@ type PrimaryFeatureId = DialogMode | "agent-teams";
 const navItems: Array<{
   id: PrimaryFeatureId;
   label: string;
-  icon: "directory" | "model" | "wand" | "brain" | "file";
+  icon: "directory" | "model" | "wand" | "brain" | "file" | "mic";
 }> = [
   { id: "directory", label: "工作目录", icon: "directory" },
   { id: "prompt-templates", label: "提示词模板", icon: "file" },
-  { id: "agent-teams", label: "子智能体团队", icon: "brain" }
+  { id: "tools", label: "工具管理", icon: "wand" },
+  { id: "voice-manager", label: "声音管理", icon: "mic" }
 ];
-
-const moreExpanded = ref(false);
-
-function activateMoreFeature(id: "revision-analysis" | "voice-manager"): void {
-  emit("openDialog", id);
-}
-
 function activateNav(id: "create-book" | PrimaryFeatureId): void {
   if (id === "create-book") {
     emit("createBook");
     return;
   }
-  if (id === "agent-teams") {
-    emit("openAgentTeams");
-    return;
-  }
+  if (id === "agent-teams") return;
   emit("openDialog", id);
 }
 </script>
@@ -154,55 +142,6 @@ function activateNav(id: "create-book" | PrimaryFeatureId): void {
           <AppIcon :name="item.icon" :size="17" />
           <span>{{ item.label }}</span>
         </button>
-
-        <button
-          class="nav-row more-toggle"
-          :class="{ 'is-expanded': moreExpanded }"
-          type="button"
-          data-nav-id="more"
-          :aria-expanded="moreExpanded"
-          aria-controls="more-feature-list"
-          @click="moreExpanded = !moreExpanded"
-        >
-          <AppIcon name="more" :size="17" />
-          <span>更多功能</span>
-          <AppIcon class="more-toggle-chevron" name="chevron" :size="13" />
-        </button>
-
-        <div
-          v-if="moreExpanded"
-          id="more-feature-list"
-          class="more-feature-list"
-        >
-          <button
-            v-for="feature in moreFeatures"
-            :key="feature.id"
-            class="more-feature-row"
-            :class="{ 'is-active': feature.id === props.activePrimaryFeature }"
-            type="button"
-            :data-feature-id="feature.id"
-            :title="feature.description"
-            :aria-current="
-              feature.id === props.activePrimaryFeature ? 'page' : undefined
-            "
-            @click="activateMoreFeature(feature.id)"
-          >
-            <span class="more-feature-icon"
-              ><AppIcon :name="feature.icon" :size="15"
-            /></span>
-            <span class="more-feature-copy">
-              <strong>{{ feature.label }}</strong>
-              <small>{{ feature.description }}</small>
-            </span>
-            <span
-              v-if="props.revisionAnalysisRunning"
-              class="nav-background-status"
-              title="修改分析正在后台运行"
-            >
-              <i aria-hidden="true" />后台中
-            </span>
-          </button>
-        </div>
       </nav>
 
       <SidebarResourceList

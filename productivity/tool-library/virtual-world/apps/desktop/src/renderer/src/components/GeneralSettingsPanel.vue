@@ -32,78 +32,10 @@ const languageOptions: Array<{ value: AppLanguage; label: string }> = [
   { value: "auto", label: "自动检测（简体中文）" },
   { value: "zh-CN", label: "简体中文" }
 ];
-const workspacePaneLayoutOptions: Array<{
-  value: WorkspacePaneLayout;
-  label: string;
-}> = [
-  { value: "agent-editor", label: "目录｜智能体｜文本内容" },
-  { value: "editor-agent", label: "目录｜文本内容｜智能体" }
-];
 </script>
 
 <template>
   <section class="settings-group">
-    <h2 class="settings-group-title">权限</h2>
-    <div
-      class="settings-card"
-      role="radiogroup"
-      aria-label="智能体默认审批方式"
-    >
-      <label class="settings-item">
-        <span class="settings-item-text"
-          ><strong>请求批准</strong
-          ><small>智能体修改或写入正文前，需要由你确认。</small></span
-        >
-        <span class="settings-toggle"
-          ><input
-            type="radio"
-            name="general-permission-mode"
-            :checked="permissionMode === 'request-approval'"
-            aria-label="请求批准"
-            @change="emit('updatePermissionMode', 'request-approval')"
-        /></span>
-      </label>
-      <label class="settings-item">
-        <span class="settings-item-text"
-          ><strong>替我审批</strong
-          ><small
-            >智能体产生写入后立即自动批准，并在后台串行保存。自动审批可能会出错。</small
-          ></span
-        >
-        <span class="settings-toggle"
-          ><input
-            type="radio"
-            name="general-permission-mode"
-            :checked="permissionMode === 'auto-approve'"
-            aria-label="替我审批"
-            @change="emit('updatePermissionMode', 'auto-approve')"
-        /></span>
-      </label>
-    </div>
-
-    <div class="settings-card">
-      <label class="settings-item">
-        <span class="settings-item-text"
-          ><strong>跨阶段操作自动审批</strong
-          ><small
-            >开启后，主智能体和子智能体的跨阶段操作将自动允许，不再逐笔询问；变更提案仍按上方审批方式处理。</small
-          ></span
-        >
-        <span class="settings-toggle"
-          ><input
-            type="checkbox"
-            :checked="autoApproveCrossStageOperations"
-            aria-label="跨阶段操作自动审批"
-            @change="
-              emit(
-                'updateAutoApproveCrossStageOperations',
-                ($event.target as HTMLInputElement).checked
-              )
-            "
-        /></span>
-      </label>
-    </div>
-
     <h2 class="settings-group-title">常规</h2>
     <div class="settings-card">
       <label class="settings-item">
@@ -123,26 +55,6 @@ const workspacePaneLayoutOptions: Array<{
             "
         /></span>
       </label>
-      <div class="settings-item settings-select-item">
-        <span class="settings-item-text"
-          ><strong>页面布局</strong
-          ><small>调整创作空间中智能体与文本内容的位置</small></span
-        >
-        <PopupSelect
-          class="general-select-control"
-          :model-value="workspacePaneLayout"
-          :options="workspacePaneLayoutOptions"
-          accessible-label="选择创作空间页面布局"
-          align="end"
-          :menu-min-width="238"
-          @update:model-value="
-            emit(
-              'updateWorkspacePaneLayout',
-              String($event) as WorkspacePaneLayout
-            )
-          "
-        />
-      </div>
       <div class="settings-item settings-select-item">
         <span class="settings-item-text"
           ><strong>语言</strong

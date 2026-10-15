@@ -227,11 +227,11 @@ const {
   requireModelConfigStore,
   requireModelUsageStore,
   requireChatAssistantProjectConfigStore,
-  requireRevisionAnalysisConfigStore,
   requireAgentTeamConfigStore,
   requireLibraryAgentConfigStore,
   requireLongAgentConfigStore,
   requirePromptTemplateStore,
+  requireToolLibraryStore,
   requireWorkspaceDirectoryStore,
   requireAppearanceService,
   requireGeneralSettingsStore,
@@ -298,11 +298,11 @@ function registerIpc(): void {
       requireModelConfigStore,
       requireModelUsageStore,
       requireChatAssistantProjectConfigStore,
-      requireRevisionAnalysisConfigStore,
       requireAgentTeamConfigStore,
       requireLibraryAgentConfigStore,
       requireLongAgentConfigStore,
       requirePromptTemplateStore,
+      requireToolLibraryStore,
       requireWorkspaceDirectoryStore,
       requireAppearanceService,
       requireGeneralSettingsStore,
@@ -354,6 +354,7 @@ if (!hasSingleInstanceLock) {
     const services = await desktopStartup.step("services", () =>
       createDesktopServices({
         userDataPath,
+        toolDefaultsDirectory: `${app.getAppPath()}/out/toolkit`,
         appVersion: app.getVersion(),
         installUpdate: () => beginGracefulShutdown({ installUpdate: true })
       })

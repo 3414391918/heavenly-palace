@@ -2,11 +2,11 @@ import type { createDesktopServices } from "./desktop-services";
 import type { ModelConfigStore } from "./model-config-store";
 import type { ModelUsageStore } from "./model-usage-store";
 import type { ChatAssistantProjectConfigStore } from "./chat-assistant-project-config-store";
-import type { RevisionAnalysisConfigStore } from "./extras/revision-analysis/config-store";
 import type { AgentTeamConfigStore } from "./agent-team-config-store";
 import type { LibraryAgentConfigStore } from "./library-agent-config-store";
 import type { LongAgentConfigStore } from "./long-agent-config-store";
 import type { PromptTemplateStore } from "./prompt-template-store";
+import type { ToolLibraryStore } from "./tool-library-store";
 import type { WorkspaceDirectoryStore } from "./workspace-directory-store";
 import type { AppearanceService } from "./appearance-service";
 import type { GeneralSettingsStore } from "./general-settings-store";
@@ -37,13 +37,6 @@ export function createDesktopServiceAccessors(
     }
     return chatAssistantProjectConfigStore;
   }
-  function requireRevisionAnalysisConfigStore(): RevisionAnalysisConfigStore {
-    const revisionAnalysisConfigStore =
-      getServices().revisionAnalysisConfigStore;
-    if (!revisionAnalysisConfigStore)
-      throw new Error("修改分析设置存储尚未初始化。");
-    return revisionAnalysisConfigStore;
-  }
   function requireAgentTeamConfigStore(): AgentTeamConfigStore {
     const agentTeamConfigStore = getServices().agentTeamConfigStore;
     if (!agentTeamConfigStore) {
@@ -68,6 +61,11 @@ export function createDesktopServiceAccessors(
   function requirePromptTemplateStore(): PromptTemplateStore {
     const store = getServices().promptTemplateStore;
     if (!store) throw new Error("提示词模板存储尚未初始化。");
+    return store;
+  }
+  function requireToolLibraryStore(): ToolLibraryStore {
+    const store = getServices().toolLibraryStore;
+    if (!store) throw new Error("工具管理尚未初始化。");
     return store;
   }
   function requireWorkspaceDirectoryStore(): WorkspaceDirectoryStore {
@@ -100,11 +98,11 @@ export function createDesktopServiceAccessors(
     requireModelConfigStore,
     requireModelUsageStore,
     requireChatAssistantProjectConfigStore,
-    requireRevisionAnalysisConfigStore,
     requireAgentTeamConfigStore,
     requireLibraryAgentConfigStore,
     requireLongAgentConfigStore,
     requirePromptTemplateStore,
+    requireToolLibraryStore,
     requireWorkspaceDirectoryStore,
     requireAppearanceService,
     requireGeneralSettingsStore,

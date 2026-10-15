@@ -2,9 +2,7 @@ import { computed } from "vue";
 import type { ShellRuntimePorts } from "./runtimePorts";
 import type { FeaturesRuntime } from "./features.types";
 import { deferShellAction } from "./deferShellAction";
-import { useBookAnalysisFeatures } from "../../composables/useBookAnalysisFeatures";
 import { MATERIAL_KIND_ALLOWED_STAGES } from "../../composables/useCatalogLibraryTransactionsCoordinator";
-import { useLazySubagentAuthoringController } from "../../composables/useLazyFeatureControllers";
 import { useSettingsFeatureCoordinator } from "../../composables/useSettingsFeatureCoordinator";
 import { useWorkspaceDialogModuleCoordinator } from "../../composables/useWorkspaceDialogModuleCoordinator";
 import { useWorkspaceFeatureHostCoordinator } from "../../composables/useWorkspaceFeatureHostCoordinator";
@@ -14,17 +12,6 @@ import { useCreativeBookCreation } from "../../composables/useCreativeBookCreati
 
 /** features assembly for the novel and library workspace. */
 export function useShellFeatures(ports: ShellRuntimePorts): FeaturesRuntime {
-  const {
-    revisionAnalysisFeature,
-    revisionAnalysisRunning,
-    configureAnalysisModels,
-    disposeAnalysisFeatures
-  } = useBookAnalysisFeatures(() => window.deepwrite);
-
-  const subagentAuthoringFeature = useLazySubagentAuthoringController({
-    api: () => window.deepwrite
-  });
-
   const featureHost = useWorkspaceFeatureHostCoordinator({
     api: () => window.deepwrite,
     view: {
@@ -35,10 +22,6 @@ export function useShellFeatures(ports: ShellRuntimePorts): FeaturesRuntime {
     },
     settingsStore: ports.state.settingsStore,
     catalogSnapshot: ports.state.catalogSnapshot,
-    features: {
-      revisionAnalysis: revisionAnalysisFeature,
-      subagentAuthoring: subagentAuthoringFeature
-    },
     actions: {
       saveActiveLongEditorBeforeLeaving: () =>
         ports.novel.saveActiveLongEditorBeforeLeaving(),
@@ -172,15 +155,10 @@ export function useShellFeatures(ports: ShellRuntimePorts): FeaturesRuntime {
     settingsStore: ports.state.settingsStore,
     notifications: uiMessage,
     onModelsLoaded(settings) {
-      configureAnalysisModels(settings.models, settings.defaultModelId);
       ports.conversations.applyModelSettingsToConversations(settings);
     }
   });
   return {
-    revisionAnalysisFeature,
-    revisionAnalysisRunning,
-    disposeAnalysisFeatures,
-    subagentAuthoringFeature,
     featureHost,
     isLongWorkspaceActive,
     activeFeature,

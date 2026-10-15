@@ -2,7 +2,6 @@ import toolsSource from "./EditorTextTools.vue?raw";
 import metadataSource from "./EditorDocumentMetadata.vue?raw";
 import { describe, expect, it } from "vitest";
 import { expectSourceToContain } from "../../../test-utils/sourceText";
-import appSource from "../test-support/workspaceShellSource";
 import editorSource from "./RightEditorPane.vue?raw";
 import headerSource from "./LibraryEditorHeader.vue?raw";
 const source = editorSource + headerSource;
@@ -20,16 +19,10 @@ const persistenceSource =
   persistenceCoordinatorSource + libraryPersistenceSource;
 
 describe("RightEditorPane expert draft navigation", () => {
-  it("expands a collapsed right-side agent when the editor is centered", () => {
-    expect(source).toContain("rightPaneCollapsed?: boolean");
-    expect(source).toContain('aria-label="展开智能体栏"');
-    expect(source).toContain("emit('toggleRight')");
-    expect(writingWorkspaceSource).toContain(
-      ":right-pane=\"paneLayout === 'agent-editor'\""
-    );
-    expect(writingWorkspaceSource).toContain(
-      "@toggle-right=\"emit('toggleRight')\""
-    );
+  it("uses the library editor as the full-width manual surface", () => {
+    expect(writingWorkspaceSource).toContain(':right-pane="false"');
+    expect(writingWorkspaceSource).toContain(':right-pane-collapsed="false"');
+    expect(writingWorkspaceSource).not.toContain("@toggle-right");
   });
 
   it("keeps automatic save status visually stable while preserving an immediate save action", () => {
@@ -197,18 +190,11 @@ describe("RightEditorPane expert draft navigation", () => {
     );
   });
 
-  it("shares selection insertion across creation, material, and skill documents", () => {
+  it("disables composer references while keeping native text context actions", () => {
     expect(writingWorkspaceSource).toContain("<RightEditorPane");
-    expect(writingWorkspaceSource).toContain(
-      "@insert-selection=\"emit('insertSelection', $event)\""
-    );
-    expect(appSource).toContain(
-      '@insert-selection="insertEditorSelectionReference"'
-    );
-    expect(source).toContain(
-      'props.document.domain === "material" ||\n      props.document.domain === "skill"'
-    );
-    expect(source).not.toContain("<EditorSelectionMenu");
+    expect(writingWorkspaceSource).not.toContain("@insert-selection");
+    expect(source).toContain("allowReferences: false");
+    expect(source).toContain('@contextmenu="handleEditorContextMenu"');
   });
 
   it("provides working text undo, redo, find, and replace controls", () => {

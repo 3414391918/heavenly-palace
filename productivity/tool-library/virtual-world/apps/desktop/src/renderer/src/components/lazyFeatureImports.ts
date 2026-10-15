@@ -1,8 +1,7 @@
 // Dependency preload manifests are loaded with optional features, never during workspace startup.
 export const loadAuthorSupportDialog = () =>
   import("./AuthorSupportDialog.vue");
-export const loadAgentTeamCatalogFeature = () =>
-  import("./AgentTeamCatalogFeature.vue");
+
 export const loadLongWorkspaceModule = () =>
   import("./LongWorkspaceModule.vue");
 export const loadSettingsPage = () => import("./SettingsPage.vue");
@@ -12,11 +11,12 @@ export const loadWorkspaceDirectoryFeature = () =>
   import("./WorkspaceDirectoryFeature.vue");
 export const loadPromptTemplateManager = () =>
   import("./PromptTemplateManager.vue");
+export const loadToolManager = () => import("./ToolManager.vue");
 export const loadWorkspaceFeatureModules = () =>
   import("./WorkspaceFeatureModules.vue");
 export const loadWorkspaceDialogLayer = () =>
   import("./WorkspaceDialogLayer.vue");
-export const loadAgentConversation = () => import("./AgentConversation.vue");
+
 export const loadBookTransferDialog = () => import("./BookTransferDialog.vue");
 export const loadCreateBookDialog = () => import("./CreateBookDialog.vue");
 export const loadCreateLongChapterCardDialog = () =>
@@ -56,7 +56,5 @@ export const loadLongStructureDialog = () =>
   import("./LongStructureDialog.vue");
 export const loadSaveConflictDialog = () => import("./SaveConflictDialog.vue");
 export const loadStartupAlertDialog = () => import("./StartupAlertDialog.vue");
-export const loadRevisionAnalysisPage = async () =>
-  (await import("../extras/revision-analysis/loader")).loadPage();
 
 export const loadWindowMenuBar = () => import("./WindowMenuBar.vue");

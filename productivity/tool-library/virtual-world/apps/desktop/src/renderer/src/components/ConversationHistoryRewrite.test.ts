@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import agentConversationSource from "./AgentConversation.vue?raw";
 import editorSource from "./ConversationUserMessageEditor.vue?raw";
 import longWorkspaceSource from "./LongWorkspaceModule.vue?raw";
 import messageItemSource from "./ConversationMessageItem.vue?raw";
@@ -59,18 +58,8 @@ describe("conversation history rewrite presentation", () => {
     );
   });
 
-  it("wires history rewriting into workspace agents", () => {
-    expect(agentConversationSource).toContain(
-      ':can-rewrite-history="canRewriteHistory"'
-    );
-    expect(agentConversationSource).toContain(
-      ':submit-edited-message="submitEditedMessage"'
-    );
-    expect(writingWorkspaceSource).toContain('"canRewriteHistory"');
-    expect(writingWorkspaceSource).toContain('"submitEditedMessage"');
-    expect(longWorkspaceSource).toContain(
-      ':can-rewrite-history="canRewriteHistory"'
-    );
-    expect(longWorkspaceSource).toContain('item.status === "accepted"');
+  it("keeps history rewriting outside the retired workspace UI", () => {
+    expect(writingWorkspaceSource).not.toContain("canRewriteHistory");
+    expect(longWorkspaceSource).not.toContain(":can-rewrite-history");
   });
 });

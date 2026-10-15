@@ -4,7 +4,6 @@ import type { WorkspaceFeatureModule } from "../components/WorkspaceFeatureModul
 import type { AppView, WorkspaceMainView } from "../stores/layoutStore";
 import type { useSettingsStore } from "../stores/settingsStore";
 import type { DialogMode } from "../types/workspace";
-import type { LazySubagentAuthoringController } from "./useLazyFeatureControllers";
 
 export type ActiveFeature = WorkspaceMainView | "settings" | "long-workspace";
 
@@ -30,18 +29,6 @@ export interface WorkspaceFeatureHostCoordinatorOptions {
   };
   settingsStore: ReturnType<typeof useSettingsStore>;
   catalogSnapshot: Readonly<Ref<CatalogSnapshot | null>>;
-  features: {
-    revisionAnalysis: {
-      controller: ReturnType<
-        typeof import("./useLazyRevisionAnalysis").useLazyRevisionAnalysis
-      >["controller"];
-      ensureLoaded(): Promise<unknown>;
-    };
-    subagentAuthoring: {
-      controller: LazySubagentAuthoringController["controller"];
-      ensureLoaded(): Promise<unknown>;
-    };
-  };
   actions: {
     saveActiveLongEditorBeforeLeaving(): Promise<boolean>;
     newLibraryConversation(): void;

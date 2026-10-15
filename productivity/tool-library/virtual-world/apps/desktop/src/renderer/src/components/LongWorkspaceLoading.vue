@@ -1,45 +1,22 @@
 <script setup lang="ts">
-import type { WorkspacePaneLayout } from "@deepwrite/contracts";
 import AppIcon from "./AppIcon.vue";
-import LongWorkspacePanePlaceholder from "./LongWorkspacePanePlaceholder.vue";
-
-// Vue forwards the async component's complete props/listeners to its fallback.
-// Ignore the data-loading prop: the component chunk may still be pending
-// after the workspace data has arrived. Only an explicit pending override is used.
-defineOptions({ inheritAttrs: false });
-withDefaults(
-  defineProps<{
-    leftCollapsed: boolean;
-    rightPane: { collapsed: boolean };
-    paneLayout: WorkspacePaneLayout;
-    pending?: boolean;
-  }>(),
-  { pending: true }
-);
+defineProps<{ leftCollapsed?: boolean; pending?: boolean }>();
 const emit = defineEmits<{ expandLeft: [] }>();
 </script>
-
 <template>
-  <button
-    v-if="leftCollapsed"
-    class="icon-button long-workspace-expand-sidebar"
-    type="button"
-    aria-label="展开左侧栏"
-    @click="emit('expandLeft')"
+  <main
+    class="long-workspace-editor-loading-state manual-workspace-empty"
+    aria-label="正在读取创作空间"
   >
-    <AppIcon name="panel-left" :size="18" />
-  </button>
-  <div
-    v-show="paneLayout === 'agent-editor' || !rightPane.collapsed"
-    class="long-agent-column"
-    aria-label="小说创作空间"
-  >
-    <LongWorkspacePanePlaceholder kind="agent" :loading="pending" />
-  </div>
-  <LongWorkspacePanePlaceholder
-    v-if="paneLayout === 'editor-agent' || !rightPane.collapsed"
-    kind="editor"
-    :right-pane="paneLayout === 'agent-editor'"
-    :loading="pending"
-  />
+    <button
+      v-if="leftCollapsed"
+      class="icon-button manual-expand-sidebar"
+      type="button"
+      aria-label="展开左侧栏"
+      @click="emit('expandLeft')"
+    >
+      <AppIcon name="panel-left" :size="18" />
+    </button>
+    <span>正在读取创作空间…</span>
+  </main>
 </template>

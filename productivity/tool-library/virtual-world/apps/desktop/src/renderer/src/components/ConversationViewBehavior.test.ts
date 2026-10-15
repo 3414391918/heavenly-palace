@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ModelConfig } from "@deepwrite/contracts/renderer";
 import { useConversationModelOptions } from "../composables/useConversationModelOptions";
-import conversationSource from "./AgentConversation.vue?raw";
 import composerSource from "./ConversationComposer.vue?raw";
 import composerLogicSource from "../composables/useConversationComposer.ts?raw";
 import modelConfigSource from "./ConversationModelConfigSelect.vue?raw";
@@ -149,7 +148,6 @@ describe("conversation view behavior", () => {
   });
 
   it("isolates elapsed clocks to active processing labels", () => {
-    expect(conversationSource).not.toContain(":clock=");
     expect(messageListSource).not.toContain(":clock=");
     expect(processingTimelineSource).toContain(
       ":active=\"message.status === 'streaming' || Boolean(message.retry)\""
@@ -168,16 +166,9 @@ describe("conversation view behavior", () => {
     expect(detailsSource).toContain('<slot v-if="open" />');
   });
 
-  it("moves focus into the composer after a welcome suggestion is chosen", () => {
-    expect(messageListSource).toContain("emit('suggestion', item)");
-    expect(conversationSource).toContain('@suggestion="applySuggestion"');
-    expect(conversationSource).toContain('ref="composer"');
-    expect(conversationSource).toContain("composer.value?.focusInput()");
+  it("keeps focus and keyboard handling within the reusable composer", () => {
     expect(composerSource).toContain("defineExpose({ focusInput })");
     expect(composerLogicSource).toContain("function focusInput");
     expect(composerLogicSource).toContain("input.focus()");
-    expect(composerLogicSource).toContain(
-      "input.setSelectionRange(caret, caret)"
-    );
   });
 });

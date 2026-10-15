@@ -8,15 +8,13 @@ import editorStructureSource from "./composables/useLongEditorStructureSelection
 import editorFileNavigationSource from "./composables/useLongEditorFileNavigation.ts?raw";
 
 describe("accepted approval navigation wiring", () => {
-  it("routes both approval card families into the central navigator", () => {
-    expect(appSource).toContain(
+  it("does not bind retired approval cards in manual editors", () => {
+    expect(appSource).not.toContain(
       '@locate-edit-proposal="locateAcceptedEditProposal"'
     );
-    expect(appSource).toContain(
+    expect(appSource).not.toContain(
       '@locate-long-proposal="locateAcceptedLongProposal"'
     );
-    expect(appSource).toContain("resolveAgentEditApprovalTarget(proposal)");
-    expect(appSource).toContain("resolveLongProposalApprovalTarget(item)");
   });
 
   it("preserves the long editor save barrier and retries stale indexes", () => {

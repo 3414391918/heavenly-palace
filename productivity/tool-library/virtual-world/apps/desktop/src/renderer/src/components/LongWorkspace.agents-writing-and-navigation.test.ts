@@ -1,7 +1,5 @@
-import longLibraryReferencesSource from "../utils/longLibraryReferences.ts?raw";
 import treeNodeFactorySource from "../utils/longWorkspaceTreeNode.ts?raw";
 import {
-  agentConversationSource,
   agentRunPreferencesSource,
   appSource,
   describe,
@@ -17,12 +15,10 @@ import {
   longWorkspaceResourceTreeSource,
   presentationCoordinatorSource,
   proposalRuntimeSource,
-  proposalSource,
   resourceTreeCoordinatorSource,
   sectionSource,
   treeNodeSource,
   workspaceDialogLayerSource,
-  workspaceSystemEventRoutesSource,
   workspaceTypeSource
 } from "./LongWorkspace.test-support";
 
@@ -71,24 +67,9 @@ describe("long-form renderer vertical slice: agents-writing-and-navigation", () 
     ]) {
       expect(longWorkspaceResourceTreeSource).toContain(label);
     }
-    expect(longWorkspaceModuleSource).toContain('class="long-agent-column"');
-    expect(longWorkspaceModuleSource).toContain(
-      'class="pane-resizer pane-resizer-right"'
-    );
+    expect(longWorkspaceModuleSource).not.toContain("long-agent-column");
+    expect(longWorkspaceModuleSource).toContain(':right-pane="false"');
     expect(appSource).toContain(':left-collapsed="leftCollapsed"');
-    expect(appSource).toContain(':right-pane="writingRightPaneViewModel"');
-    expect(appSource).toContain(
-      '@toggle-left="leftCollapsed = !leftCollapsed"'
-    );
-    expect(appSource).toContain(
-      '@toggle-right="rightCollapsed = !rightCollapsed"'
-    );
-    expect(appSource).toContain(
-      "@resize-start=\"startPaneResize('right', $event)\""
-    );
-    expect(longWorkspaceModuleSource).toContain(
-      "paneLayout === 'editor-agent' || !rightPane.collapsed"
-    );
   });
 
   it("wires left-tree collection actions through the existing structure pipeline", () => {
@@ -146,82 +127,10 @@ describe("long-form renderer vertical slice: agents-writing-and-navigation", () 
     );
   });
 
-  it("uses dedicated long agent context and approval surfaces", () => {
-    expect(presentationCoordinatorSource).toContain(
-      "const activeLongRuntimeContext"
-    );
-    expect(appSource).toContain(
-      "activeRuntimeContext: activeLongRuntimeContext"
-    );
-    expect(appSource).not.toContain(
-      "const activeLongRuntimeContext = computed"
-    );
-    expect(longConversationSource).toContain(
-      "target.conversation.sendLongMessage("
-    );
-    expect(longConversationSource).toContain(
-      "options.catalog.buildAttachments("
-    );
-    expect(longConversationSource).toContain(
-      "options.catalog.filterReadableAttachments("
-    );
-    expect(longLibraryReferencesSource).toContain(
-      "profile.readAccess.skillKinds"
-    );
-    expect(longLibraryReferencesSource).toContain(
-      "profile.readAccess.materialKinds"
-    );
-    expect(appSource).not.toContain("<LongProposalReview");
-    expect(agentConversationSource).toContain("<LongProposalReview");
-    expect(agentConversationSource).toContain("embedded");
-    expect(longWorkspaceModuleSource).toContain(
-      ':long-proposal-items="proposalItems"'
-    );
-    expect(appSource).toContain('@review-edit="reviewLongAgentEdit"');
-    expect(proposalSource).toContain("long.mutation_proposal");
-    expect(proposalSource).not.toContain("long.chapter_write_proposal");
-    expect(appSource).toContain("stageLongDraftEditProposal,");
-    expect(workspaceSystemEventRoutesSource).toContain(
-      "dependencies.stageLongDraftEditProposal(event);"
-    );
-    expect(proposalSource).toContain("long.ledger_commit_proposal");
-    expect(proposalSource).toContain("查看具体影响");
-    expect(proposalSource).toContain("删除实体");
-    expect(proposalSource).toContain("实体完整前后快照");
-    expect(proposalSource).toContain("snapshotText(change.before)");
-    expect(proposalSource).toContain("snapshotText(change.after)");
-    expect(proposalSource).not.toContain(".slice(0, 80)");
-    expect(proposalSource).toContain("long.continuity_file_proposal");
-    expect(proposalSource).not.toContain("查看提交内容");
-    expect(proposalSource).not.toContain("本章六类连续性摘要");
-    expect(proposalSource).toContain('item.approvalMode === "auto-approve"');
-    expect(proposalSource).toContain("自动保存中");
-    expect(proposalRuntimeSource).toContain(
-      "approvalModeForEvent: proposalApprovalMode"
-    );
-    expect(proposalRuntimeSource).toContain(
-      "prepareAutoApprove: prepareAutomaticProposal"
-    );
-    const approvalModeResolver =
-      proposalRuntimeSource
-        .split("function proposalApprovalMode(")[1]
-        ?.split("async function refreshWorkspaceAfterProposal")[0] ?? "";
-    expect(approvalModeResolver).toContain(
-      "conversationForProposalEvent(event)?.approvalModeForRun("
-    );
-    expect(approvalModeResolver).not.toContain("continuity_ledger");
-    expect(appSource).not.toContain("function longAgentRunApprovalMode(");
-    expect(longConversationSource).toContain(
-      "target.conversation.selectApprovalMode(target.approvalMode);"
-    );
-    expect(appSource).toContain(
-      "permissionMode: () => generalSettings.value.permissionMode"
-    );
-    expect(editorSource).not.toContain("LongLedgerCommitRecordSchema");
-    expect(editorSource).not.toContain("本章连续性摘要");
-    expect(editorSource).not.toContain("伏笔线状态推导");
-    expect(editorSource).not.toContain("查看原始审计记录");
-    expect(proposalSource).not.toContain("workspace.editor_mutation");
+  it("does not mount conversation proposal controls in the novel editor", () => {
+    expect(longWorkspaceModuleSource).not.toContain(":long-proposal-items");
+    expect(longWorkspaceModuleSource).not.toContain("AgentConversation");
+    expect(longWorkspaceModuleSource).toContain("<LongWorkspaceEditor");
   });
 
   it("keeps saves ordered and pauses long-agent sends while refreshing", () => {
@@ -236,8 +145,10 @@ describe("long-form renderer vertical slice: agents-writing-and-navigation", () 
       "state.refreshStatus.value = {"
     );
     expect(appSource).toContain("retryActiveLongWorkspaceRefresh");
-    expect(longWorkspaceModuleSource).toContain("小说智能体已暂停发送");
-    expect(longWorkspaceModuleSource).toContain('v-if="refreshStatus?.error"');
+    expect(longWorkspaceModuleSource).not.toContain("小说智能体已暂停发送");
+    expect(longWorkspaceModuleSource).not.toContain(
+      'v-if="refreshStatus?.error"'
+    );
     expect(appSource).not.toContain(
       'activeLongWorkspaceRefreshStatus.pending\n                    ? "正在同步保存后的最新工作区索引…"'
     );

@@ -1,5 +1,4 @@
 import { createGeneralSettingsTestApi } from "./generalSettingsTestApi";
-import { createBookAnalysisTestApi } from "./book-analysis.test-support";
 import { createUnusedLongApi } from "./unusedLongApi.test-support";
 import { createModelApiTestFixture } from "./modelApiTestFixture";
 import { createConversationCatalogTestApi } from "./conversationCatalogTestApi";
@@ -15,6 +14,28 @@ export function createConversationTestApi(
   session: DeepWriteApi["session"]
 ): DeepWriteApi {
   return {
+    toolLibrary: {
+      async list() {
+        return { directory: "/tmp/example-tools", tools: [] };
+      },
+      async create() {
+        return { directory: "/tmp/example-tools", tools: [] };
+      },
+      async delete() {
+        return { directory: "/tmp/example-tools", tools: [] };
+      },
+      async read(input) {
+        return { ...input, content: "", sha256: "0".repeat(64) };
+      },
+      async save(input) {
+        return {
+          toolId: input.toolId,
+          path: input.path,
+          content: input.content,
+          sha256: "0".repeat(64)
+        };
+      }
+    },
     fishAudio: {
       async execute() {
         return {};
@@ -126,7 +147,6 @@ export function createConversationTestApi(
         return structuredClone(DEFAULT_LIBRARY_AGENT_SETTINGS);
       }
     },
-    ...createBookAnalysisTestApi(),
     workspaceDirectory: {
       async list() {
         return { path: null };

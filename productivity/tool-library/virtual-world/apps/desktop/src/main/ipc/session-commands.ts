@@ -1,4 +1,3 @@
-import { assertRevisionAnalysisRuntime } from "../extras/revision-analysis/runtime-validation";
 import { acquireConversationOperation } from "./conversation-operation-guard";
 import { resolveAgentTeamRuntime } from "../agent-team-run-mode";
 import { prepareLibraryManagementRunContext } from "../library-management-run-context";
@@ -188,11 +187,6 @@ export async function handleSessionCommands(
             .requireLibraryAgentConfigStore()
             .resolve(libraryWorkspace.domain)
         : undefined;
-      if (command.payload.workspaceContext?.revisionAnalysis)
-        assertRevisionAnalysisRuntime(
-          command.payload.workspaceContext.revisionAnalysis,
-          runtimeConfig
-        );
       const { thinkingLevel, temperature } = resolveModelRunSettings(
         runtimeConfig,
         {

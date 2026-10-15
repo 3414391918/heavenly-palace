@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { moreFeatures } from "./sidebarMoreFeatures";
 import dialog from "./CreateBookDialog.vue?raw";
 import settings from "./SettingsPage.vue?raw";
 import sidebar from "./LeftSidebar.vue?raw";
@@ -13,26 +12,19 @@ describe("unified creation entry points", () => {
     expect(dialog).not.toContain("SHORT_BOOK_GENRES");
     expect(dialog).not.toContain("SCRIPT_BOOK_GENRES");
   });
-  it("renders the main agent settings directly", () => {
-    expect(settings).toContain("<LongAgentSettingsPanel");
-    expect(settings).not.toContain("ShortAgentSettingsPanel");
-    expect(settings).toContain("主智能体配置");
+  it("removes creation settings and preserves custom model configuration", () => {
+    expect(settings).not.toContain("<LongAgentSettingsPanel");
+    expect(settings).not.toContain("<LibraryAgentSettingsPanel");
+    expect(settings).not.toContain('title: "创作"');
+    expect(settings).toContain('label: "自定义模型配置"');
   });
-  it("exposes the subagent team, revision analysis and voice management", () => {
-    expect(sidebar).toContain("子智能体团队");
-    expect(moreFeatures).toEqual([
-      {
-        id: "revision-analysis",
-        label: "修改分析",
-        description: "从文稿修改中学习可复用技能",
-        icon: "file"
-      },
-      {
-        id: "voice-manager",
-        label: "声音管理",
-        description: "查看和管理 FishAudio 平台上的声音",
-        icon: "model"
-      }
-    ]);
+
+  it("provides independent tools and voices without retired navigation", () => {
+    expect(sidebar).toContain('id: "tools"');
+    expect(sidebar).toContain('id: "voice-manager"');
+    expect(sidebar).toContain('id: "prompt-templates"');
+    expect(sidebar).not.toContain("子智能体团队");
+    expect(sidebar).not.toContain("更多功能");
+    expect(sidebar).not.toContain("修改分析");
   });
 });

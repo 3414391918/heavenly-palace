@@ -20,14 +20,9 @@ export async function runUnifiedCreationSmoke(window: BrowserWindow) {
     if(!created?.book?.id || created.book.workspaceIndex.plot.volumes.length!==1 || created.book.workspaceIndex.chapters.length!==1) {
       throw new Error("Unified novel creation lost its initial structure");
     }
-    const settings=await api.longAgents.list();
-    if(settings.agents.length!==1 || settings.agents[0].id!=="long") throw new Error("Unexpected creation profiles");
     const smoke=await import(${JSON.stringify(moduleUrl)});
     const promptTemplates=await smoke.runPromptTemplateRendererSmoke();
-    const teams=await api.agentTeams.create({name:"统一子智能体测试团队"});
-    if(!teams.teams.some(team=>team.name==="统一子智能体测试团队" && team.workspaceType==="long")) throw new Error("Team creation failed");
-    const analysis=await api.revisionAnalysis.list();
-    if(!analysis.systemPrompt) throw new Error("Revision analysis settings unavailable");
-    return {status:"ok",created:true,settings:true,team:true,retiredApisAbsent:true,promptTemplates};
+    const tools=await smoke.runToolManagerRendererSmoke();
+    return {status:"ok",created:true,retiredApisAbsent:true,promptTemplates,tools};
   })()`);
 }

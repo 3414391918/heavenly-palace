@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest";
-import moreFeaturesSource from "./sidebarMoreFeatures.ts?raw";
 import sidebarSource from "./LeftSidebar.vue?raw";
 import profileSource from "./SidebarProfileMenu.vue?raw";
-const source = `${sidebarSource}\n${profileSource}\n${moreFeaturesSource}`;
+const source = `${sidebarSource}\n${profileSource}`;
 
 describe("LeftSidebar account controls", () => {
   it("separates the account menu from the settings-page button", () => {
@@ -42,10 +41,12 @@ describe("LeftSidebar account controls", () => {
     expect(source).not.toContain("newConversation");
   });
 
-  it("keeps agent-team management in the primary navigation", () => {
+  it("puts tools and sounds in the primary navigation", () => {
     expect(sidebarSource).not.toContain('label: "自定义模型配置"');
-    expect(source).toContain('id: "agent-teams"');
-    expect(source).toContain('emit("openAgentTeams")');
+    expect(sidebarSource).toContain('id: "tools"');
+    expect(sidebarSource).toContain('id: "voice-manager"');
+    expect(sidebarSource).not.toContain('emit("openAgentTeams")');
+    expect(sidebarSource).not.toContain("moreFeatures");
     expect(source).toContain("props.activePrimaryFeature");
     expect(source).toContain("'is-active'");
     expect(source).toContain("'page'");

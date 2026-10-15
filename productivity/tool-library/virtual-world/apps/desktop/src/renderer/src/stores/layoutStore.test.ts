@@ -102,7 +102,7 @@ describe("layout store", () => {
     const refs = storeToRefs(store);
 
     expect(refs.currentView.value).toBe("workspace");
-    expect(refs.workspaceMainView.value).toBe("conversation");
+    expect(refs.workspaceMainView.value).toBe("tools");
     expect(refs.leftPaneWidth.value).toBe(defaultLeftPaneWidth(1400));
     expect(refs.rightPaneWidth.value).toBe(defaultRightPaneWidth(1400));
 

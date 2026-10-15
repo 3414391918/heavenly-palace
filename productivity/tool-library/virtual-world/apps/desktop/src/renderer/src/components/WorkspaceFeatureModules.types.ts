@@ -1,19 +1,14 @@
 import type {
   AppLanguage,
   BodyTextFormats,
-  AgentTeamCatalogSnapshot,
-  CatalogSnapshot,
   GeneralPermissionMode,
   LibraryAgentSettings,
   LongAgentSettings,
-  ModelConfig,
   ModelSettings,
   ModelUsageDashboard,
-  SkillLibrary,
   TextViewMode,
   WorkspacePaneLayout
 } from "@deepwrite/contracts";
-import type { SubagentAuthoringController } from "../composables/useSubagentAuthoring";
 
 export interface SettingsFeatureModule {
   kind: "settings";
@@ -46,20 +41,6 @@ export interface SettingsFeatureModule {
   runtimeAvailable: boolean;
 }
 
-export interface AgentTeamFeatureModule {
-  kind: "agent-team";
-  navigationEpoch: number;
-  catalog: AgentTeamCatalogSnapshot | null;
-  models: readonly ModelConfig[];
-  skills: readonly SkillLibrary[];
-  preferredModelId: string | null;
-  loading: boolean;
-  saving: boolean;
-  loadError: string | null;
-  runtimeAvailable: boolean;
-  authoring: SubagentAuthoringController | null;
-}
-
 export interface DirectoryFeatureModule {
   kind: "directory";
   path: string | null;
@@ -78,17 +59,9 @@ export interface ModelsFeatureModule {
 }
 
 export type WorkspaceFeatureModule =
+  | { kind: "tools" }
   | { kind: "voice-manager" }
   | { kind: "prompt-templates" }
-  | {
-      kind: "revision-analysis";
-      controller:
-        | import("../extras/revision-analysis/useRevisionAnalysis").RevisionAnalysisController
-        | null;
-      models: readonly ModelConfig[];
-      catalogSnapshot: CatalogSnapshot | null;
-    }
   | SettingsFeatureModule
-  | AgentTeamFeatureModule
   | DirectoryFeatureModule
   | ModelsFeatureModule;

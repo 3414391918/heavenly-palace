@@ -30,8 +30,10 @@ import {
   WorkspaceDirectoryChooseCommandEnvelopeSchema,
   WorkspaceDirectoryListCommandEnvelopeSchema
 } from "./workspace-directory";
+import { ToolLibraryCommandEnvelopeSchemas } from "./tool-library";
 
 export const SettingsCommandEnvelopeSchemas = [
+  ...ToolLibraryCommandEnvelopeSchemas,
   LongAgentsListCommandEnvelopeSchema,
   LongAgentsSaveCommandEnvelopeSchema,
   PromptTemplatesListCommandEnvelopeSchema,

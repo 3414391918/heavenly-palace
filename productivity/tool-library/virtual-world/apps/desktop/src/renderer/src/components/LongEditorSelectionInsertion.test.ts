@@ -3,7 +3,6 @@ import moduleSource from "./LongWorkspaceModule.vue?raw";
 import editorSource from "./LongWorkspaceEditor.vue?raw";
 import manuscriptSource from "./LongManuscriptEditor.vue?raw";
 import menuSource from "../../../main/text-context-menu-items.ts?raw";
-import pendingReferencesSource from "../composables/usePendingEditorReferences.ts?raw";
 
 describe("long editor selection insertion", () => {
   it("offers the shared right-click action from every long-form text editor", () => {
@@ -26,23 +25,11 @@ describe("long editor selection insertion", () => {
     expect(editorSource).toContain('emit("insertSelection", reference)');
   });
 
-  it("carries long-form selections through the composer and back to the editor", () => {
-    expect(moduleSource).toContain(':editor-references="editorReferences"');
-    expect(moduleSource).toContain('@insert-selection="insertEditorReference"');
-    expect(moduleSource).toContain(
-      '@clear-editor-references="clearEditorReferences"'
-    );
-    expect(moduleSource).toContain(
-      '@remove-editor-reference="removeEditorReference"'
-    );
-    expect(moduleSource).toContain(
-      '@locate-editor-reference="locateEditorReference"'
-    );
-    expect(editorSource).toContain("resolveEditorTextReferenceRange(");
-    expect(editorSource).toContain(
-      'input.setSelectionRange(range.start, range.end, "forward")'
-    );
-    expect(pendingReferencesSource).toContain("PROMPT_ATTACHMENT_MAX_ITEMS");
-    expect(pendingReferencesSource).toContain("这段正文已经插入输入框");
+  it("disables the composer action without removing native editing or illustrations", () => {
+    expect(moduleSource).not.toContain(":editor-references");
+    expect(moduleSource).not.toContain("@insert-selection");
+    expect(editorSource).toContain("allowReferences: false");
+    expect(editorSource).toContain("handleEditorContextMenu");
+    expect(editorSource).toContain("useLongEditorIllustrationCommit");
   });
 });

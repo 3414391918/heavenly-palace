@@ -17,6 +17,7 @@ export interface EditorSelectionReferenceSource {
 export function useEditorSelectionInsertion(options: {
   source(): EditorSelectionReferenceSource | undefined;
   history?: TextMenuHistory;
+  allowReferences?: boolean;
   insert(reference: EditorTextReference): void;
 }) {
   const menu = useSelectionInsertionMenu({ insert: options.insert });
@@ -52,7 +53,7 @@ export function useEditorSelectionInsertion(options: {
       end
     });
     menu.openSelectionAction(
-      reference ?? undefined,
+      options.allowReferences === false ? undefined : (reference ?? undefined),
       event,
       options.history,
       () => sourceIsCurrent(source)
@@ -60,6 +61,10 @@ export function useEditorSelectionInsertion(options: {
   }
 
   function handlePreviewContextMenu(event: MouseEvent): void {
+    if (options.allowReferences === false) {
+      menu.closeSelectionAction();
+      return;
+    }
     const preview = event.currentTarget;
     const source = options.source();
     const selection = globalThis.getSelection?.();

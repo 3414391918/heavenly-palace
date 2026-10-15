@@ -16,8 +16,8 @@ export interface QueuedAgentEditRun {
 }
 
 export interface WorkspaceSystemEventRouteDependencies {
-  revisionAnalysis: { handleEvent(event: SystemEventEnvelope): void };
-  subagentAuthoring: {
+  revisionAnalysis?: { handleEvent(event: SystemEventEnvelope): void };
+  subagentAuthoring?: {
     handleEvent(event: SystemEventEnvelope): void;
   };
   stageLongPlotDesignEditProposal(
@@ -54,10 +54,10 @@ export function registerWorkspaceSystemEventRoutes(
 ): () => void {
   const disposers = [
     center.subscribeAll((event) => {
-      dependencies.revisionAnalysis.handleEvent(event);
+      dependencies.revisionAnalysis?.handleEvent(event);
     }),
     center.subscribeAll((event) => {
-      dependencies.subagentAuthoring.handleEvent(event);
+      dependencies.subagentAuthoring?.handleEvent(event);
     }),
     center.subscribeAll((event) => {
       if (event.type === "long.mutation_proposal") {

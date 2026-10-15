@@ -6,10 +6,6 @@ import writingWorkspaceSource from "./components/WritingWorkspaceModule.vue?raw"
 import stylesSource from "virtual:deepwrite-renderer-styles";
 import coordinatorSource from "./composables/useGeneralSettingsCoordinator.ts?raw";
 import lifecycleSource from "./composables/useWorkspaceLifecycleCoordinator.ts?raw";
-import registryPreferencesSource from "./composables/conversationRegistryPreferences.ts?raw";
-import runtimeRegistrySource from "./composables/useConversationRuntimeRegistryCoordinator.ts?raw";
-import shortConversationSource from "./composables/useLibraryConversationCoordinator.ts?raw";
-import longConversationSource from "./composables/useLongConversationCoordinator.ts?raw";
 
 describe("App general settings integration", () => {
   it("loads and persists general settings through the desktop runtime", () => {
@@ -20,30 +16,9 @@ describe("App general settings integration", () => {
     expect(coordinatorSource).toContain("await api.save(snapshot);");
   });
 
-  it("uses the configured permission as every agent's default approval mode", () => {
-    expect(source).toContain(
-      "permissionMode: () => generalSettings.value.permissionMode"
-    );
-    expect(runtimeRegistrySource).toContain(
-      "conversation.selectApprovalMode(options.permissionMode())"
-    );
-    expect(registryPreferencesSource).toContain(
-      "conversation.selectApprovalMode(permissionMode)"
-    );
-    expect(source).toContain("applyApprovalMode: applyDefaultApprovalMode");
-    expect(coordinatorSource).toContain(
-      "options.applyApprovalMode(permissionMode)"
-    );
-    expect(shortConversationSource).toContain(
-      "options.settings.updatePermissionMode(mode)"
-    );
-    expect(longConversationSource).toContain(
-      "options.settings.updatePermissionMode(mode)"
-    );
-    expect(longWorkspaceSource).toContain(
-      ':approval-mode="conversationController.approvalMode.value"'
-    );
-    expect(source).toContain('@update-permission-mode="updatePermissionMode"');
+  it("does not expose approval modes in the manual novel surface", () => {
+    expect(longWorkspaceSource).not.toContain(":approval-mode=");
+    expect(writingWorkspaceSource).not.toContain(":approval-mode=");
   });
 
   it("applies language and menu-bar setting changes", () => {
@@ -70,36 +45,14 @@ describe("App general settings integration", () => {
     );
   });
 
-  it("persists and applies the selected creative-workspace pane layout", () => {
-    expect(coordinatorSource).toContain(
-      "function updateWorkspacePaneLayout(layout: WorkspacePaneLayout)"
-    );
-    expect(source).toContain(
-      '@update-workspace-pane-layout="updateWorkspacePaneLayout"'
-    );
-    expect(source).toContain("'is-editor-agent-layout'");
-    expect(source).toContain(
+  it("uses a manual shell independent of old pane preferences", () => {
+    expect(source).toContain("manual-workspace-shell");
+    expect(source).not.toContain(
       ':pane-layout="generalSettings.workspacePaneLayout"'
     );
-    expect(writingWorkspaceSource).toContain(
-      "paneLayout === 'editor-agent' || !rightPane.collapsed"
-    );
-    expect(longWorkspaceSource).toContain(
-      "paneLayout === 'editor-agent' || !rightPane.collapsed"
-    );
-    expect(stylesSource).toContain(
-      ".desktop-shell.is-editor-agent-layout > .conversation-pane"
-    );
-    expect(stylesSource).toContain(
-      ".desktop-shell.is-editor-agent-layout > .editor-pane"
-    );
-    const swappedLayoutStyles = stylesSource.slice(
-      stylesSource.indexOf(
-        ".desktop-shell.is-editor-agent-layout > .conversation-pane"
-      ),
-      stylesSource.indexOf(".long-workspace-loading-state strong")
-    );
-    expect(swappedLayoutStyles.match(/grid-row:\s*1/g)).toHaveLength(2);
+    expect(writingWorkspaceSource).toContain(':right-pane="false"');
+    expect(longWorkspaceSource).toContain(':right-pane="false"');
+    expect(stylesSource).toContain(".desktop-shell.manual-workspace-shell");
   });
 
   it("persists and applies the default text view mode to every editor", () => {

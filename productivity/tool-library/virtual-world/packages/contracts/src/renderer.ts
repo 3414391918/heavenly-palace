@@ -14,6 +14,7 @@ export type * from "./body-text-format";
 export type * from "./library-agent";
 export type * from "./long-agent-settings";
 export * from "./prompt-templates";
+export * from "./tool-library";
 export type * from "./long-agent-team";
 export type * from "./long-ledger";
 export type * from "./long-manuscript-export";

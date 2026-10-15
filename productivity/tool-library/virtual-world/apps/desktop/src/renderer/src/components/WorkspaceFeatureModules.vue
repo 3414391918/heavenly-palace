@@ -18,21 +18,15 @@ import type {
   WorkspacePaneLayout
 } from "@deepwrite/contracts";
 import {
-  AgentTeamCatalogFeature,
-  RevisionAnalysisPage,
   ModelSettingsFeature,
   SettingsPage,
   WorkspaceDirectoryFeature,
-  PromptTemplateManager
+  PromptTemplateManager,
+  ToolManager
 } from "./lazyAppComponents";
 import type { WorkspaceFeatureModule } from "./WorkspaceFeatureModules.types";
 import WorkspaceFeatureFrame from "./WorkspaceFeatureFrame.vue";
 import FishAudioManager from "./FishAudioManager.vue";
-import {
-  generateWorkspaceFeatureSubagent,
-  resetWorkspaceFeatureSubagent,
-  stopWorkspaceFeatureSubagent
-} from "./workspaceFeatureModuleAuthoring";
 
 defineProps<{
   module: WorkspaceFeatureModule;
@@ -87,7 +81,16 @@ const emit = defineEmits<{
 
 <template>
   <WorkspaceFeatureFrame
-    v-if="module.kind === 'prompt-templates'"
+    v-if="module.kind === 'tools'"
+    class="workspace-settings-main-view tool-manager-main-view"
+    :left-collapsed="leftCollapsed"
+    expand-button-class="workspace-settings-expand-sidebar"
+    label="工具管理"
+    @expand-left="emit('expandLeft')"
+    ><ToolManager
+  /></WorkspaceFeatureFrame>
+  <WorkspaceFeatureFrame
+    v-else-if="module.kind === 'prompt-templates'"
     class="workspace-settings-main-view"
     :left-collapsed="leftCollapsed"
     expand-button-class="workspace-settings-expand-sidebar"
@@ -158,43 +161,6 @@ const emit = defineEmits<{
   />
 
   <WorkspaceFeatureFrame
-    v-else-if="module.kind === 'agent-team'"
-    class="agent-team-main-view"
-    :left-collapsed="leftCollapsed"
-    expand-button-class="agent-team-expand-sidebar"
-    label="子智能体团队"
-    @expand-left="emit('expandLeft')"
-  >
-    <AgentTeamCatalogFeature
-      v-if="module.authoring"
-      :catalog="module.catalog"
-      :navigation-epoch="module.navigationEpoch"
-      :models="module.models"
-      :skills="module.skills"
-      :preferred-model-id="module.preferredModelId"
-      :loading="module.loading"
-      :saving="module.saving"
-      :load-error="module.loadError"
-      :runtime-available="module.runtimeAvailable"
-      :authoring-generating="module.authoring.isBusy.value"
-      :authoring-draft="module.authoring.draft.value"
-      :authoring-status-text="module.authoring.statusText.value"
-      :authoring-error="module.authoring.error.value"
-      @retry="emit('retryAgentTeam')"
-      @create="emit('createAgentTeam', $event)"
-      @rename="emit('renameAgentTeam', $event)"
-      @delete="emit('deleteAgentTeam', $event)"
-      @download="emit('downloadAgentTeam', $event)"
-      @install="emit('installAgentTeam')"
-      @set-enabled="emit('setAgentTeamEnabled', $event)"
-      @save="emit('saveAgentTeam', $event)"
-      @authoring-generate="generateWorkspaceFeatureSubagent(module, $event)"
-      @authoring-stop="stopWorkspaceFeatureSubagent(module)"
-      @authoring-reset="resetWorkspaceFeatureSubagent(module)"
-    />
-  </WorkspaceFeatureFrame>
-
-  <WorkspaceFeatureFrame
     v-else-if="module.kind === 'directory'"
     class="workspace-settings-main-view"
     :left-collapsed="leftCollapsed"
@@ -229,23 +195,6 @@ const emit = defineEmits<{
       @save-models="emit('saveModels', $event)"
       @test-model="emit('testModel', $event)"
       @open-official-models="emit('openOfficialModels')"
-    />
-  </WorkspaceFeatureFrame>
-
-  <WorkspaceFeatureFrame
-    v-else-if="module.kind === 'revision-analysis'"
-    class="revision-analysis-main-view"
-    :left-collapsed="leftCollapsed"
-    expand-button-class="revision-analysis-expand-sidebar"
-    label="修改分析"
-    @expand-left="emit('expandLeft')"
-  >
-    <RevisionAnalysisPage
-      v-if="module.controller"
-      :controller="module.controller"
-      :models="module.models"
-      :catalog-snapshot="module.catalogSnapshot"
-      @refresh-catalog="emit('refreshCatalog')"
     />
   </WorkspaceFeatureFrame>
 </template>

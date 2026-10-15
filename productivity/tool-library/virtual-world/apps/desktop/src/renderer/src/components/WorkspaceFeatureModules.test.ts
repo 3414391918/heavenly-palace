@@ -10,7 +10,8 @@ describe("WorkspaceFeatureModules boundary", () => {
   it("owns the mutually exclusive non-writing feature branches", () => {
     for (const kind of [
       "settings",
-      "agent-team",
+      "tools",
+      "prompt-templates",
       "directory",
       "models",
       "voice-manager"
@@ -18,7 +19,9 @@ describe("WorkspaceFeatureModules boundary", () => {
       expect(source).toContain(`module.kind === '${kind}'`);
     }
     expect(source).toContain("<SettingsPage");
-    expect(source).toContain("<AgentTeamCatalogFeature");
+    expect(source).toContain("<ToolManager");
+    expect(source).not.toContain("<AgentTeamCatalogFeature");
+    expect(source).not.toContain("RevisionAnalysisPage");
     expect(source).toContain("<WorkspaceDirectoryFeature");
     expect(source).toContain("<ModelSettingsFeature");
     expect(source).not.toContain("v-show");
@@ -42,9 +45,7 @@ describe("WorkspaceFeatureModules boundary", () => {
   it("uses one typed low-frequency module input without absorbing writing state", () => {
     expect(typesSource).toContain("export type WorkspaceFeatureModule =");
     expect(source).toContain("module: WorkspaceFeatureModule");
-    expect(typesSource).toContain(
-      "authoring: SubagentAuthoringController | null"
-    );
+    expect(typesSource).not.toContain("SubagentAuthoringController");
     expect(source).not.toMatch(/\bany\b/u);
     expect(typesSource).not.toMatch(/\bany\b/u);
     expect(source).not.toContain("$attrs");
@@ -55,15 +56,10 @@ describe("WorkspaceFeatureModules boundary", () => {
     expect(source).not.toContain("DialogHost");
   });
 
-  it("keeps settings whole and reads authoring refs below the shell boundary", () => {
+  it("keeps settings and tools behind the shell boundary", () => {
     expect(source).toContain("v-else-if=\"module.kind === 'settings'\"");
     expect(source).toContain(':initial-category="module.initialCategory"');
-    expect(source).toContain(
-      ':authoring-generating="module.authoring.isBusy.value"'
-    );
-    expect(source).toContain(':authoring-draft="module.authoring.draft.value"');
-    expect(source).toContain(
-      "generateWorkspaceFeatureSubagent(module, $event)"
-    );
+    expect(source).toContain("v-if=\"module.kind === 'tools'\"");
+    expect(source).not.toContain(":authoring-generating");
   });
 });

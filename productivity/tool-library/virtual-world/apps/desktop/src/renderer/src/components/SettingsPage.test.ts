@@ -32,44 +32,14 @@ describe("SettingsPage", () => {
     expect(generalPanelSource).not.toContain("<strong>上下文使用显示</strong>");
   });
 
-  it("keeps only the requested general controls and makes permission modes exclusive", () => {
-    expect(generalSettingsSource).toContain('role="radiogroup"');
-    expect(generalSettingsSource).toContain('type="radio"');
-    expect(generalSettingsSource).toContain(
-      "permissionMode === 'request-approval'"
-    );
-    expect(generalSettingsSource).toContain(
-      "permissionMode === 'auto-approve'"
-    );
-    expectSourceToContain(generalSettingsSource, "<strong>请求批准</strong>");
-    expectSourceToContain(generalSettingsSource, "<strong>替我审批</strong>");
-    expect(generalSettingsSource).not.toContain(
-      "permissionMode === 'full-access'"
-    );
-    expect(generalSettingsSource).not.toContain(
-      "<strong>完全访问权限</strong>"
-    );
-    expect(generalSettingsSource).toContain("emit('updatePermissionMode'");
-    expect(generalSettingsSource).not.toContain(
-      "<strong>默认文件打开目标</strong>"
-    );
+  it("removes approval controls belonging to the retired main agent", () => {
+    expect(generalPanelSource).not.toContain('role="radiogroup"');
+    expect(generalPanelSource).not.toContain("<strong>请求批准</strong>");
+    expect(generalPanelSource).not.toContain("<strong>替我审批</strong>");
   });
 
-  it("offers an independent persisted cross-stage auto-approval switch", () => {
-    expectSourceToContain(
-      generalSettingsSource,
-      "<strong>跨阶段操作自动审批</strong>"
-    );
-    expect(generalSettingsSource).toContain(
-      ':checked="autoApproveCrossStageOperations"'
-    );
-    expect(generalSettingsSource).toContain(
-      "主智能体和子智能体的跨阶段操作将自动允许"
-    );
-    expect(generalSettingsSource).toContain("变更提案仍按上方审批方式处理");
-    expect(generalSettingsSource).toContain(
-      "'updateAutoApproveCrossStageOperations'"
-    );
+  it("does not show retired cross-stage approval settings", () => {
+    expect(generalPanelSource).not.toContain("跨阶段操作自动审批");
   });
 
   it("wires language and menu-bar controls to persisted settings", () => {
@@ -92,19 +62,9 @@ describe("SettingsPage", () => {
     );
   });
 
-  it("offers both persisted creative-workspace pane layouts", () => {
-    expectSourceToContain(generalSettingsSource, "<strong>页面布局</strong>");
-    expect(generalSettingsSource).toContain('value: "agent-editor"');
-    expect(generalSettingsSource).toContain('value: "editor-agent"');
-    expect(generalSettingsSource).toContain("目录｜智能体｜文本内容");
-    expect(generalSettingsSource).toContain("目录｜文本内容｜智能体");
-    expect(generalSettingsSource).toContain(
-      ':model-value="workspacePaneLayout"'
-    );
-    expectSourceToContain(
-      generalSettingsSource,
-      "emit('updateWorkspacePaneLayout'"
-    );
+  it("does not offer conversation/editor pane layouts", () => {
+    expect(generalPanelSource).not.toContain("<strong>页面布局</strong>");
+    expect(generalPanelSource).not.toContain("目录｜智能体｜文本内容");
   });
 
   it("offers a persisted default text view mode with both choices", () => {
@@ -145,14 +105,12 @@ describe("SettingsPage", () => {
     expect(source).not.toContain("saveAgentTeams");
   });
 
-  it("provides dedicated skill and material library agent categories", () => {
-    expect(source).toContain('label: "技能库配置"');
-    expect(source).toContain('label: "素材库配置"');
-    expect(source).toContain("<LibraryAgentSettingsPanel");
-    expect(source).toContain('domain="skill"');
-    expect(source).toContain('domain="material"');
-    expect(source).toContain("emit('saveLibraryAgents', $event)");
-    expect(source).toContain("emit('resetLibraryAgent', $event)");
+  it("removes the complete creation settings group", () => {
+    expect(source).not.toContain('title: "创作"');
+    expect(source).not.toContain('label: "技能库配置"');
+    expect(source).not.toContain('label: "素材库配置"');
+    expect(source).not.toContain("<LibraryAgentSettingsPanel");
+    expect(source).not.toContain("<LongAgentSettingsPanel");
   });
 
   it("keeps usage and custom models without the removed settings categories", () => {

@@ -68,7 +68,7 @@ export const useLayoutStore = defineStore("layout", () => {
 
   const currentView = ref<AppView>("workspace");
   const settingsInitialCategory = ref("general");
-  const workspaceMainView = ref<WorkspaceMainView>("conversation");
+  const workspaceMainView = ref<WorkspaceMainView>("tools");
   const leftCollapsed = ref(false);
   const rightCollapsed = ref(false);
   const desktopShell = shallowRef<HTMLElement | null>(null);

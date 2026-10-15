@@ -19,7 +19,6 @@ import {
   saveBuiltinSubagents,
   setAgentTeamEnabled
 } from "./agent-teams-api";
-import { analysisApis } from "./analysis-apis";
 import {
   acknowledgeDesktopAlert,
   checkForUpdates,
@@ -67,6 +66,7 @@ import { conversationExport } from "./conversation-export-api";
 import { conversationPersistence } from "./conversation-persistence-api";
 import { desktopEvents } from "./desktop-events-api";
 import { fishAudio } from "./fish-audio-api";
+import { toolLibrary } from "./tool-library-api";
 import {
   copyPromptTemplateImage,
   deletePromptTemplate,
@@ -112,6 +112,7 @@ async function getHealth(): Promise<SystemHealthPayload> {
 }
 const api: DeepWriteApi = {
   fishAudio,
+  toolLibrary,
   textContextMenu,
   system: {
     health: getHealth
@@ -211,7 +212,6 @@ const api: DeepWriteApi = {
     save: saveLibraryAgents,
     reset: resetLibraryAgents
   },
-  ...analysisApis,
   workspaceDirectory: {
     list: listWorkspaceDirectory,
     choose: chooseWorkspaceDirectory

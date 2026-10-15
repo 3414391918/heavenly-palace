@@ -22,10 +22,8 @@ import AppIcon from "./AppIcon.vue";
 import AppearanceSettingsPanel from "./AppearanceSettingsPanel.vue";
 import BodyTextSettingsPanel from "./BodyTextSettingsPanel.vue";
 import GeneralSettingsPanel from "./GeneralSettingsPanel.vue";
-import LibraryAgentSettingsPanel from "./LibraryAgentSettingsPanel.vue";
 import ModelSettingsFeature from "./ModelSettingsFeature.vue";
 import ModelUsagePanel from "./ModelUsagePanel.vue";
-import LongAgentSettingsPanel from "./LongAgentSettingsPanel.vue";
 import FishAudioSettingsPanel from "./FishAudioSettingsPanel.vue";
 
 interface SettingsCategory {
@@ -104,15 +102,6 @@ const emit = defineEmits<{
 const searchQuery = ref("");
 
 const sections: SettingsSection[] = [
-  {
-    id: "creation",
-    label: "创作",
-    categories: [
-      { id: "main-agent", label: "主智能体配置", icon: "brain" },
-      { id: "skill-library-agent", label: "技能库配置", icon: "wand" },
-      { id: "material-library-agent", label: "素材库配置", icon: "archive" }
-    ]
-  },
   {
     id: "models-and-usage",
     label: "模型与用量",
@@ -219,41 +208,8 @@ async function selectCategory(id: string): Promise<void> {
       <div class="settings-content-inner">
         <h1 class="settings-title">{{ activeLabel }}</h1>
 
-        <LongAgentSettingsPanel
-          v-if="activeCategory === 'main-agent'"
-          :settings="longAgentSettings"
-          :loading="longAgentLoading"
-          :saving="longAgentSaving"
-          :load-error="longAgentError"
-          :runtime-available="runtimeAvailable"
-          @retry="emit('retryLongAgents')"
-          @save="emit('saveLongAgents', $event)"
-        />
-
-        <LibraryAgentSettingsPanel
-          v-else-if="activeCategory === 'skill-library-agent'"
-          domain="skill"
-          :settings="libraryAgentSettings"
-          :loading="libraryAgentLoading"
-          :saving="libraryAgentSaving"
-          :runtime-available="runtimeAvailable"
-          @save="emit('saveLibraryAgents', $event)"
-          @reset="emit('resetLibraryAgent', $event)"
-        />
-
-        <LibraryAgentSettingsPanel
-          v-else-if="activeCategory === 'material-library-agent'"
-          domain="material"
-          :settings="libraryAgentSettings"
-          :loading="libraryAgentLoading"
-          :saving="libraryAgentSaving"
-          :runtime-available="runtimeAvailable"
-          @save="emit('saveLibraryAgents', $event)"
-          @reset="emit('resetLibraryAgent', $event)"
-        />
-
         <ModelUsagePanel
-          v-else-if="activeCategory === 'usage'"
+          v-if="activeCategory === 'usage'"
           :dashboard="modelUsageDashboard"
           :loading="modelUsageLoading"
           @query="emit('loadModelUsage', $event)"

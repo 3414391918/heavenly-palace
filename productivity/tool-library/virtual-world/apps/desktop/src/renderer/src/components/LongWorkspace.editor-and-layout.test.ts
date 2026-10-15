@@ -349,7 +349,7 @@ describe("long-form renderer vertical slice: editor-and-layout", () => {
     );
     expect(longWorkspaceModuleSource).toContain('<template v-if="book">');
     expect(longWorkspaceModuleSource).toContain(
-      "<LongWorkspacePanePlaceholder"
+      'class="manual-workspace-empty"'
     );
     expect(longWorkspaceModuleSource).toContain(
       '<template v-if="workspaceIndex">'

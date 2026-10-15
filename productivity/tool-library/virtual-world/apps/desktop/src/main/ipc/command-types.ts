@@ -1,4 +1,3 @@
-import type { RevisionAnalysisConfigStore } from "../extras/revision-analysis/config-store";
 import type { BrowserWindow } from "electron";
 import type {
   AgentRuntimeRef,
@@ -23,6 +22,7 @@ import type { LibraryAgentConfigStore } from "../library-agent-config-store";
 import type { listRemoteModels } from "../list-remote-models";
 import type { LongAgentConfigStore } from "../long-agent-config-store";
 import type { PromptTemplateStore } from "../prompt-template-store";
+import type { ToolLibraryStore } from "../tool-library-store";
 import type { exportLongManuscript } from "../long-manuscript-export";
 import type { ModelConfigStore } from "../model-config-store";
 import type { ModelUsageStore } from "../model-usage-store";
@@ -62,11 +62,11 @@ export interface IpcCommandContext {
   requireModelConfigStore: () => ModelConfigStore;
   requireModelUsageStore: () => ModelUsageStore;
   requireChatAssistantProjectConfigStore: () => ChatAssistantProjectConfigStore;
-  requireRevisionAnalysisConfigStore: () => RevisionAnalysisConfigStore;
   requireAgentTeamConfigStore: () => AgentTeamConfigStore;
   requireLibraryAgentConfigStore: () => LibraryAgentConfigStore;
   requireLongAgentConfigStore: () => LongAgentConfigStore;
   requirePromptTemplateStore: () => PromptTemplateStore;
+  requireToolLibraryStore: () => ToolLibraryStore;
   requireWorkspaceDirectoryStore: () => WorkspaceDirectoryStore;
   requireAppearanceService: () => AppearanceService;
   requireGeneralSettingsStore: () => GeneralSettingsStore;

@@ -1,36 +1,9 @@
 import { describe, expect, it } from "vitest";
 // @ts-expect-error Loaded as source text by the Vitest-only virtual module.
 import rendererStyles from "virtual:deepwrite-renderer-styles";
-import conversationSource from "./AgentConversation.vue?raw";
-import panelSource from "./AgentActivityFloatPanel.vue?raw";
 import workspaceSource from "../test-support/workspaceShellSource";
 
 describe("agent activity floating panel", () => {
-  it("renders the status list outside normal conversation layout", () => {
-    expect(panelSource).toContain('aria-label="智能体执行列表"');
-    expect(panelSource).toContain("agent-activity-spinner");
-    expect(panelSource).toContain("item.status");
-    expect(panelSource).toContain('completed: "已完成，等待查看"');
-    expect(panelSource).toContain("暂无运行中的智能体");
-    expect(rendererStyles).toContain(".agent-activity-panel {");
-    expect(rendererStyles).toContain("position: absolute;");
-    expect(rendererStyles).toContain("max-height: min(40vh, 420px);");
-  });
-
-  it("adds a persistent header toggle and a collapsed activity badge", () => {
-    expect(conversationSource).toContain("展开智能体执行列表");
-    expect(conversationSource).toContain("收起智能体执行列表");
-    expect(conversationSource).toContain("agent-activity-toggle-badge");
-    expect(conversationSource).toContain('name="panel-top"');
-    expect(conversationSource).toContain("<AgentActivityFloatPanel");
-    expect(conversationSource).not.toContain(
-      "!agentActivityCollapsed && agentActivityItems.length"
-    );
-    expect(rendererStyles).toContain(
-      ".agent-activity-toggle.is-collapsed .agent-activity-toggle-icon"
-    );
-  });
-
   it("injects one workspace-level coordinator without changing IPC", () => {
     expect(workspaceSource).toContain("useAgentActivityCoordinator({");
     expect(workspaceSource).toContain(

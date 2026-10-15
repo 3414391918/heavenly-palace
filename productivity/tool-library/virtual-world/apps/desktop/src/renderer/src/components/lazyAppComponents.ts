@@ -16,9 +16,7 @@ function lazyFeature<T extends Component>(
 export const AuthorSupportDialog = lazyFeature((features) =>
   features.loadAuthorSupportDialog()
 );
-export const AgentTeamCatalogFeature = lazyFeature((features) =>
-  features.loadAgentTeamCatalogFeature()
-);
+
 export const LongWorkspaceModule = lazyFeature(
   (features) => features.loadLongWorkspaceModule(),
   LongWorkspaceLoading
@@ -35,15 +33,16 @@ export const WorkspaceDirectoryFeature = lazyFeature((features) =>
 export const PromptTemplateManager = lazyFeature((features) =>
   features.loadPromptTemplateManager()
 );
+export const ToolManager = lazyFeature((features) =>
+  features.loadToolManager()
+);
 export const WorkspaceFeatureModules = lazyFeature((features) =>
   features.loadWorkspaceFeatureModules()
 );
 export const WorkspaceDialogLayer = lazyFeature((features) =>
   features.loadWorkspaceDialogLayer()
 );
-export const AgentConversation = lazyFeature((features) =>
-  features.loadAgentConversation()
-);
+
 export const BookTransferDialog = lazyFeature((features) =>
   features.loadBookTransferDialog()
 );
@@ -109,9 +108,6 @@ export const SaveConflictDialog = lazyFeature((features) =>
 );
 export const StartupAlertDialog = lazyFeature((features) =>
   features.loadStartupAlertDialog()
-);
-export const RevisionAnalysisPage = lazyFeature((features) =>
-  features.loadRevisionAnalysisPage()
 );
 
 export const WindowMenuBar = lazyFeature((features) =>

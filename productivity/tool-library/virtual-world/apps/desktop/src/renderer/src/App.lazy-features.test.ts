@@ -21,7 +21,7 @@ describe("App lazy feature mounting", () => {
     );
     expectSourceToContain(
       lazyComponentsSource,
-      '() => import("./AgentTeamCatalogFeature.vue")'
+      '() => import("./ToolManager.vue")'
     );
     expect(lazyComponentsSource).not.toContain("CloudBackupPage.vue");
     expectSourceToContain(

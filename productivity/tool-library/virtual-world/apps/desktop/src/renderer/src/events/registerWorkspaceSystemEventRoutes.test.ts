@@ -114,7 +114,7 @@ describe("workspace system event routes", () => {
     dispose();
     center.publish(event({ type: "agent.usage_observed", payload: {} }));
 
-    expect(dependencies.revisionAnalysis.handleEvent).not.toHaveBeenCalled();
+    expect(dependencies.revisionAnalysis!.handleEvent).not.toHaveBeenCalled();
     expect(dependencies.allConversations).not.toHaveBeenCalled();
     expect(dependencies.handleLongWorkspaceProposal).not.toHaveBeenCalled();
   });

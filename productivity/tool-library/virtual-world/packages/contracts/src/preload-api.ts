@@ -104,6 +104,7 @@ import type {
 export interface DeepWriteApi
   extends TextContextMenuPreloadApi, ChatAssistantConfigApi {
   fishAudio: FishAudioPreloadApi;
+  toolLibrary: import("./tool-library").ToolLibraryApi;
   windowFrame?: WindowFrameApi;
   system: {
     health(): Promise<SystemHealthPayload>;
@@ -242,7 +243,6 @@ export interface DeepWriteApi
     save(settings: LibraryAgentSettingsInput): Promise<LibraryAgentSettings>;
     reset(domain?: LibraryAgentDomain): Promise<LibraryAgentSettings>;
   };
-  revisionAnalysis: import("./revision-analysis").RevisionAnalysisApi;
   workspaceDirectory: {
     list(): Promise<WorkspaceDirectorySettings>;
     choose(): Promise<WorkspaceDirectorySettings | null>;

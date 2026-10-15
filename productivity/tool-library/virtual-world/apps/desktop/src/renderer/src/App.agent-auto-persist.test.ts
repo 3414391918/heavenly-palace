@@ -7,7 +7,6 @@ import presentationCoordinatorSource from "./composables/useLongWorkspacePresent
 import coordinatorSource from "./test-support/proposalCoordinatorSource";
 import worldbuildingLaneSource from "./composables/proposal-coordinator/long-worldbuilding-lane.ts?raw";
 import longImpactApprovalSource from "./composables/proposal-coordinator/long-impact-approval.ts?raw";
-import shortConversationSource from "./composables/useLibraryConversationCoordinator.ts?raw";
 import eventRoutesSource from "./events/registerWorkspaceSystemEventRoutes.ts?raw";
 
 describe("App agent realtime auto persistence", () => {
@@ -119,12 +118,10 @@ describe("App agent realtime auto persistence", () => {
     );
   });
 
-  it("enables live proposal handling for every main conversation context", () => {
-    expect(shortConversationSource).toContain("allowLiveEditReview: true");
-    expect(writingWorkspaceSource).toContain('v-bind="conversationContext"');
-    expect(longWorkspaceSource).toContain("allow-live-edit-review");
-    expect(source).not.toContain(
-      ":allow-live-edit-review=\"\n          activeAgentDocument.domain === 'creation'"
+  it("does not mount live proposal handling in manual editors", () => {
+    expect(writingWorkspaceSource).not.toContain(
+      'v-bind="conversationContext"'
     );
+    expect(longWorkspaceSource).not.toContain("allow-live-edit-review");
   });
 });

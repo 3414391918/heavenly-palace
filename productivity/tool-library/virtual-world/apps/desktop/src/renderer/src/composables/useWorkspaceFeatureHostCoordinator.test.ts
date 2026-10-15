@@ -84,16 +84,6 @@ function createHarness(overrides: HarnessOverrides = {}) {
     },
     settingsStore,
     catalogSnapshot: shallowRef(null),
-    features: {
-      revisionAnalysis: {
-        controller: shallowRef(null),
-        ensureLoaded: ensureRevisionLoaded
-      },
-      subagentAuthoring: {
-        controller: authoringController,
-        ensureLoaded: ensureAuthoringLoaded
-      }
-    },
     actions: {
       saveActiveLongEditorBeforeLeaving: saveBeforeLeaving,
       newLibraryConversation,
@@ -144,51 +134,45 @@ describe("useWorkspaceFeatureHostCoordinator", () => {
     expect(harness.coordinator.activeFeature.value).toBe("models");
   });
 
-  it("projects every feature descriptor and leaves both writing surfaces unwrapped", async () => {
+  it("projects manual feature descriptors and redirects old feature identities", async () => {
     const harness = createHarness();
-
     expect(harness.coordinator.workspaceFeatureModule.value).toBeNull();
-    harness.activeLongBookId.value = "long-book";
-    expect(harness.coordinator.workspaceFeatureModule.value).toBeNull();
-    harness.activeLongBookId.value = null;
-
-    const featureKinds = [
+    for (const feature of [
       "directory",
       "models",
-      "revision-analysis",
-      "revision-analysis",
-      "agent-team"
-    ] as const;
-    for (const feature of featureKinds) {
+      "tools",
+      "voice-manager",
+      "prompt-templates"
+    ] as const) {
       harness.workspaceMainView.value = feature;
       expect(harness.coordinator.workspaceFeatureModule.value?.kind).toBe(
         feature
       );
     }
-
+    for (const legacy of ["agent-team", "revision-analysis"] as const) {
+      harness.workspaceMainView.value = legacy;
+      expect(harness.coordinator.workspaceFeatureModule.value).toEqual({
+        kind: "tools"
+      });
+    }
     await harness.coordinator.openSettings("appearance");
-    const settingsModule = harness.coordinator.workspaceFeatureModule.value;
-    expect(settingsModule?.kind).toBe("settings");
-    expect(
-      settingsModule?.kind === "settings"
-        ? settingsModule.initialCategory
-        : undefined
-    ).toBe("appearance");
+    const settings = harness.coordinator.workspaceFeatureModule.value;
+    expect(settings?.kind).toBe("settings");
+    expect(settings?.kind === "settings" && settings.initialCategory).toBe(
+      "appearance"
+    );
   });
 
-  it("opens style comparison through the save guard and loads available models", async () => {
+  it("opens tools through the save guard without loading model or team controllers", async () => {
     const harness = createHarness();
-    await harness.coordinator.openWorkspaceDialog("revision-analysis");
+    await harness.coordinator.openWorkspaceDialog("tools");
     expect(harness.saveBeforeLeaving).toHaveBeenCalledOnce();
-    expect(harness.loaders.loadModelSettings).toHaveBeenCalledOnce();
+    expect(harness.loaders.loadModelSettings).not.toHaveBeenCalled();
     expect(harness.coordinator.workspaceFeatureModule.value).toEqual({
-      kind: "revision-analysis",
-      models: [],
-      controller: null,
-      catalogSnapshot: null
+      kind: "tools"
     });
     const blocked = createHarness({ saveBeforeLeaving: async () => false });
-    await blocked.coordinator.openWorkspaceDialog("revision-analysis");
+    await blocked.coordinator.openWorkspaceDialog("tools");
     expect(blocked.workspaceMainView.value).toBe("conversation");
   });
 
@@ -228,89 +212,56 @@ describe("useWorkspaceFeatureHostCoordinator", () => {
     ).toBe(true);
   });
 
-  it("does not let a late imitation or team load replace a newer page", async () => {
-    const learning = deferred<void>();
-    const authoring = deferred<void>();
+  it("does not let a delayed save replace a newer page", async () => {
+    const saving = deferred<boolean>();
+    let calls = 0;
     const harness = createHarness({
-      ensureRevisionLoaded: () => learning.promise,
-      ensureAuthoringLoaded: () => authoring.promise
+      saveBeforeLeaving: () =>
+        ++calls === 1 ? saving.promise : Promise.resolve(true)
     });
-
-    const imitationNavigation =
-      harness.coordinator.openWorkspaceDialog("revision-analysis");
-    await Promise.resolve();
+    const opening = harness.coordinator.openWorkspaceDialog("tools");
     await harness.coordinator.openWorkspaceDialog("models");
-    learning.resolve();
-    await imitationNavigation;
+    saving.resolve(true);
+    await opening;
     expect(harness.workspaceMainView.value).toBe("models");
-
-    const teamNavigation = harness.coordinator.openAgentTeams();
-    await Promise.resolve();
-    await harness.coordinator.openWorkspaceDialog("models");
-    authoring.resolve();
-    await teamNavigation;
-    expect(harness.workspaceMainView.value).toBe("models");
-    expect(harness.loaders.loadAgentTeamSettings).not.toHaveBeenCalled();
   });
 
-  it("does not let a lazy feature replace an external conversation navigation", async () => {
-    const learning = deferred<void>();
-    const harness = createHarness({
-      ensureRevisionLoaded: () => learning.promise
-    });
-
-    harness.workspaceMainView.value = "models";
-    const imitationNavigation =
-      harness.coordinator.openWorkspaceDialog("revision-analysis");
-    await Promise.resolve();
+  it("does not let a delayed save replace a resource navigation", async () => {
+    const saving = deferred<boolean>();
+    const harness = createHarness({ saveBeforeLeaving: () => saving.promise });
+    const opening = harness.coordinator.openWorkspaceDialog("tools");
     harness.coordinator.showConversation();
-    learning.resolve();
-    await imitationNavigation;
-
+    saving.resolve(true);
+    await opening;
     expect(harness.workspaceMainView.value).toBe("conversation");
-    expect(harness.loaders.loadModelSettings).not.toHaveBeenCalled();
   });
 
-  it("reports an active lazy-feature failure but suppresses a stale failure", async () => {
-    const activeHarness = createHarness({
-      ensureRevisionLoaded: async () => {
-        throw new Error("仿写模块不可用");
-      }
-    });
-    await activeHarness.coordinator.openWorkspaceDialog("revision-analysis");
-    expect(activeHarness.errors).toEqual(["仿写模块不可用"]);
-    expect(activeHarness.workspaceMainView.value).toBe("conversation");
-
-    const pending = deferred<void>();
-    const staleHarness = createHarness({
-      ensureAuthoringLoaded: () => pending.promise
-    });
-    const teamNavigation = staleHarness.coordinator.openAgentTeams();
-    await Promise.resolve();
-    await staleHarness.coordinator.openWorkspaceDialog("models");
-    pending.reject(new Error("旧团队加载失败"));
-    await teamNavigation;
-    expect(staleHarness.errors).toEqual([]);
-  });
-
-  it("loads only the dependencies owned by conversation, long writing, and models", async () => {
+  it("does not load retired analysis or authoring controllers", async () => {
     const harness = createHarness();
+    await harness.coordinator.openWorkspaceDialog("revision-analysis");
+    await harness.coordinator.openAgentTeams();
+    expect(harness.workspaceMainView.value).toBe("tools");
+    expect(harness.ensureRevisionLoaded).not.toHaveBeenCalled();
+    expect(harness.ensureAuthoringLoaded).not.toHaveBeenCalled();
+  });
 
-    await harness.coordinator.ensureActiveFeatureDependencies("conversation");
-    expect(harness.loaders.loadModelSettings).toHaveBeenCalledTimes(1);
-    expect(harness.loaders.loadLibraryAgentSettings).toHaveBeenCalledTimes(1);
-    expect(harness.loaders.loadAgentTeamSettings).toHaveBeenCalledTimes(1);
-
-    await harness.coordinator.ensureActiveFeatureDependencies("long-workspace");
-    expect(harness.loaders.loadModelSettings).toHaveBeenCalledTimes(2);
-    expect(harness.loaders.ensureLongAgentSettingsLoaded).toHaveBeenCalledTimes(
-      1
-    );
-    expect(harness.loaders.loadAgentTeamSettings).toHaveBeenCalledTimes(2);
-
+  it("keeps manual pages independent of model and agent settings", async () => {
+    const harness = createHarness();
+    for (const feature of [
+      "conversation",
+      "long-workspace",
+      "tools",
+      "directory"
+    ] as const)
+      await harness.coordinator.ensureActiveFeatureDependencies(feature);
+    expect(harness.loaders.loadModelSettings).not.toHaveBeenCalled();
+    expect(harness.loaders.loadLibraryAgentSettings).not.toHaveBeenCalled();
+    expect(
+      harness.loaders.ensureLongAgentSettingsLoaded
+    ).not.toHaveBeenCalled();
+    expect(harness.loaders.loadAgentTeamSettings).not.toHaveBeenCalled();
     await harness.coordinator.ensureActiveFeatureDependencies("models");
-    await harness.coordinator.ensureActiveFeatureDependencies("directory");
-    expect(harness.loaders.loadModelSettings).toHaveBeenCalledTimes(3);
+    expect(harness.loaders.loadModelSettings).toHaveBeenCalledOnce();
   });
 
   it("loads settings models without opening removed official model pages", async () => {
@@ -322,8 +273,8 @@ describe("useWorkspaceFeatureHostCoordinator", () => {
     expect(harness.loaders.loadOfficialModels).not.toHaveBeenCalled();
     expect(
       harness.loaders.ensureLongAgentSettingsLoaded
-    ).toHaveBeenCalledOnce();
-    expect(harness.loaders.loadLibraryAgentSettings).toHaveBeenCalledOnce();
+    ).not.toHaveBeenCalled();
+    expect(harness.loaders.loadLibraryAgentSettings).not.toHaveBeenCalled();
 
     harness.coordinator.closeSettings();
     await harness.coordinator.openSettings("custom-models");

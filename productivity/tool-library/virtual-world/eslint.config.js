@@ -9,6 +9,7 @@ const sourceFiles = ["**/*.{js,mjs,cjs,ts,vue}"];
 const nodeFiles = [
   "*.{js,mjs,cjs,ts}",
   "tools/**/*.{js,mjs,cjs,ts}",
+  "toolkit/**/*.{js,mjs,cjs,ts}",
   "packages/**/*.{js,mjs,cjs,ts}",
   "apps/desktop/src/main/**/*.{js,mjs,cjs,ts}",
   "apps/desktop/src/preload/**/*.{js,mjs,cjs,ts}",

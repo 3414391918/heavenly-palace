@@ -105,6 +105,7 @@ const {
   handleEditorContextMenu,
   handlePreviewContextMenu
 } = useEditorSelectionInsertion({
+  allowReferences: false,
   history: {
     canUndo: () => canUndo.value,
     canRedo: () => canRedo.value,

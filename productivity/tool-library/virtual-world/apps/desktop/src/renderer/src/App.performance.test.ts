@@ -17,11 +17,7 @@ describe("App performance boundaries", () => {
     expect(compositionSource).toContain("useCatalogDocumentPersistence");
   });
   it("loads settings, teams and novel editors on demand", () => {
-    for (const name of [
-      "SettingsPage",
-      "AgentTeamCatalogFeature",
-      "LongWorkspaceModule"
-    ])
+    for (const name of ["SettingsPage", "ToolManager", "LongWorkspaceModule"])
       expect(imports).toContain(name + ".vue");
     expect(lazyLong).toContain('import("./useLongBookLifecycleCoordinator")');
     expect(shellSource).not.toContain(

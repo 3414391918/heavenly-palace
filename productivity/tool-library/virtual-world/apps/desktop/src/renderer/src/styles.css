@@ -3,6 +3,7 @@
 @import "./styles/agent-activity.css";
 @import "./styles/conversation-turn-navigator.css";
 @import "./styles/context-window-indicator.css";
+@import "./styles/manual-workspace.css";
 
 :root {
   color: var(--text-primary, #202226);

@@ -1,4 +1,3 @@
-import { watchFeatureErrors } from "./workspaceFeatureErrors";
 import { computed, ref } from "vue";
 import type { DialogMode } from "../types/workspace";
 import type {
@@ -58,8 +57,6 @@ export function useWorkspaceFeatureHostCoordinator(
     )
   );
 
-  const stopFeatureErrors = watchFeatureErrors(options, () => active);
-
   function beginNavigation(): number {
     return ++navigationGeneration;
   }
@@ -100,27 +97,12 @@ export function useWorkspaceFeatureHostCoordinator(
   async function openWorkspaceDialog(mode: DialogMode): Promise<void> {
     const generation = beginNavigation();
     if (!(await canApplyNavigation(generation))) return;
-    if (mode === "revision-analysis") {
-      try {
-        await options.features.revisionAnalysis.ensureLoaded();
-      } catch (error: unknown) {
-        if (navigationIsCurrent(generation))
-          options.notifications.error(
-            errorMessage(error, "加载修改分析模块失败。")
-          );
-        return;
-      }
-      if (!navigationIsCurrent(generation)) return;
-    }
+    if (mode === "revision-analysis") mode = "tools";
     options.view.workspaceMain.value = mode;
     if (mode === "directory" && options.api()) {
       issueBackground(loadWorkspaceDirectory);
     }
-    if (
-      (mode === "models" || mode === "revision-analysis") &&
-      !settingsStore.modelSettings &&
-      options.api()
-    ) {
+    if (mode === "models" && !settingsStore.modelSettings && options.api()) {
       issueBackground(options.loaders.loadModelSettings);
     }
   }
@@ -148,8 +130,6 @@ export function useWorkspaceFeatureHostCoordinator(
     if (!settingsStore.modelSettings) {
       issueBackground(options.loaders.loadModelSettings);
     }
-    issueBackground(options.loaders.ensureLongAgentSettingsLoaded);
-    issueBackground(options.loaders.loadLibraryAgentSettings);
   }
 
   function openOfficialModelsSettings(): void {
@@ -159,25 +139,7 @@ export function useWorkspaceFeatureHostCoordinator(
   async function openAgentTeams(): Promise<void> {
     const generation = beginNavigation();
     if (!(await canApplyNavigation(generation))) return;
-    try {
-      await options.features.subagentAuthoring.ensureLoaded();
-    } catch (error: unknown) {
-      if (navigationIsCurrent(generation)) {
-        options.notifications.error(
-          errorMessage(error, "加载子智能体团队模块失败。")
-        );
-      }
-      return;
-    }
-    if (!navigationIsCurrent(generation)) return;
-    agentTeamNavigationEpoch.value += 1;
-    options.view.workspaceMain.value = "agent-team";
-    if (options.api() && !settingsStore.agentTeamLoaded) {
-      issueBackground(options.loaders.loadAgentTeamSettings);
-    }
-    if (options.api() && !settingsStore.modelSettings) {
-      issueBackground(options.loaders.loadModelSettings);
-    }
+    options.view.workspaceMain.value = "tools";
     if (options.api() && !options.catalogSnapshot.value) {
       issueBackground(options.loaders.loadCatalogSnapshot);
     }
@@ -238,22 +200,6 @@ export function useWorkspaceFeatureHostCoordinator(
     feature: ActiveFeature
   ): Promise<void> {
     if (!active || !options.api()) return;
-    if (feature === "conversation") {
-      await Promise.all([
-        options.loaders.loadModelSettings(),
-        options.loaders.loadLibraryAgentSettings(),
-        options.loaders.loadAgentTeamSettings()
-      ]);
-      return;
-    }
-    if (feature === "long-workspace") {
-      await Promise.all([
-        options.loaders.loadModelSettings(),
-        options.loaders.ensureLongAgentSettingsLoaded(),
-        options.loaders.loadAgentTeamSettings()
-      ]);
-      return;
-    }
     if (feature === "models") {
       await options.loaders.loadModelSettings();
     }
@@ -262,7 +208,6 @@ export function useWorkspaceFeatureHostCoordinator(
   function dispose(): void {
     if (!active) return;
     active = false;
-    stopFeatureErrors();
     navigationGeneration += 1;
     directoryChooseGeneration += 1;
     if (directoryChoosePending) {

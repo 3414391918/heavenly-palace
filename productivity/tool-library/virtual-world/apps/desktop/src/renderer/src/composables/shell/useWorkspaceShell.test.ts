@@ -50,7 +50,7 @@ describe("workspace shell composition", () => {
         setup() {
           const shell = useWorkspaceShell();
           expect(shell.selectedResourceId).toBe("");
-          expect(shell.workspaceFeatureModule).toBeNull();
+          expect(shell.workspaceFeatureModule).toEqual({ kind: "tools" });
           expect(shell.activeAgentDocument.domain).toBe("creation");
           expect(
             shell.resourceTreeSections.find(

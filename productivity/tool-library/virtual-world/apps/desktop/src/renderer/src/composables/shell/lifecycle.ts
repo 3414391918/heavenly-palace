@@ -11,8 +11,6 @@ import { useWorkspaceLifecycleCoordinator } from "../../composables/useWorkspace
 export function useShellLifecycle(ports: ShellRuntimePorts): LifecycleRuntime {
   function startWorkspaceSystemEvents(): () => void {
     const removeRoutes = registerWorkspaceSystemEventRoutes(systemEventCenter, {
-      revisionAnalysis: ports.features.revisionAnalysisFeature,
-      subagentAuthoring: ports.features.subagentAuthoringFeature,
       stageLongPlotDesignEditProposal: deferShellAction(
         () => ports.proposals.stageLongPlotDesignEditProposal
       ),
@@ -75,7 +73,7 @@ export function useShellLifecycle(ports: ShellRuntimePorts): LifecycleRuntime {
     toggleRight: () => {
       ports.state.rightCollapsed.value = !ports.state.rightCollapsed.value;
     },
-    canToggleRight: () => ports.state.currentView.value === "workspace",
+    canToggleRight: () => false,
     escape: () => {
       ports.features.closeCreateBookDialog();
       ports.state.bookTransferDialogMode.value = null;
@@ -91,14 +89,12 @@ export function useShellLifecycle(ports: ShellRuntimePorts): LifecycleRuntime {
     if (!window.deepwrite) return;
     const tasks: Promise<unknown>[] = [
       ports.features.loadAppAlerts(),
-      ports.editor.loadCatalogSnapshot()
+      ports.editor.loadCatalogSnapshot(),
+      ports.novel.loadLongBookList({ notify: true })
     ];
     const bookId = ports.state.activeLongBookId.value;
     if (bookId) {
-      tasks.push(
-        ports.novel.loadLongBookList({ notify: true }),
-        ports.novel.refreshLongWorkspaceOnWindowFocus(bookId)
-      );
+      tasks.push(ports.novel.refreshLongWorkspaceOnWindowFocus(bookId));
     }
     const results = await Promise.allSettled(tasks);
     const failure = results.find(
@@ -179,9 +175,7 @@ export function useShellLifecycle(ports: ShellRuntimePorts): LifecycleRuntime {
         ports.state.conversationStore.dispose({
           flush: ports.conversations.conversationPersistenceEnabled,
           isCurrent: ports.state.ownsConversationStore
-        }),
-      () => ports.features.disposeAnalysisFeatures(),
-      () => ports.features.subagentAuthoringFeature.dispose()
+        })
     ],
     onError(error, operation) {
       console.error(
