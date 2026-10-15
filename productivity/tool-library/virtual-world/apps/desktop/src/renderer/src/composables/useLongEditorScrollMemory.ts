@@ -53,6 +53,7 @@ export function useLongEditorScrollMemory(options: {
   viewMode: Ref<TextViewMode>;
   editorInput: Ref<HTMLTextAreaElement | null | undefined>;
   documentPreview: Ref<HTMLElement | null | undefined>;
+  visualMode?: () => boolean;
   /**
    * Short and script editors reset the view mode in their own document watch
    * and then restore. Leaving this on would record the previous section's
@@ -60,9 +61,12 @@ export function useLongEditorScrollMemory(options: {
    */
   bindIdentityWatch?: boolean;
 }) {
-  function scrollerFor(view: TextViewMode): ScrollElement | null {
+  function scrollerFor(
+    view: TextViewMode,
+    visual = options.visualMode?.() ?? false
+  ): ScrollElement | null {
     const element =
-      view === "edit"
+      view === "edit" && !visual
         ? options.editorInput.value
         : options.documentPreview.value;
     return element ?? null;
@@ -70,9 +74,10 @@ export function useLongEditorScrollMemory(options: {
 
   function rememberScroll(
     key = options.documentKey(),
-    view = options.viewMode.value
+    view = options.viewMode.value,
+    visual = options.visualMode?.() ?? false
   ): void {
-    const scroller = scrollerFor(view);
+    const scroller = scrollerFor(view, visual);
     if (!scroller) return;
     rememberEditorScrollPosition(key, view, scroller.scrollTop);
   }

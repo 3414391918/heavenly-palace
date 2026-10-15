@@ -10,7 +10,7 @@ vi.mock("../ui-feedback", () => ({
   uiMessage: { info: vi.fn(), success: vi.fn(), error: vi.fn() }
 }));
 
-function harness() {
+function harness(visual = false) {
   const content = ref("  未保存正文。\n第二段。");
   const kind = ref<BodyTextKind | undefined>("short");
   const blocked = ref(false);
@@ -34,12 +34,15 @@ function harness() {
   const updateContent = vi.fn((next: string) => {
     content.value = next;
   });
+  const restoreSelection = vi.fn();
   const api = useBodyTextFormatting({
     kind: () => kind.value,
     content: () => content.value,
     disabled: () => blocked.value,
     documentKey: () => key.value,
     editorInput: () => input as unknown as HTMLTextAreaElement,
+    ...(visual ? { selection: () => ({ start: 5, end: 5 }) } : {}),
+    restoreSelection,
     recordChange,
     updateContent
   });
@@ -52,7 +55,8 @@ function harness() {
     history,
     input,
     recordChange,
-    updateContent
+    updateContent,
+    restoreSelection
   };
 }
 
@@ -61,6 +65,12 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 describe("body text formatting operation", () => {
+  it("returns the caret to the visible chapter after formatting", async () => {
+    const h = harness(true);
+    await h.api.format();
+    await nextTick();
+    expect(h.restoreSelection).toHaveBeenCalledWith(5, 5);
+  });
   it("formats the current draft in one undo step and supports redo", async () => {
     const h = harness();
     const original = h.content.value;

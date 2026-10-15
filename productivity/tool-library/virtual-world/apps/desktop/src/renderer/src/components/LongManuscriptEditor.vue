@@ -11,6 +11,11 @@ import ChapterImageActions from "../features/chapter-images/ChapterImageActions.
 import type { ChapterImageContext } from "../features/chapter-images/useChapterImageActions";
 import ChapterImagePasteDialog from "../features/chapter-images/ChapterImagePasteDialog.vue";
 import { useChapterIllustrationInsertion } from "../features/chapter-images/useChapterIllustrationInsertion";
+import ChapterVisualEditor from "../features/chapter-images/ChapterVisualEditor.vue";
+import type {
+  ChapterVisualInput,
+  ChapterVisualSelection
+} from "../features/chapter-images/chapterVisualSegments";
 import { uiMessage } from "../ui-feedback";
 
 const props = defineProps<{
@@ -26,6 +31,7 @@ const props = defineProps<{
   imageContext?: ChapterImageContext | undefined;
   documentKey: string;
   viewMode: TextViewMode;
+  visual: boolean;
   readOnly: boolean;
   busy: boolean;
   committedNotice: string | undefined;
@@ -40,6 +46,7 @@ const emit = defineEmits<{
   titleKeydown: [event: KeyboardEvent];
   beforeinput: [event: InputEvent];
   input: [event: Event];
+  visualInput: [change: ChapterVisualInput];
   keydown: [event: KeyboardEvent];
   contextmenu: [event: MouseEvent];
   previewContextmenu: [event: MouseEvent];
@@ -55,12 +62,16 @@ const emit = defineEmits<{
 
 const editorElement = ref<HTMLTextAreaElement | null>(null);
 const previewElement = ref<HTMLElement | null>(null);
+const visualEditor = ref<InstanceType<typeof ChapterVisualEditor> | null>(null);
 const insertion = useChapterIllustrationInsertion({
   context: () => props.imageContext,
   documentKey: () => props.documentKey,
   content: () => props.content,
   savedContent: () => props.savedContent,
-  blocked: () => props.readOnly || props.busy || props.viewMode !== "edit",
+  blocked: () =>
+    props.readOnly ||
+    props.busy ||
+    (!props.visual && props.viewMode !== "edit"),
   api: () => {
     const api = window.deepwrite?.long;
     if (!api) throw new Error("桌面图片服务不可用。");
@@ -68,9 +79,16 @@ const insertion = useChapterIllustrationInsertion({
   },
   added: (result, previous) => {
     const input = editorElement.value;
-    const scrollTop = input?.scrollTop ?? 0;
+    const scrollTop = props.visual
+      ? (previewElement.value?.scrollTop ?? 0)
+      : (input?.scrollTop ?? 0);
     emit("illustrationAdded", result, previous);
     void nextTick(() => {
+      if (props.visual) {
+        visualEditor.value?.focusRange(result.selectionOffset);
+        if (previewElement.value) previewElement.value.scrollTop = scrollTop;
+        return;
+      }
       if (!input || input !== editorElement.value) return;
       input.setSelectionRange(result.selectionOffset, result.selectionOffset);
       input.focus({ preventScroll: true });
@@ -84,6 +102,25 @@ function handleContextMenu(event: MouseEvent) {
   emit("contextmenu", event);
   insertion.register(event);
 }
+
+function handleVisualContextMenu(event: MouseEvent, baseOffset: number) {
+  emit("contextmenu", event);
+  insertion.register(event, baseOffset);
+}
+
+function handleVisualSelection(selection: ChapterVisualSelection) {
+  editorElement.value?.setSelectionRange(selection.start, selection.end);
+}
+
+function focusRange(start: number, end = start) {
+  visualEditor.value?.focusRange(start, end);
+}
+
+function getSelection(): ChapterVisualSelection | undefined {
+  return props.visual ? visualEditor.value?.getSelection() : undefined;
+}
+
+defineExpose({ focusRange, getSelection });
 
 watch(editorElement, (element) => emit("editorElementChange", element), {
   flush: "post"
@@ -144,8 +181,17 @@ function updateTitle(event: Event): void {
       {{ title }}
     </h1>
 
+    <textarea
+      v-if="visual"
+      ref="editorElement"
+      :value="content"
+      class="long-visual-source-input"
+      tabindex="-1"
+      aria-hidden="true"
+      readonly
+    />
     <EditorSearchHighlight
-      v-if="viewMode === 'edit'"
+      v-else-if="viewMode === 'edit'"
       :content="content"
       :matches="searchMatches"
       :active-index="activeSearchIndex"
@@ -166,20 +212,34 @@ function updateTitle(event: Event): void {
       />
     </EditorSearchHighlight>
     <article
-      v-else
+      v-if="visual || viewMode === 'preview'"
       ref="previewElement"
       class="long-document-preview"
       @contextmenu="emit('previewContextmenu', $event)"
       @scroll="emit('editorScroll', $event)"
     >
       <ChapterImageActions
-        v-if="content.trim()"
+        v-if="visual || content.trim()"
         :context="imageContext"
         :disabled="busy || readOnly"
         :resolve-image-url="resolveImageUrl"
         v-slot="{ resolveUrl }"
       >
+        <ChapterVisualEditor
+          v-if="visual"
+          ref="visualEditor"
+          :content="content"
+          :disabled="readOnly || busy || insertion.busy.value"
+          :resolve-image-url="resolveImageUrl ?? (() => undefined)"
+          :display-image-url="resolveUrl"
+          @beforeinput="emit('beforeinput', $event)"
+          @input="emit('visualInput', $event)"
+          @selection="handleVisualSelection"
+          @keydown="emit('keydown', $event)"
+          @text-contextmenu="handleVisualContextMenu"
+        />
         <MarkdownContent
+          v-else
           :content="content"
           :resolve-image-url="resolveUrl"
           annotate-headings
@@ -317,6 +377,15 @@ function updateTitle(event: Event): void {
 
 .long-document-preview .is-empty {
   color: var(--text-tertiary);
+}
+
+.long-visual-source-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  opacity: 0;
+  pointer-events: none;
 }
 
 @container (max-width: 40rem) {

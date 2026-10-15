@@ -53,7 +53,7 @@ export function useChapterIllustrationInsertion(options: {
       offset
     };
   }
-  function register(event: MouseEvent) {
+  function register(event: MouseEvent, baseOffset = 0) {
     releaseMenu?.();
     releaseMenu = undefined;
     const input = event.currentTarget;
@@ -75,7 +75,7 @@ export function useChapterIllustrationInsertion(options: {
         options.content() === content &&
         !options.blocked() &&
         !busy.value,
-      add: () => open(input.selectionEnd)
+      add: () => open(baseOffset + input.selectionEnd)
     });
   }
   function close() {

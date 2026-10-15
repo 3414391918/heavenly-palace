@@ -8,6 +8,7 @@ import {
   type TextSelectionRange
 } from "../utils/boundedTextHistory";
 import type { LongDocumentState } from "./useLongEditorDocumentSession";
+import type { ChapterVisualInput } from "../features/chapter-images/chapterVisualSegments";
 
 export function useLongEditorHistory(options: {
   documentStates: Ref<Record<string, LongDocumentState>>;
@@ -30,6 +31,9 @@ export function useLongEditorHistory(options: {
     fileId: string
   ) => void;
   scheduleRecoveryWrite: (key: string) => void;
+  visualMode?: () => boolean;
+  visualSelection?: () => TextSelectionRange | undefined;
+  visualFocusRange?: (start: number, end: number) => void;
 }): {
   textHistory: ReturnType<typeof createBoundedTextHistory>;
   historyVersion: Ref<number>;
@@ -39,6 +43,7 @@ export function useLongEditorHistory(options: {
   notifyHistoryChanged: () => void;
   handleEditorBeforeInput: (event: InputEvent) => void;
   handleEditorInput: (event: Event) => void;
+  recordVisualInput: (change: ChapterVisualInput) => void;
   recordProgrammaticChange: (
     nextContent: string,
     selectionAfter: TextSelectionRange
@@ -86,6 +91,10 @@ export function useLongEditorHistory(options: {
   function getEditorSelection(
     fallback = options.currentVisibleContent.value.length
   ): TextSelectionRange {
+    if (options.visualMode?.()) {
+      const visualSelection = options.visualSelection?.();
+      if (visualSelection) return visualSelection;
+    }
     const input = options.editorInput.value;
     return {
       start: input?.selectionStart ?? fallback,
@@ -179,6 +188,22 @@ export function useLongEditorHistory(options: {
     );
   }
 
+  function recordVisualInput(change: ChapterVisualInput): void {
+    if (options.currentReadOnly.value || options.isDocumentContentBusy.value)
+      return;
+    const result = textHistory.recordInput({
+      beforeContent: options.currentVisibleContent.value,
+      afterContent: change.content,
+      selectionBefore: change.selectionBefore,
+      selectionAfter: change.selectionAfter,
+      inputType: change.inputType,
+      timestamp: change.timestamp
+    });
+    if (result) notifyHistoryChanged();
+    options.updateVisibleContent(change.content);
+    updateVisibleCharacterCount(change.content, result?.nonWhitespaceDelta);
+  }
+
   function recordProgrammaticChange(
     nextContent: string,
     selectionAfter: TextSelectionRange
@@ -213,6 +238,10 @@ export function useLongEditorHistory(options: {
     options.updateVisibleContent(result.content);
     updateVisibleCharacterCount(result.content, result.nonWhitespaceDelta);
     await nextTick();
+    if (options.visualMode?.()) {
+      options.visualFocusRange?.(result.start, result.end);
+      return;
+    }
     const input = options.editorInput.value;
     if (!input) return;
     input.focus({ preventScroll: true });
@@ -245,6 +274,7 @@ export function useLongEditorHistory(options: {
     notifyHistoryChanged,
     handleEditorBeforeInput,
     handleEditorInput,
+    recordVisualInput,
     recordProgrammaticChange,
     updateVisibleCharacterCount,
     restoreEditorHistory,

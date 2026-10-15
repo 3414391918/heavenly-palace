@@ -17,21 +17,27 @@ export function applyBodyTextFormatting(
   const input = options.editorInput();
   const key = options.documentKey();
   const scrollTop = input?.scrollTop;
+  const activeSelection = options.selection?.();
   const selection = {
-    start: Math.min(input?.selectionStart ?? 0, nextContent.length),
-    end: Math.min(input?.selectionEnd ?? 0, nextContent.length)
+    start: Math.min(
+      activeSelection?.start ?? input?.selectionStart ?? 0,
+      nextContent.length
+    ),
+    end: Math.min(
+      activeSelection?.end ?? input?.selectionEnd ?? 0,
+      nextContent.length
+    )
   };
   const delta = options.recordChange(nextContent, selection);
   options.updateContent(nextContent, delta);
   uiMessage.success("已规范正文格式");
   void nextTick(() => {
-    if (
-      key !== options.documentKey() ||
-      !input ||
-      input !== options.editorInput()
-    )
-      return;
-    input.setSelectionRange(selection.start, selection.end);
-    if (scrollTop !== undefined) input.scrollTop = scrollTop;
+    if (key !== options.documentKey()) return;
+    if (input && input === options.editorInput()) {
+      input.setSelectionRange(selection.start, selection.end);
+      if (scrollTop !== undefined) input.scrollTop = scrollTop;
+    }
+    if (activeSelection)
+      options.restoreSelection?.(selection.start, selection.end);
   });
 }

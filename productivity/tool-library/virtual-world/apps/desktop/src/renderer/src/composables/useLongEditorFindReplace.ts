@@ -14,6 +14,9 @@ export function useLongEditorFindReplace(options: {
   canUseTextTools: ComputedRef<boolean>;
   viewMode: Ref<TextViewMode>;
   editorInput: Ref<HTMLTextAreaElement | null>;
+  visualMode?: () => boolean;
+  visualSelection?: () => TextSelectionRange | undefined;
+  visualFocusRange?: (start: number, end: number) => void;
   editorToolsElement: Ref<HTMLElement | undefined>;
   updateVisibleContent: (content: string) => void;
   updateVisibleCharacterCount: (
@@ -94,7 +97,9 @@ export function useLongEditorFindReplace(options: {
     options.viewMode.value = "edit";
     findPanelMode.value = mode;
     findPanelOpen.value = true;
-    searchAnchor.value = options.editorInput.value?.selectionStart ?? 0;
+    searchAnchor.value = options.visualMode?.()
+      ? (options.visualSelection?.()?.start ?? 0)
+      : (options.editorInput.value?.selectionStart ?? 0);
     currentMatchIndex.value = -1;
     await nextTick();
     findInput.value?.focus({ preventScroll: true });
@@ -140,6 +145,12 @@ export function useLongEditorFindReplace(options: {
     currentMatchIndex.value = index;
     options.viewMode.value = "edit";
     await nextTick();
+    if (options.visualMode?.()) {
+      options.visualFocusRange?.(match.start, match.end);
+      await nextTick();
+      findInput.value?.focus({ preventScroll: true });
+      return;
+    }
     const input = options.editorInput.value;
     if (!input) return;
     input.focus({ preventScroll: true });

@@ -41,6 +41,32 @@ beforeEach(() => {
 });
 
 describe("long editor scroll memory", () => {
+  it("remembers the visible chapter scroller instead of its hidden source textarea", async () => {
+    const scope = effectScope();
+    const first = longEditorScrollMemoryKey(identity({ fileId: "body-1" }));
+    const second = longEditorScrollMemoryKey(identity({ fileId: "body-2" }));
+    const key = ref(first);
+    const preview = scrollElement(540);
+    const hidden = scrollElement(0) as HTMLTextAreaElement;
+    const memory = scope.run(() =>
+      useLongEditorViewport({
+        documentKey: () => key.value,
+        viewMode: ref("edit"),
+        editorInput: ref(hidden),
+        documentPreview: ref(preview),
+        visualMode: () => true,
+        contentReady: () => true
+      })
+    )!;
+    memory.handleScroll({ currentTarget: preview } as unknown as Event);
+    key.value = second;
+    await flushScrollRestore();
+    expect(preview.scrollTop).toBe(0);
+    key.value = first;
+    await flushScrollRestore();
+    expect(preview.scrollTop).toBe(540);
+    scope.stop();
+  });
   it("waits for preview content and ignores layout scroll events during loading", async () => {
     const scope = effectScope();
     const key = longEditorScrollMemoryKey(identity());

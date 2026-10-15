@@ -94,9 +94,13 @@ describe("LongManuscriptEditor", () => {
     );
   });
 
-  it("keeps the textarea mounted when an agent temporarily locks editing", () => {
-    expect(source).toContain(`v-if="viewMode === 'edit'"`);
-    expect(source).not.toContain(`v-if="viewMode === 'edit' && !readOnly"`);
+  it("keeps chapter text visible when editing is temporarily locked", () => {
+    expect(source).toContain(`v-if="visual"`);
+    expect(source).toContain(`v-else-if="viewMode === 'edit'"`);
+    expect(source).toContain("<ChapterVisualEditor");
+    expect(source).toContain(
+      ':disabled="readOnly || busy || insertion.busy.value"'
+    );
     expect(source).toContain(
       ':readonly="readOnly || busy || insertion.busy.value"'
     );
@@ -107,6 +111,17 @@ describe("LongManuscriptEditor", () => {
     expect(editorSource).toContain(
       ':readonly="currentReadOnly || isDocumentContentBusy"'
     );
+  });
+
+  it("uses one visual surface only for chapter body while retaining Markdown storage", () => {
+    expect(editorSource).toContain(
+      'currentSelectionFile.value?.role === "body"'
+    );
+    expect(editorSource).toContain(':visual="currentIsDraftBody"');
+    expect(editorSource).toContain('@visual-input="recordVisualInput"');
+    expect(source).toContain("insertion.register(event, baseOffset)");
+    expect(source).toContain("<ChapterImageActions");
+    expect(source).toContain('ref="previewElement"');
   });
 
   it("uses the persisted default mode while keeping read-only files in preview", () => {

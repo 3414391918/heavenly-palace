@@ -93,25 +93,14 @@ export async function runLongEditorPreviewSmoke(
     app = createEditor();
     app.mount(host);
     await until(
-      () => Boolean(host.querySelector(".long-document-editor")),
+      () => Boolean(host.querySelector(".chapter-visual-editor textarea")),
       host,
-      "initial editor"
-    );
-    const previewTab = [
-      ...host.querySelectorAll<HTMLButtonElement>('[role="tab"]')
-    ].find((tab) => tab.textContent?.trim() === "预览")!;
-    previewTab.click();
-    await until(
-      () => Boolean(host.querySelector(".long-document-preview")),
-      host,
-      "initial preview"
+      "unified chapter editor"
     );
     const preview = host.querySelector<HTMLElement>(".long-document-preview")!;
-    await until(
-      () => preview.querySelectorAll("p").length >= 300,
-      host,
-      "loaded preview content"
-    );
+    await until(() => loadedChapterText(preview), host, "loaded chapter text");
+    if (host.querySelector(".long-editor-view-tabs"))
+      throw new Error("Unified chapter still shows separate edit/preview tabs");
     await decodeImages(preview);
     preview.scrollTop = 820;
     preview.dispatchEvent(new Event("scroll"));
@@ -139,17 +128,11 @@ export async function runLongEditorPreviewSmoke(
     app = createEditor();
     app.mount(host);
     await until(
-      () => Boolean(host.querySelector(".long-document-preview")),
+      () => Boolean(host.querySelector(".chapter-visual-editor textarea")),
       host,
-      "reopened preview"
+      "reopened chapter editor"
     );
-    await until(
-      () =>
-        (host.querySelector(".long-document-preview")?.querySelectorAll("p")
-          .length ?? 0) >= 300,
-      host,
-      "reopened preview content"
-    );
+    await until(() => loadedChapterText(host), host, "reopened chapter text");
     await decodeImages(
       host.querySelector<HTMLElement>(".long-document-preview")!
     );
@@ -172,6 +155,14 @@ async function decodeImages(preview: HTMLElement): Promise<void> {
     })
   );
   await settle();
+}
+
+function loadedChapterText(root: ParentNode): boolean {
+  return [
+    ...root.querySelectorAll<HTMLTextAreaElement>(".chapter-visual-text")
+  ].some(
+    (input) => (input.value.match(/用于检查预览位置保留/g)?.length ?? 0) >= 300
+  );
 }
 
 function assertPreview(host: HTMLElement, position: number, operation: string) {

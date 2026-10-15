@@ -9,6 +9,7 @@ import type {
 import LongWorkspaceEditor from "../../components/LongWorkspaceEditor.vue";
 import { createLongChapterSelection } from "../../types/longWorkspace";
 import { installNativeTextContextMenu } from "../../composables/nativeTextContextMenu";
+import { splitChapterVisualSegments } from "./chapterVisualSegments";
 
 /** Runs inside a disposable Electron profile with the real image/save IPC. */
 export async function runChapterIllustrationRendererSmoke(
@@ -64,7 +65,23 @@ export async function runChapterIllustrationRendererSmoke(
     await nextTick();
   };
   const editor = () =>
-    host.querySelector<HTMLTextAreaElement>(".long-document-editor")!;
+    host.querySelector<HTMLTextAreaElement>(".long-visual-source-input")!;
+  const visualTextAt = (offset: number) => {
+    const parts = splitChapterVisualSegments(editor().value, (source) =>
+      source.startsWith("images/") ? source : undefined
+    );
+    const index = parts.findIndex(
+      (part) =>
+        part.kind === "text" && part.start <= offset && offset <= part.end
+    );
+    const part = parts[index];
+    const input = host.querySelector<HTMLTextAreaElement>(
+      `.chapter-visual-text[data-segment-index="${index}"]`
+    );
+    if (!part || !input)
+      throw new Error(`Visual chapter text missing at offset ${offset}`);
+    return { input, localOffset: offset - part.start };
+  };
   const dialog = () =>
     [...document.querySelectorAll<HTMLElement>(".character-dialog")].find(
       (item) => item.querySelector("h3")?.textContent === "新增图片"
@@ -80,9 +97,9 @@ export async function runChapterIllustrationRendererSmoke(
   let menuId = 0;
   async function open(offset: number) {
     mark("open menu");
-    const input = editor();
+    const { input, localOffset } = visualTextAt(offset);
     input.focus();
-    input.setSelectionRange(offset, offset);
+    input.setSelectionRange(localOffset, localOffset);
     input.dispatchEvent(
       new MouseEvent("contextmenu", { bubbles: true, button: 2 })
     );
@@ -108,21 +125,66 @@ export async function runChapterIllustrationRendererSmoke(
   try {
     mark("mount editor");
     application.mount(host);
-    // A previous preview smoke remembers this same chapter's preview mode.
-    // Enter editing explicitly while preserving the production view memory.
     await wait(
       () =>
-        [...host.querySelectorAll<HTMLButtonElement>("button")].some(
-          (item) => item.textContent?.trim() === "编辑" && !item.disabled
+        Boolean(
+          editor() &&
+          host.querySelector<HTMLTextAreaElement>(".chapter-visual-text") &&
+          editor().value
         ),
-      "load text view controls"
-    );
-    button("编辑").click();
-    await wait(
-      () => Boolean(editor() && !editor().readOnly && editor().value),
       "load editable manuscript"
     );
     mark("editor ready");
+    const beforeVisualEdit = editor().value;
+    const lastText = [
+      ...host.querySelectorAll<HTMLTextAreaElement>(".chapter-visual-text")
+    ].at(-1)!;
+    lastText.focus();
+    lastText.setSelectionRange(lastText.value.length, lastText.value.length);
+    lastText.dispatchEvent(
+      new InputEvent("beforeinput", {
+        bubbles: true,
+        inputType: "insertText",
+        data: "可视编辑"
+      })
+    );
+    lastText.setRangeText(
+      "可视编辑",
+      lastText.value.length,
+      lastText.value.length,
+      "end"
+    );
+    lastText.dispatchEvent(
+      new InputEvent("input", {
+        bubbles: true,
+        inputType: "insertText",
+        data: "可视编辑"
+      })
+    );
+    await wait(
+      () => editor().value.endsWith("可视编辑"),
+      "direct visual text edit"
+    );
+    const nativeUndo = new InputEvent("beforeinput", {
+      bubbles: true,
+      cancelable: true,
+      inputType: "historyUndo"
+    });
+    lastText.dispatchEvent(nativeUndo);
+    if (!nativeUndo.defaultPrevented)
+      throw new Error("Visual editor did not intercept native undo");
+    await wait(() => editor().value === beforeVisualEdit, "visual native undo");
+    const nativeRedo = new InputEvent("beforeinput", {
+      bubbles: true,
+      cancelable: true,
+      inputType: "historyRedo"
+    });
+    [...host.querySelectorAll<HTMLTextAreaElement>(".chapter-visual-text")]
+      .at(-1)!
+      .dispatchEvent(nativeRedo);
+    if (!nativeRedo.defaultPrevented)
+      throw new Error("Visual editor did not intercept native redo");
+    await wait(() => editor().value.endsWith("可视编辑"), "visual native redo");
     const original = editor().value;
     const offset = original.indexOf("\n");
     if (offset < 0) throw new Error("Illustration fixture needs paragraphs");
@@ -202,8 +264,7 @@ export async function runChapterIllustrationRendererSmoke(
       }
     }
     const expected = editor().value;
-    mark("preview");
-    button("预览").click();
+    mark("images inline");
     await wait(
       () =>
         host.querySelectorAll('img[src*="/001.png"],img[src*="/002.png"]')
@@ -216,6 +277,48 @@ export async function runChapterIllustrationRendererSmoke(
       image.loading = "eager";
       await image.decode();
     }
+    const firstImage = host.querySelector<HTMLImageElement>(
+      'img[src*="/001.png"]'
+    )!;
+    firstImage.dispatchEvent(
+      new MouseEvent("contextmenu", { bubbles: true, button: 2 })
+    );
+    await wait(
+      () => Boolean(document.querySelector(".chapter-image-menu")),
+      "inline image actions"
+    );
+    const imageMenu = document.querySelector<HTMLElement>(
+      ".chapter-image-menu"
+    )!;
+    button("替换图片", imageMenu).click();
+    await wait(
+      () =>
+        Boolean(
+          [...document.querySelectorAll<HTMLElement>(".character-dialog")].find(
+            (item) => item.querySelector("h3")?.textContent === "替换图片"
+          )
+        ),
+      "inline image replacement"
+    );
+    button("取消", document.body).click();
+    await wait(
+      () => !document.querySelector(".chapter-image-menu-dismiss"),
+      "close inline image replacement"
+    );
+    firstImage.dispatchEvent(
+      new MouseEvent("contextmenu", { bubbles: true, button: 2 })
+    );
+    await wait(
+      () => Boolean(document.querySelector(".chapter-image-menu")),
+      "reopen inline image actions"
+    );
+    button("复制图片", document.querySelector(".chapter-image-menu")!).click();
+    await wait(
+      () => !document.querySelector(".chapter-image-menu"),
+      "copy inline image"
+    );
+    if (!(await api.readClipboardImage()))
+      throw new Error("Inline image copy did not reach the clipboard");
     application.unmount();
     mark("reopen preview");
     application = createEditor();
@@ -244,7 +347,6 @@ export async function runChapterIllustrationRendererSmoke(
       ]);
     }
     mark("reopened images decoded");
-    button("编辑").click();
     await wait(
       () => Boolean(editor() && editor().value === expected),
       "reload saved manuscript"

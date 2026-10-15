@@ -176,6 +176,9 @@ const plotPointSummaryDrafts = ref<Record<string, LongVolumeOutlineDraft>>({});
 const pendingWorldbuildingDeleteId = ref<string | null>(null);
 const editorInput = ref<HTMLTextAreaElement | null>(null);
 const documentPreview = ref<HTMLElement | null>(null);
+const manuscriptEditor = ref<InstanceType<typeof LongManuscriptEditor> | null>(
+  null
+);
 const editorToolsElement = ref<HTMLElement>();
 const { resetToDefault, setViewMode, viewMode } = useTextViewMode({
   defaultMode: () => props.defaultViewMode
@@ -1027,6 +1030,15 @@ const {
   stateKey
 });
 
+const currentIsDraftBody = computed(
+  () =>
+    props.selection?.root === "draft" &&
+    currentSelectionFile.value?.role === "body"
+);
+const visualSelection = () => manuscriptEditor.value?.getSelection();
+const focusVisualRange = (start: number, end: number) =>
+  manuscriptEditor.value?.focusRange(start, end);
+
 const {
   workspaceSavePending,
   currentState,
@@ -1145,6 +1157,7 @@ const {
   viewMode,
   editorInput,
   documentPreview,
+  visualMode: () => currentIsDraftBody.value,
   contentReady: () =>
     currentIsStructuredText.value ||
     Boolean(currentState.value?.loaded && !currentState.value.loading)
@@ -1176,6 +1189,7 @@ const {
   resetEditorHistory,
   handleEditorBeforeInput,
   handleEditorInput,
+  recordVisualInput,
   recordProgrammaticChange,
   updateVisibleCharacterCount,
   undo,
@@ -1198,7 +1212,10 @@ const {
   scrollEditorToRange: (input, start) =>
     historyHost.scrollEditorToRange(input, start),
   clearRecoveryRecordForKey,
-  scheduleRecoveryWrite
+  scheduleRecoveryWrite,
+  visualMode: () => currentIsDraftBody.value,
+  visualSelection,
+  visualFocusRange: focusVisualRange
 });
 
 const illustrations = useLongEditorIllustrationCommit({
@@ -1231,6 +1248,10 @@ const {
   documentKey: () =>
     `${props.bookId}:${currentSelectionFile.value?.file.id ?? ""}`,
   editorInput: () => editorInput.value,
+  selection: () => (currentIsDraftBody.value ? visualSelection() : undefined),
+  restoreSelection: (start, end) => {
+    if (currentIsDraftBody.value) focusVisualRange(start, end);
+  },
   recordChange: recordProgrammaticChange,
   updateContent: (content, delta) => {
     updateVisibleContent(content);
@@ -1244,6 +1265,9 @@ const findApi = useLongEditorFindReplace({
   canUseTextTools,
   viewMode,
   editorInput,
+  visualMode: () => currentIsDraftBody.value,
+  visualSelection,
+  visualFocusRange: focusVisualRange,
   editorToolsElement,
   updateVisibleContent: (content) => historyHost.updateVisibleContent(content),
   updateVisibleCharacterCount,
@@ -1377,14 +1401,18 @@ async function locateEditorReference(
 
   setViewMode("edit");
   await nextTick();
-  const input = editorInput.value;
-  if (!input || reference.documentId !== currentReferenceDocumentId.value) {
-    return false;
-  }
   const range = resolveEditorTextReferenceRange(
     currentVisibleContent.value,
     reference
   );
+  if (currentIsDraftBody.value) {
+    focusVisualRange(range.start, range.end);
+    return true;
+  }
+  const input = editorInput.value;
+  if (!input || reference.documentId !== currentReferenceDocumentId.value) {
+    return false;
+  }
   input.focus();
   input.setSelectionRange(range.start, range.end, "forward");
   findApi.scrollEditorToRange(input, range.start);
@@ -1851,7 +1879,8 @@ onBeforeUnmount(() => {
           v-if="
             !currentIsForeshadowingView &&
             !currentIsPlotPointStoryline &&
-            !currentIsCharacterCoreProfile
+            !currentIsCharacterCoreProfile &&
+            !currentIsDraftBody
           "
           class="long-editor-view-tabs"
           role="tablist"
@@ -1882,7 +1911,8 @@ onBeforeUnmount(() => {
           v-if="
             !currentIsForeshadowingView &&
             !currentIsPlotPointStoryline &&
-            !currentIsCharacterCoreProfile
+            !currentIsCharacterCoreProfile &&
+            !currentIsDraftBody
           "
           class="long-toolbar-separator"
         />
@@ -2219,6 +2249,7 @@ onBeforeUnmount(() => {
               Boolean(currentState?.content) ||
               isDocumentSwitchPending)
           "
+          ref="manuscriptEditor"
           v-model:title-draft="structureTitleDraft"
           :title="currentDocumentTitle"
           :title-editable="Boolean(currentStructureTitleTarget)"
@@ -2238,6 +2269,7 @@ onBeforeUnmount(() => {
           :image-context="illustrations.imageContext.value"
           :document-key="currentSelectionFile?.file.id ?? selection?.key ?? ''"
           :view-mode="viewMode"
+          :visual="currentIsDraftBody"
           :read-only="currentReadOnly"
           :busy="isDocumentContentBusy"
           :search-matches="searchMatches"
@@ -2252,6 +2284,7 @@ onBeforeUnmount(() => {
           @title-keydown="handleStructureTitleKeydown"
           @beforeinput="handleEditorBeforeInput"
           @input="handleEditorInput"
+          @visual-input="recordVisualInput"
           @keydown="handleEditorKeydown"
           @contextmenu="handleEditorContextMenu"
           @preview-contextmenu="handlePreviewContextMenu"

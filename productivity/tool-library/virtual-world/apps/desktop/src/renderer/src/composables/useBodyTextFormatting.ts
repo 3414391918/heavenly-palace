@@ -10,6 +10,8 @@ export interface BodyTextFormattingOptions {
   disabled(): boolean;
   documentKey(): string;
   editorInput(): HTMLTextAreaElement | null | undefined;
+  selection?(): TextSelectionRange | undefined;
+  restoreSelection?(start: number, end: number): void;
   recordChange(
     content: string,
     selection: TextSelectionRange
