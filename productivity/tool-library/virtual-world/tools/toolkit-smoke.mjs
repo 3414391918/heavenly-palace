@@ -2,7 +2,7 @@ import { cp, mkdtemp, mkdir, readFile, rm } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import assert from "node:assert/strict";
 
 const project = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -193,8 +193,50 @@ try {
     input: { bookDirectory: book }
   });
   assert.equal(context.libraries.libraries.length, 1);
+  const voiceTool = join(root, "tools", "voice-design");
+  assert.equal(
+    JSON.parse(await readFile(join(voiceTool, "tool.json"), "utf8")).id,
+    "voice-design"
+  );
+  const voiceSchema = JSON.parse(
+    execFileSync(
+      process.execPath,
+      [join(voiceTool, "cli.mjs"), "--input", "-"],
+      {
+        input: JSON.stringify({ action: "schema" }),
+        encoding: "utf8"
+      }
+    )
+  );
+  assert.deepEqual(voiceSchema.schema.required, ["title", "instruction"]);
+  const { createDesignedVoice } = await import(
+    pathToFileURL(join(voiceTool, "voice-design.mjs"))
+  );
+  const requests = [];
+  const voice = await createDesignedVoice(
+    { title: "测试角色", instruction: "温和而清晰的声音" },
+    "invalid-test-key",
+    async (url, init) => {
+      requests.push({ url, init });
+      if (url.endsWith("/v1/voice-design"))
+        return Response.json({
+          candidates: [
+            {
+              audio_base64: Buffer.from("sample").toString("base64"),
+              text: "你好"
+            }
+          ]
+        });
+      return Response.json({ _id: "voice-example" }, { status: 201 });
+    }
+  );
+  assert.equal(voice.id, "voice-example");
+  assert.equal(requests.length, 2);
+  assert.equal(requests[1].init.body.get("title"), "测试角色");
+  assert.equal(requests[1].init.body.get("visibility"), "private");
+  assert.ok(requests[1].init.body.get("voices"));
   console.log(
-    "Standalone toolkit smoke passed: copied files, schema, novel create/read/write/structure/illustrations, library create/read, shared context and discovery markers; no Electron or node_modules."
+    "Standalone toolkit smoke passed: copied files, schema, novel create/read/write/structure/illustrations, library create/read, shared context, voice design, and discovery markers; no Electron or node_modules."
   );
 } finally {
   await rm(root, { recursive: true, force: true });

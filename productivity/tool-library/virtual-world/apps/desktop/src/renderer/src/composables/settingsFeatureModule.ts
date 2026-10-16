@@ -26,14 +26,6 @@ export function buildSettingsFeatureModule(
     libraryAgentSettings: settingsStore.libraryAgentSettings,
     libraryAgentLoading: settingsStore.libraryAgentLoading,
     libraryAgentSaving: settingsStore.libraryAgentSaving,
-    modelUsageDashboard: settingsStore.modelUsageDashboard,
-    modelUsageLoading: settingsStore.modelUsageLoading,
-    modelSettings: settingsStore.modelSettings,
-    modelLoading: settingsStore.modelLoading,
-    modelSaving: settingsStore.modelSaving,
-    modelError: settingsStore.modelError,
-    modelTestMessage: settingsStore.modelTestMessage,
-    testingModelId: settingsStore.testingModelId,
     runtimeAvailable: Boolean(options.api())
   };
 }

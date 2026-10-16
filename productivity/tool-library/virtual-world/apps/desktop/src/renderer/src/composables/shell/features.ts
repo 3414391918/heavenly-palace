@@ -30,8 +30,6 @@ export function useShellFeatures(ports: ShellRuntimePorts): FeaturesRuntime {
       newLongConversation: () => ports.conversations.newLongConversation()
     },
     loaders: {
-      loadModelSettings: () => loadModelSettings(),
-      loadOfficialModels: () => loadOfficialModels(),
       ensureLongAgentSettingsLoaded: () => ensureLongAgentSettingsLoaded(),
       loadAgentTeamSettings: () => loadAgentTeamSettings(),
       loadLibraryAgentSettings: () => loadLibraryAgentSettings(),
@@ -119,23 +117,8 @@ export function useShellFeatures(ports: ShellRuntimePorts): FeaturesRuntime {
   });
 
   const {
-    loadModelSettings,
     loadAppAlerts,
     closeStartupAlert,
-    loadModelUsage,
-    loadOfficialModels,
-    loadSiteOfficialModels,
-    saveOfficialToken,
-    clearOfficialToken,
-    saveSiteOfficialToken,
-    clearSiteOfficialToken,
-    refreshSiteOfficialModels,
-    setSiteOfficialModelEnabled,
-    setOfficialModelEnabled,
-    saveModelSettings,
-    refreshFreeModels,
-    setFreeModelEnabled,
-    testModel,
     loadLongAgentSettings,
     ensureLongAgentSettingsLoaded,
     saveLongAgentSettings,
@@ -153,10 +136,7 @@ export function useShellFeatures(ports: ShellRuntimePorts): FeaturesRuntime {
   } = useSettingsFeatureCoordinator({
     api: () => window.deepwrite,
     settingsStore: ports.state.settingsStore,
-    notifications: uiMessage,
-    onModelsLoaded(settings) {
-      ports.conversations.applyModelSettingsToConversations(settings);
-    }
+    notifications: uiMessage
   });
   return {
     featureHost,
@@ -167,23 +147,8 @@ export function useShellFeatures(ports: ShellRuntimePorts): FeaturesRuntime {
     openCreateBookDialog,
     createCreativeBook,
     workspaceDialogModule,
-    loadModelSettings,
     loadAppAlerts,
     closeStartupAlert,
-    loadModelUsage,
-    loadOfficialModels,
-    loadSiteOfficialModels,
-    saveOfficialToken,
-    clearOfficialToken,
-    saveSiteOfficialToken,
-    clearSiteOfficialToken,
-    refreshSiteOfficialModels,
-    setSiteOfficialModelEnabled,
-    setOfficialModelEnabled,
-    saveModelSettings,
-    refreshFreeModels,
-    setFreeModelEnabled,
-    testModel,
     loadLongAgentSettings,
     ensureLongAgentSettingsLoaded,
     saveLongAgentSettings,

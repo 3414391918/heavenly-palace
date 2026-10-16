@@ -7,8 +7,6 @@ import type {
 } from "@deepwrite/contracts";
 import { uiMessage } from "../../ui-feedback";
 import FishAudioProgress from "./FishAudioProgress.vue";
-import { generateCharacterVoiceText } from "./generateCharacterVoiceText";
-import { readCharacterVoiceProfile } from "./readCharacterVoiceProfile";
 import { useFishAudioProgress } from "./useFishAudioProgress";
 
 const props = defineProps<{
@@ -17,9 +15,7 @@ const props = defineProps<{
   characterName: string;
 }>();
 const emit = defineEmits<{ close: [] }>();
-const mode = ref<"clone" | "design" | null>(null);
 const title = ref(props.characterName + "的声音");
-const prompt = ref("");
 const files = ref<FishAudioFile[]>([]);
 const busy = ref(false);
 const completed = ref(false);
@@ -85,30 +81,6 @@ function cancelTask() {
   taskController.value.abort();
 }
 
-function readProfile(signal: AbortSignal) {
-  return new Promise<Awaited<ReturnType<typeof readCharacterVoiceProfile>>>(
-    (resolve, reject) => {
-      if (signal.aborted) {
-        reject(new DOMException("任务已取消", "AbortError"));
-        return;
-      }
-      const onAbort = () =>
-        reject(new DOMException("任务已取消", "AbortError"));
-      signal.addEventListener("abort", onAbort, { once: true });
-      void readCharacterVoiceProfile(props.bookId, props.characterId).then(
-        (profile) => {
-          signal.removeEventListener("abort", onAbort);
-          resolve(profile);
-        },
-        (error: unknown) => {
-          signal.removeEventListener("abort", onAbort);
-          reject(error);
-        }
-      );
-    }
-  );
-}
-
 async function executeWithProgress(
   payload: Extract<FishAudioCommandPayload, { action: "voice.create" }>,
   signal: AbortSignal
@@ -140,31 +112,6 @@ async function executeWithProgress(
 function showFailure(error: unknown, fallback: string) {
   if (progressNodes.value.at(-1)?.status !== "error") progress.fail(error);
   uiMessage.error(error instanceof Error ? error.message : fallback);
-}
-
-async function chooseMode(value: "clone" | "design") {
-  mode.value = value;
-  completed.value = false;
-  progress.clear();
-  if (value !== "design" || prompt.value) return;
-  const signal = startTask();
-  try {
-    progress.start("profile", "读取角色资料");
-    const profile = await readProfile(signal);
-    progress.complete("profile", `已读取 ${profile.name} 的角色资料`);
-    progress.start("model", "请求模型生成声音提示词");
-    prompt.value = await generateCharacterVoiceText(
-      profile,
-      (event) => progress.append("model", event.kind, event.text),
-      signal
-    );
-    progress.complete("model", `已生成 ${Array.from(prompt.value).length} 字`);
-  } catch (error) {
-    if (cancelRequested) progress.cancel();
-    else showFailure(error, "生成声音提示词失败");
-  } finally {
-    finishTask();
-  }
 }
 
 function duration(file: File): Promise<number> {
@@ -239,16 +186,14 @@ async function addFiles(event: Event) {
 }
 
 async function createVoice() {
-  if (!mode.value || !title.value.trim()) return;
-  if (mode.value === "clone") progress.clear();
+  if (!title.value.trim() || !files.value.length) return;
+  progress.clear();
   const signal = startTask();
   try {
     progress.start(
       "prepare",
       "准备声音资料",
-      mode.value === "clone"
-        ? `已选择 ${files.value.length} 段音频，共 ${totalSeconds.value.toFixed(1)} 秒`
-        : "使用已生成的声音提示词"
+      `已选择 ${files.value.length} 段音频，共 ${totalSeconds.value.toFixed(1)} 秒`
     );
     progress.complete("prepare");
     await executeWithProgress(
@@ -258,10 +203,8 @@ async function createVoice() {
         characterId: props.characterId,
         characterName: props.characterName,
         title: title.value.trim(),
-        mode: mode.value,
-        ...(mode.value === "design"
-          ? { prompt: prompt.value }
-          : { files: files.value })
+        mode: "clone",
+        files: files.value
       },
       signal
     );
@@ -289,64 +232,34 @@ async function createVoice() {
         <h2>创建声音</h2>
         <button type="button" :disabled="busy" @click="closeDialog">×</button>
       </header>
-      <div class="fish-mode-row">
-        <button
-          type="button"
-          :class="{ active: mode === 'clone' }"
-          :disabled="busy"
-          @click="chooseMode('clone')"
-        >
-          声音克隆
-        </button>
-        <button
-          type="button"
-          :class="{ active: mode === 'design' }"
-          :disabled="busy"
-          @click="chooseMode('design')"
-        >
-          声音设计
-        </button>
-      </div>
-      <label v-if="mode"
+      <label
         >声音名称<input v-model="title" maxlength="120" :disabled="busy"
       /></label>
-      <template v-if="mode === 'clone'">
-        <p>上传 1～20 段音频，合计不超过 120 秒、20 MB。</p>
-        <input
-          ref="input"
-          type="file"
-          accept=".wav,.mp3,.m4a,.opus,audio/*"
-          multiple
-          hidden
-          @change="addFiles"
-        />
-        <button type="button" :disabled="busy" @click="input?.click()">
-          上传音频
-        </button>
-        <ul class="fish-file-list">
-          <li v-for="(file, index) in files" :key="index">
-            {{ file.name }} · {{ file.durationSeconds.toFixed(1) }} 秒
-            <button
-              type="button"
-              :disabled="busy"
-              @click="files.splice(index, 1)"
-            >
-              删除
-            </button>
-          </li>
-        </ul>
-        <p>合计 {{ totalSeconds.toFixed(1) }} / 120 秒</p>
-      </template>
-      <label v-if="mode === 'design'"
-        >声音设计提示词
-        <textarea
-          v-model="prompt"
-          rows="9"
-          maxlength="2000"
-          :disabled="busy"
-          placeholder="正在由小说智能体生成…"
-        />
-      </label>
+      <p>上传 1～20 段音频，合计不超过 120 秒、20 MB。</p>
+      <input
+        ref="input"
+        type="file"
+        accept=".wav,.mp3,.m4a,.opus,audio/*"
+        multiple
+        hidden
+        @change="addFiles"
+      />
+      <button type="button" :disabled="busy" @click="input?.click()">
+        上传音频
+      </button>
+      <ul class="fish-file-list">
+        <li v-for="(file, index) in files" :key="index">
+          {{ file.name }} · {{ file.durationSeconds.toFixed(1) }} 秒
+          <button
+            type="button"
+            :disabled="busy"
+            @click="files.splice(index, 1)"
+          >
+            删除
+          </button>
+        </li>
+      </ul>
+      <p>合计 {{ totalSeconds.toFixed(1) }} / 120 秒</p>
       <FishAudioProgress :nodes="progressNodes" />
       <footer>
         <button
@@ -359,12 +272,7 @@ async function createVoice() {
           }}</button
         ><button
           type="button"
-          :disabled="
-            busy ||
-            completed ||
-            !mode ||
-            (mode === 'clone' ? !files.length : !prompt.trim())
-          "
+          :disabled="busy || completed || !files.length"
           @click="createVoice"
         >
           {{ completed ? "已创建" : busy ? "处理中…" : "创建声音" }}

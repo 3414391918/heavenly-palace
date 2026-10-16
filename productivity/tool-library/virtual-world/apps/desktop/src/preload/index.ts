@@ -82,13 +82,6 @@ import {
 } from "./legacy-catalog-book-api";
 import { long } from "./long-api";
 import {
-  abort,
-  prompt,
-  queryModelUsage,
-  models as sessionModels,
-  submitUserInput
-} from "./session-models-api";
-import {
   chooseWorkspaceDirectory,
   exportLongManuscript,
   listGeneralSettings,
@@ -109,6 +102,9 @@ async function getHealth(): Promise<SystemHealthPayload> {
       createEnvelope("system.health", {}, { id, correlationId: id })
     )
   );
+}
+function removedModelFeature(): Promise<never> {
+  return Promise.reject(new Error("应用内模型调用功能已移除。"));
 }
 const api: DeepWriteApi = {
   fishAudio,
@@ -174,14 +170,31 @@ const api: DeepWriteApi = {
   },
   long,
   session: {
-    prompt,
-    abort,
-    submitUserInput
+    prompt: removedModelFeature,
+    abort: removedModelFeature,
+    submitUserInput: removedModelFeature
   },
-  models: sessionModels,
-  modelUsage: {
-    query: queryModelUsage
+  models: {
+    list: removedModelFeature,
+    refreshFree: removedModelFeature,
+    setFreeModelEnabled: removedModelFeature,
+    refreshOfficial: removedModelFeature,
+    queryOfficialBalance: removedModelFeature,
+    saveOfficialToken: removedModelFeature,
+    clearOfficialToken: removedModelFeature,
+    saveSiteOfficialToken: removedModelFeature,
+    clearSiteOfficialToken: removedModelFeature,
+    refreshSiteOfficial: removedModelFeature,
+    querySiteOfficialQuota: removedModelFeature,
+    mergeSiteOfficialQuota: removedModelFeature,
+    setSiteOfficialModelEnabled: removedModelFeature,
+    setOfficialModelEnabled: removedModelFeature,
+    save: removedModelFeature,
+    test: removedModelFeature,
+    resolveCapacity: removedModelFeature,
+    listRemote: removedModelFeature
   },
+  modelUsage: { query: removedModelFeature },
   chatAssistantProjectConfig,
   chatAssistantRoleplay,
   longAgents: {

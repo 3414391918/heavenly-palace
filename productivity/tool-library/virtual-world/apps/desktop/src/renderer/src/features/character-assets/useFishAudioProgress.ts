@@ -6,12 +6,9 @@ export interface FishAudioProgressNode {
   label: string;
   status: "running" | "completed" | "error" | "cancelled";
   detail: string;
-  thinking: string;
-  output: string;
 }
 
 const platformLabels: Record<FishAudioProgressPayload["stage"], string> = {
-  "voice.design": "生成声音样本",
   "voice.create": "创建声音"
 };
 
@@ -34,9 +31,7 @@ export function useFishAudioProgress() {
         id,
         label,
         status: "running",
-        detail,
-        thinking: "",
-        output: ""
+        detail
       });
     }
     activeId = id;
@@ -69,17 +64,6 @@ export function useFishAudioProgress() {
     }
     activeId = "";
   }
-  function append(
-    id: string,
-    kind: "thinking" | "content" | "retry",
-    text: string
-  ) {
-    const node = find(id);
-    if (!node) return;
-    if (kind === "thinking") node.thinking += text;
-    else if (kind === "content") node.output += text;
-    else node.detail = `模型重试：${text}`;
-  }
   function acceptPlatform(
     operationId: string,
     progress: FishAudioProgressPayload
@@ -102,7 +86,6 @@ export function useFishAudioProgress() {
     complete,
     fail,
     cancel,
-    append,
     acceptPlatform
   };
 }

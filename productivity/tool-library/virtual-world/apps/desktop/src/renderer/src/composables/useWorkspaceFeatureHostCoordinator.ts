@@ -102,9 +102,6 @@ export function useWorkspaceFeatureHostCoordinator(
     if (mode === "directory" && options.api()) {
       issueBackground(loadWorkspaceDirectory);
     }
-    if (mode === "models" && !settingsStore.modelSettings && options.api()) {
-      issueBackground(options.loaders.loadModelSettings);
-    }
   }
 
   async function openSettings(initialCategory = "general"): Promise<void> {
@@ -126,14 +123,6 @@ export function useWorkspaceFeatureHostCoordinator(
     }
     options.view.settingsInitialCategory.value = initialCategory;
     options.view.current.value = "settings";
-    if (!options.api()) return;
-    if (!settingsStore.modelSettings) {
-      issueBackground(options.loaders.loadModelSettings);
-    }
-  }
-
-  function openOfficialModelsSettings(): void {
-    issueBackground(() => openSettings("custom-models"));
   }
 
   async function openAgentTeams(): Promise<void> {
@@ -200,9 +189,7 @@ export function useWorkspaceFeatureHostCoordinator(
     feature: ActiveFeature
   ): Promise<void> {
     if (!active || !options.api()) return;
-    if (feature === "models") {
-      await options.loaders.loadModelSettings();
-    }
+    void feature;
   }
 
   function dispose(): void {
@@ -224,7 +211,6 @@ export function useWorkspaceFeatureHostCoordinator(
     newConversation,
     openWorkspaceDialog,
     openSettings,
-    openOfficialModelsSettings,
     openAgentTeams,
     loadWorkspaceDirectory,
     chooseWorkspaceDirectory,

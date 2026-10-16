@@ -4,8 +4,6 @@ import type {
   GeneralPermissionMode,
   LibraryAgentSettings,
   LongAgentSettings,
-  ModelSettings,
-  ModelUsageDashboard,
   TextViewMode,
   WorkspacePaneLayout
 } from "@deepwrite/contracts";
@@ -30,14 +28,6 @@ export interface SettingsFeatureModule {
   libraryAgentSettings: LibraryAgentSettings | null;
   libraryAgentLoading: boolean;
   libraryAgentSaving: boolean;
-  modelUsageDashboard: ModelUsageDashboard | null;
-  modelUsageLoading: boolean;
-  modelSettings: ModelSettings | null;
-  modelLoading: boolean;
-  modelSaving: boolean;
-  modelError: string | null;
-  modelTestMessage: string | null;
-  testingModelId: string | null;
   runtimeAvailable: boolean;
 }
 
@@ -47,21 +37,9 @@ export interface DirectoryFeatureModule {
   loading: boolean;
 }
 
-export interface ModelsFeatureModule {
-  kind: "models";
-  settings: ModelSettings | null;
-  loading: boolean;
-  saving: boolean;
-  error: string | null;
-  testMessage: string | null;
-  testingModelId: string | null;
-  alertMessages: readonly string[];
-}
-
 export type WorkspaceFeatureModule =
   | { kind: "tools" }
   | { kind: "voice-manager" }
   | { kind: "prompt-templates" }
   | SettingsFeatureModule
-  | DirectoryFeatureModule
-  | ModelsFeatureModule;
+  | DirectoryFeatureModule;

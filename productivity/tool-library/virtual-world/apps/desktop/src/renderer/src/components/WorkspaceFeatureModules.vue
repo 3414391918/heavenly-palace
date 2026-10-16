@@ -11,14 +11,10 @@ import type {
   LibraryAgentDomain,
   LibraryAgentSettingsInput,
   LongAgentSettingsInput,
-  ModelConfigInput,
-  ModelSettingsInput,
-  ModelUsageQueryInput,
   TextViewMode,
   WorkspacePaneLayout
 } from "@deepwrite/contracts";
 import {
-  ModelSettingsFeature,
   SettingsPage,
   WorkspaceDirectoryFeature,
   PromptTemplateManager,
@@ -50,20 +46,6 @@ const emit = defineEmits<{
   saveLongAgents: [settings: LongAgentSettingsInput];
   saveLibraryAgents: [settings: LibraryAgentSettingsInput];
   resetLibraryAgent: [domain: LibraryAgentDomain];
-  loadModelUsage: [input?: ModelUsageQueryInput];
-  loadModels: [];
-  saveModels: [settings: ModelSettingsInput];
-  testModel: [model: ModelConfigInput];
-  loadOfficialModels: [];
-  loadSiteOfficialModels: [];
-  saveOfficialToken: [apiKey: string];
-  clearOfficialToken: [];
-  saveSiteOfficialToken: [apiKey: string];
-  clearSiteOfficialToken: [];
-  refreshSiteOfficialModels: [];
-  setSiteOfficialModelEnabled: [modelId: string, enabled: boolean];
-  setOfficialModelEnabled: [modelId: string, enabled: boolean];
-  setFreeModelEnabled: [modelId: string, enabled: boolean];
   retryAgentTeam: [];
   createAgentTeam: [input: AgentTeamProfileCreateInput];
   renameAgentTeam: [input: AgentTeamProfileRenameInput];
@@ -73,8 +55,6 @@ const emit = defineEmits<{
   setAgentTeamEnabled: [input: AgentTeamProfileSetEnabledInput];
   saveAgentTeam: [input: AgentTeamProfileSaveInput];
   chooseWorkspaceDirectory: [];
-  refreshFreeModels: [];
-  openOfficialModels: [];
   refreshCatalog: [];
 }>();
 </script>
@@ -128,14 +108,6 @@ const emit = defineEmits<{
     :library-agent-settings="module.libraryAgentSettings"
     :library-agent-loading="module.libraryAgentLoading"
     :library-agent-saving="module.libraryAgentSaving"
-    :model-usage-dashboard="module.modelUsageDashboard"
-    :model-usage-loading="module.modelUsageLoading"
-    :model-settings="module.modelSettings"
-    :model-loading="module.modelLoading"
-    :model-saving="module.modelSaving"
-    :model-error="module.modelError"
-    :model-test-message="module.modelTestMessage"
-    :testing-model-id="module.testingModelId"
     :runtime-available="module.runtimeAvailable"
     @back="emit('back')"
     @update-permission-mode="emit('updatePermissionMode', $event)"
@@ -154,10 +126,6 @@ const emit = defineEmits<{
     @save-long-agents="emit('saveLongAgents', $event)"
     @save-library-agents="emit('saveLibraryAgents', $event)"
     @reset-library-agent="emit('resetLibraryAgent', $event)"
-    @load-model-usage="emit('loadModelUsage', $event)"
-    @load-models="emit('loadModels')"
-    @save-models="emit('saveModels', $event)"
-    @test-model="emit('testModel', $event)"
   />
 
   <WorkspaceFeatureFrame
@@ -172,29 +140,6 @@ const emit = defineEmits<{
       :path="module.path"
       :loading="module.loading"
       @choose="emit('chooseWorkspaceDirectory')"
-    />
-  </WorkspaceFeatureFrame>
-
-  <WorkspaceFeatureFrame
-    v-else-if="module.kind === 'models'"
-    class="workspace-settings-main-view"
-    :left-collapsed="leftCollapsed"
-    expand-button-class="workspace-settings-expand-sidebar"
-    label="自定义模型配置"
-    @expand-left="emit('expandLeft')"
-  >
-    <ModelSettingsFeature
-      active
-      :model-settings="module.settings"
-      :model-loading="module.loading"
-      :model-saving="module.saving"
-      :model-error="module.error"
-      :model-test-message="module.testMessage"
-      :testing-model-id="module.testingModelId"
-      :model-alert-messages="module.alertMessages"
-      @save-models="emit('saveModels', $event)"
-      @test-model="emit('testModel', $event)"
-      @open-official-models="emit('openOfficialModels')"
     />
   </WorkspaceFeatureFrame>
 </template>

@@ -39,10 +39,7 @@ export const FishAudioSettingsStatusSchema = z.object({
 });
 export const FishAudioDeleteResultSchema = z.object({ deleted: z.boolean() });
 export const FishAudioCancelResultSchema = z.object({ cancelled: z.boolean() });
-export const FishAudioProgressStageSchema = z.enum([
-  "voice.design",
-  "voice.create"
-]);
+export const FishAudioProgressStageSchema = z.literal("voice.create");
 export const FishAudioProgressPayloadSchema = z.object({
   operationId: z.string().min(1),
   stage: FishAudioProgressStageSchema,
@@ -85,9 +82,8 @@ export const FishAudioCommandPayloadSchema = z.discriminatedUnion("action", [
     characterId: z.string().min(1),
     characterName: z.string().min(1).max(120),
     title: z.string().trim().min(1).max(120),
-    mode: z.enum(["clone", "design"]),
-    prompt: z.string().max(2000).optional(),
-    files: z.array(FishAudioFileSchema).max(20).optional()
+    mode: z.literal("clone"),
+    files: z.array(FishAudioFileSchema).min(1).max(20)
   }),
   z.object({
     action: z.literal("record.delete"),

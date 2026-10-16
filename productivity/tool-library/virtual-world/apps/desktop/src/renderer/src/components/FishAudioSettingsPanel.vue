@@ -58,9 +58,7 @@ onMounted(() => void load());
   <section class="settings-group fish-audio-settings">
     <div class="settings-card">
       <h2>FishAudio</h2>
-      <p>
-        用于声音克隆、声音设计和角色实时对话。密钥仅保存在本机的系统加密存储中。
-      </p>
+      <p>用于应用内的声音克隆。密钥仅保存在本机的系统加密存储中。</p>
       <p>{{ hasApiKey ? "已配置 API Key" : "尚未配置 API Key" }}</p>
       <label for="fish-audio-api-key">API Key</label>
       <input

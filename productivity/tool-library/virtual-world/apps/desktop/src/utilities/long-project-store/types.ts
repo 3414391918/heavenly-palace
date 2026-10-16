@@ -175,6 +175,7 @@ export interface SearchLongProjectResult {
 export interface WriteLongDocumentInput {
   fileId: string;
   content: string;
+  expectedContent?: string;
 }
 
 export interface WriteLongDocumentResult extends OpenedLongBook {

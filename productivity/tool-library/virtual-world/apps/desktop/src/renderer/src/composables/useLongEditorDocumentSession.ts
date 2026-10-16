@@ -559,7 +559,8 @@ export function useLongEditorDocumentSession(options: {
       const result = await api.writeDocument({
         bookId,
         fileId: state.file.id,
-        content: submittedContent
+        content: submittedContent,
+        expectedContent: state.savedContent
       });
       const latest = documentStates.value[key];
       if (!latest) return false;

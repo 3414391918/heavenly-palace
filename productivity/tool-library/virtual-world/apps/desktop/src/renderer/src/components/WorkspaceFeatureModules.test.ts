@@ -13,7 +13,6 @@ describe("WorkspaceFeatureModules boundary", () => {
       "tools",
       "prompt-templates",
       "directory",
-      "models",
       "voice-manager"
     ]) {
       expect(source).toContain(`module.kind === '${kind}'`);
@@ -23,7 +22,7 @@ describe("WorkspaceFeatureModules boundary", () => {
     expect(source).not.toContain("<AgentTeamCatalogFeature");
     expect(source).not.toContain("RevisionAnalysisPage");
     expect(source).toContain("<WorkspaceDirectoryFeature");
-    expect(source).toContain("<ModelSettingsFeature");
+    expect(source).not.toContain("<ModelSettingsFeature");
     expect(source).not.toContain("v-show");
     expect(source).not.toContain("KeepAlive");
   });

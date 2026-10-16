@@ -241,6 +241,14 @@ export async function writeDocument(
     if (file.kind !== "markdown") {
       throw new Error("第一阶段只允许通过 writeDocument 写入 Markdown 文件。");
     }
+    if (
+      input.expectedContent !== undefined &&
+      file.disk.content !== input.expectedContent
+    ) {
+      throw new Error(
+        "章节正文已在其它位置修改；编辑器草稿已保留，请重新读取后合并。"
+      );
+    }
     await guardCharacterProfileWrite(
       loaded,
       fileId,
@@ -274,7 +282,13 @@ export async function writeDocument(
     await commitLongProjectTransaction({
       projectRoot: loaded.projectDirectory,
       operations: [
-        { path: file.reference.path, content: input.content },
+        {
+          path: file.reference.path,
+          content: input.content,
+          ...(input.expectedContent === undefined
+            ? {}
+            : { expectedSha256: file.disk.sha256 })
+        },
         { path: LONG_WORKSPACE_INDEX_PATH, content: indexContent },
         { path: MANIFEST_PATH, content: manifestContent }
       ],

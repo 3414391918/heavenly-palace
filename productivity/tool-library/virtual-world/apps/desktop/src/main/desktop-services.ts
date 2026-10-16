@@ -7,10 +7,6 @@ import { FishAudioService } from "./fish-audio-service";
 import { LibraryAgentConfigStore } from "./library-agent-config-store";
 import { LongAgentConfigStore } from "./long-agent-config-store";
 import { PromptTemplateStore } from "./prompt-template-store";
-import { ModelConfigStore } from "./model-config-store";
-import { ModelUsageStore } from "./model-usage-store";
-import { SoftwareTokenUsageReporter } from "./software-token-usage-reporter";
-import type { StartupLog } from "./startup-log";
 import { UpdateService } from "./update-service";
 import { WorkspaceDirectoryStore } from "./workspace-directory-store";
 import { ToolLibraryStore } from "./tool-library-store";
@@ -24,20 +20,10 @@ interface DesktopServiceOptions {
 /** Construction has no network dependency; optional refreshes start separately. */
 export function createDesktopServices(options: DesktopServiceOptions) {
   const { userDataPath } = options;
-  const modelConfigStore = new ModelConfigStore(userDataPath, {
-    appVersion: options.appVersion
-  });
-  const modelUsageStore = new ModelUsageStore(userDataPath);
   const workspaceDirectoryStore = new WorkspaceDirectoryStore(userDataPath);
   const longAgentConfigStore = new LongAgentConfigStore(userDataPath);
   const libraryAgentConfigStore = new LibraryAgentConfigStore(userDataPath);
   return {
-    modelConfigStore,
-    modelUsageStore,
-    softwareTokenUsageReporter: new SoftwareTokenUsageReporter(
-      userDataPath,
-      modelUsageStore
-    ),
     agentTeamConfigStore: new AgentTeamConfigStore(userDataPath),
     libraryAgentConfigStore,
     longAgentConfigStore,
@@ -65,25 +51,4 @@ export function createDesktopServices(options: DesktopServiceOptions) {
     updateService: new UpdateService(options.installUpdate),
     appAlertStore: new AppAlertStore(userDataPath)
   };
-}
-export function refreshDesktopServices(
-  services: ReturnType<typeof createDesktopServices>,
-  log: StartupLog
-): void {
-  void services.softwareTokenUsageReporter
-    .reportAtStartup()
-    .catch((error: unknown) => {
-      log.write("usage-report.failed", { error });
-    });
-  void services.modelConfigStore.initialize().catch((error: unknown) => {
-    log.write("model-config.failed", { error });
-  });
-  void services.modelConfigStore
-    .list()
-    .then((settings) =>
-      services.modelUsageStore.syncConfiguredModels(settings.models)
-    )
-    .catch((error: unknown) => {
-      log.write("model-usage.failed", { error });
-    });
 }

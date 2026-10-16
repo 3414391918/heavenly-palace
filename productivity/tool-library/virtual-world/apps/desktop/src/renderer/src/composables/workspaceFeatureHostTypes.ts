@@ -35,8 +35,6 @@ export interface WorkspaceFeatureHostCoordinatorOptions {
     newLongConversation(): void;
   };
   loaders: {
-    loadModelSettings(): Promise<unknown>;
-    loadOfficialModels(): Promise<unknown>;
     ensureLongAgentSettingsLoaded(): Promise<unknown>;
     loadAgentTeamSettings(): Promise<unknown>;
     loadLibraryAgentSettings(): Promise<unknown>;
@@ -53,7 +51,6 @@ export interface WorkspaceFeatureHostCoordinator {
   newConversation(): void;
   openWorkspaceDialog(mode: DialogMode): Promise<void>;
   openSettings(category?: string): Promise<void>;
-  openOfficialModelsSettings(): void;
   openAgentTeams(): Promise<void>;
   loadWorkspaceDirectory(): Promise<void>;
   chooseWorkspaceDirectory(): Promise<void>;

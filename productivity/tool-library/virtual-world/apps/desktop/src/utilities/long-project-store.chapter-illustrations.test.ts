@@ -163,6 +163,22 @@ describe("chapter illustration insertion", () => {
     });
   });
 
+  it("does not let a stale editor save erase an illustration added externally", async () => {
+    const setup = await fixture("stale-editor-save");
+    const inserted = await setup.projectStore.addChapterImage(
+      setup.created.projectDirectory,
+      setup.input
+    );
+    await expect(
+      setup.projectStore.writeDocument(setup.created.projectDirectory, {
+        fileId: setup.chapter.body.id,
+        content: `${setup.input.content}\n\n编辑器中的新文字。`,
+        expectedContent: setup.input.content
+      })
+    ).rejects.toThrow(/正文.*修改|正文.*更新|冲突/u);
+    expect(await readFile(setup.bodyPath, "utf8")).toBe(inserted.content);
+  });
+
   it("rejects broken images and invalid offsets before saving anything", async () => {
     const setup = await fixture("invalid");
     for (const changes of [

@@ -42,17 +42,7 @@ defineProps<{ nodes: FishAudioProgressNode[] }>();
         >
           {{ node.detail }}
         </p>
-        <template v-if="node.thinking">
-          <strong>模型返回的思考</strong>
-          <pre>{{ node.thinking }}</pre>
-        </template>
-        <template v-if="node.output">
-          <strong>模型输出</strong>
-          <pre>{{ node.output }}</pre>
-        </template>
-        <p v-if="!node.detail && !node.thinking && !node.output">
-          等待返回详细内容…
-        </p>
+        <p v-if="!node.detail">等待返回详细内容…</p>
       </div>
     </details>
   </section>
@@ -108,18 +98,5 @@ defineProps<{ nodes: FishAudioProgressNode[] }>();
 .fish-progress-body p {
   margin: 0;
   overflow-wrap: anywhere;
-}
-.fish-progress-body strong {
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-.fish-progress-body pre {
-  margin: 0;
-  max-height: 200px;
-  overflow: auto;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  font: inherit;
-  font-size: 12px;
 }
 </style>

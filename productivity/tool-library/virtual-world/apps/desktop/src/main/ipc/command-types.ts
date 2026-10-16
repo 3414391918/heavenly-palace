@@ -19,13 +19,10 @@ import type {
 import type { importLegacyLibraryArchives } from "../legacy-library-import-batch";
 import type { LegacySyncPreviewRegistry } from "../legacy-sync-preview-registry";
 import type { LibraryAgentConfigStore } from "../library-agent-config-store";
-import type { listRemoteModels } from "../list-remote-models";
 import type { LongAgentConfigStore } from "../long-agent-config-store";
 import type { PromptTemplateStore } from "../prompt-template-store";
 import type { ToolLibraryStore } from "../tool-library-store";
 import type { exportLongManuscript } from "../long-manuscript-export";
-import type { ModelConfigStore } from "../model-config-store";
-import type { ModelUsageStore } from "../model-usage-store";
 import type { createRendererStateFlushCoordinator } from "../renderer-state-flush";
 import type { UtilitySupervisor } from "../supervisor";
 import type { UsageRunContext } from "../usage-observation";
@@ -51,16 +48,6 @@ export interface IpcCommandContext {
   activeRuns: Map<string, ActiveRun>;
   pendingUsageContexts: Map<string, UsageRunContext>;
   terminalRuns: Set<string>;
-  recordUsageObservation: (
-    event: Extract<
-      SystemEventEnvelope,
-      {
-        type: "agent.usage_observed";
-      }
-    >
-  ) => void;
-  requireModelConfigStore: () => ModelConfigStore;
-  requireModelUsageStore: () => ModelUsageStore;
   requireChatAssistantProjectConfigStore: () => ChatAssistantProjectConfigStore;
   requireAgentTeamConfigStore: () => AgentTeamConfigStore;
   requireLibraryAgentConfigStore: () => LibraryAgentConfigStore;
@@ -72,11 +59,9 @@ export interface IpcCommandContext {
   requireGeneralSettingsStore: () => GeneralSettingsStore;
   requireFishAudioService: () => FishAudioService;
   exportLongManuscript: typeof exportLongManuscript;
-  listRemoteModels: typeof listRemoteModels;
   remoteFetch?: (input: string, init?: RequestInit) => Promise<Response>;
   fishAudioFetch?: (input: string, init?: RequestInit) => Promise<Response>;
   rendererStateFlush: ReturnType<typeof createRendererStateFlushCoordinator>;
-  resolveDraftApiKey: ModelConfigStore["resolveDraftApiKey"];
   readExternalLibraryEntries: typeof readExternalLibraryEntries;
   importLegacyLibraryArchives: typeof importLegacyLibraryArchives;
   cachedAppearanceSettings: () => AppearanceSettings;

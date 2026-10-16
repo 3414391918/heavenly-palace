@@ -19,10 +19,7 @@ import { ContinuationImportPreviewRegistry } from "./continuation-import-preview
 import { guardConversationWindowClose } from "./conversation-window-close";
 import { createDesktopWindow } from "./create-desktop-window";
 import { createDesktopServiceAccessors } from "./desktop-service-accessors";
-import {
-  createDesktopServices,
-  refreshDesktopServices
-} from "./desktop-services";
+import { createDesktopServices } from "./desktop-services";
 import { createDesktopStartup } from "./desktop-startup";
 import { electronRemoteFetch } from "./electron-remote-fetch";
 import { readExternalLibraryEntries } from "./external-library-import";
@@ -43,7 +40,6 @@ import {
 } from "./ipc/workspace-paths";
 import { importLegacyLibraryArchives } from "./legacy-library-import-batch";
 import { LegacySyncPreviewRegistry } from "./legacy-sync-preview-registry";
-import { listRemoteModels } from "./list-remote-models";
 import {
   installLongImageProtocolHandler,
   registerLongImageScheme
@@ -99,9 +95,8 @@ const gracefulShutdown = createGracefulShutdown({
     mainWindow?.close();
   },
   shutdownUtilities: () => supervisor.shutdownAll(),
-  flushUsage: () => desktopServices?.modelUsageStore.flush(),
-  reportUsage: () =>
-    desktopServices?.softwareTokenUsageReporter.reportBeforeShutdown(),
+  flushUsage: () => undefined,
+  reportUsage: () => undefined,
   complete(installUpdate) {
     shutdownComplete = true;
     destroyMenuBarTray();
@@ -128,19 +123,15 @@ function beginGracefulShutdown(
   quitting = true;
   gracefulShutdown.begin(options);
 }
-const {
-  handleUtilityEvent,
-  handleUnexpectedExit,
-  handleWorkerRestarted,
-  recordUsageObservation
-} = createUtilityEventHandlers({
-  activeRuns,
-  terminalRuns,
-  pendingUsageContexts,
-  broadcastEvent,
-  getModelUsageStore: () => desktopServices?.modelUsageStore,
-  getSmokeEventTap: () => smokeEventTap
-});
+const { handleUtilityEvent, handleUnexpectedExit, handleWorkerRestarted } =
+  createUtilityEventHandlers({
+    activeRuns,
+    terminalRuns,
+    pendingUsageContexts,
+    broadcastEvent,
+    getModelUsageStore: () => undefined,
+    getSmokeEventTap: () => smokeEventTap
+  });
 const supervisor = new UtilitySupervisor({
   onUtilityEvent: handleUtilityEvent,
   onUnexpectedExit: handleUnexpectedExit,
@@ -224,8 +215,6 @@ function syncGeneralSettings(settings: GeneralSettings): void {
   }
 }
 const {
-  requireModelConfigStore,
-  requireModelUsageStore,
   requireChatAssistantProjectConfigStore,
   requireAgentTeamConfigStore,
   requireLibraryAgentConfigStore,
@@ -294,9 +283,6 @@ function registerIpc(): void {
       activeRuns,
       pendingUsageContexts,
       terminalRuns,
-      recordUsageObservation,
-      requireModelConfigStore,
-      requireModelUsageStore,
       requireChatAssistantProjectConfigStore,
       requireAgentTeamConfigStore,
       requireLibraryAgentConfigStore,
@@ -308,18 +294,11 @@ function registerIpc(): void {
       requireGeneralSettingsStore,
       requireFishAudioService,
       exportLongManuscript,
-      listRemoteModels: (input) =>
-        listRemoteModels(
-          input,
-          cachedGeneralSettings.useNetworkProxy ? fetch : electronRemoteFetch
-        ),
       remoteFetch: cachedGeneralSettings.useNetworkProxy
         ? fetch
         : electronRemoteFetch,
       fishAudioFetch: electronRemoteFetch,
       rendererStateFlush,
-      resolveDraftApiKey: (...args) =>
-        requireModelConfigStore().resolveDraftApiKey(...args),
       readExternalLibraryEntries,
       importLegacyLibraryArchives,
       cachedAppearanceSettings: () => cachedAppearanceSettings,
@@ -383,7 +362,6 @@ if (!hasSingleInstanceLock) {
         (await services.generalSettingsStore.list()).settings
       );
     });
-    refreshDesktopServices(services, desktopStartup.log);
     updateService.subscribe((state) => {
       if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send(UPDATE_STATE_EVENT_CHANNEL, state);

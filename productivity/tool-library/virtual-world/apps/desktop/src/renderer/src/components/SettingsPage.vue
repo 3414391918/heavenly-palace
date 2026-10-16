@@ -10,11 +10,6 @@ import {
   type LibraryAgentSettingsInput,
   type LongAgentSettings,
   type LongAgentSettingsInput,
-  type ModelConfigInput,
-  type ModelSettings,
-  type ModelSettingsInput,
-  type ModelUsageDashboard,
-  type ModelUsageQueryInput,
   type TextViewMode,
   type WorkspacePaneLayout
 } from "@deepwrite/contracts";
@@ -22,8 +17,6 @@ import AppIcon from "./AppIcon.vue";
 import AppearanceSettingsPanel from "./AppearanceSettingsPanel.vue";
 import BodyTextSettingsPanel from "./BodyTextSettingsPanel.vue";
 import GeneralSettingsPanel from "./GeneralSettingsPanel.vue";
-import ModelSettingsFeature from "./ModelSettingsFeature.vue";
-import ModelUsagePanel from "./ModelUsagePanel.vue";
 import FishAudioSettingsPanel from "./FishAudioSettingsPanel.vue";
 
 interface SettingsCategory {
@@ -64,14 +57,6 @@ const props = defineProps<{
   longAgentLoading: boolean;
   longAgentSaving: boolean;
   longAgentError: string | null;
-  modelUsageDashboard: ModelUsageDashboard | null;
-  modelUsageLoading: boolean;
-  modelSettings: ModelSettings | null;
-  modelLoading: boolean;
-  modelSaving: boolean;
-  modelError: string | null;
-  modelTestMessage: string | null;
-  testingModelId: string | null;
   libraryAgentSettings: LibraryAgentSettings | null;
   libraryAgentLoading: boolean;
   libraryAgentSaving: boolean;
@@ -94,22 +79,10 @@ const emit = defineEmits<{
   saveLongAgents: [settings: LongAgentSettingsInput];
   saveLibraryAgents: [settings: LibraryAgentSettingsInput];
   resetLibraryAgent: [domain: LibraryAgentDomain];
-  loadModelUsage: [input?: ModelUsageQueryInput];
-  loadModels: [];
-  saveModels: [settings: ModelSettingsInput];
-  testModel: [model: ModelConfigInput];
 }>();
 const searchQuery = ref("");
 
 const sections: SettingsSection[] = [
-  {
-    id: "models-and-usage",
-    label: "模型与用量",
-    categories: [
-      { id: "usage", label: "用量", icon: "ledger" },
-      { id: "custom-models", label: "自定义模型配置", icon: "model" }
-    ]
-  },
   {
     id: "personal",
     label: "个人",
@@ -157,10 +130,7 @@ const activeLabel = computed(() => {
   return "常规";
 });
 
-async function selectCategory(id: string): Promise<void> {
-  if (id === "custom-models") {
-    emit("loadModels");
-  }
+function selectCategory(id: string): void {
   activeCategory.value = id;
 }
 </script>
@@ -208,31 +178,8 @@ async function selectCategory(id: string): Promise<void> {
       <div class="settings-content-inner">
         <h1 class="settings-title">{{ activeLabel }}</h1>
 
-        <ModelUsagePanel
-          v-if="activeCategory === 'usage'"
-          :dashboard="modelUsageDashboard"
-          :loading="modelUsageLoading"
-          @query="emit('loadModelUsage', $event)"
-        />
-
-        <ModelSettingsFeature
-          v-else-if="activeCategory === 'custom-models'"
-          model-scope="custom"
-          embedded
-          active
-          :model-settings="modelSettings"
-          :model-loading="modelLoading"
-          :model-saving="modelSaving"
-          :model-error="modelError"
-          :model-test-message="modelTestMessage"
-          :testing-model-id="testingModelId"
-          :model-alert-messages="[]"
-          @save-models="emit('saveModels', $event)"
-          @test-model="emit('testModel', $event)"
-        />
-
         <GeneralSettingsPanel
-          v-else-if="activeCategory === 'general'"
+          v-if="activeCategory === 'general'"
           :permission-mode="permissionMode"
           :auto-approve-cross-stage-operations="autoApproveCrossStageOperations"
           :auto-save-enabled="autoSaveEnabled"

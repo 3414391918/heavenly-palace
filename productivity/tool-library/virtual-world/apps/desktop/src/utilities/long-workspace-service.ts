@@ -548,7 +548,10 @@ export class LongWorkspaceService {
     const opened = await this.openProject(parsed);
     const written = await this.store.writeDocument(opened.projectDirectory, {
       fileId: parsed.fileId,
-      content: parsed.content
+      content: parsed.content,
+      ...(parsed.expectedContent === undefined
+        ? {}
+        : { expectedContent: parsed.expectedContent })
     });
     await this.updateCatalogSummaryBestEffort(
       parsed.bookId,

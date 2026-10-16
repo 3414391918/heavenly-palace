@@ -1,6 +1,4 @@
 import type { createDesktopServices } from "./desktop-services";
-import type { ModelConfigStore } from "./model-config-store";
-import type { ModelUsageStore } from "./model-usage-store";
 import type { ChatAssistantProjectConfigStore } from "./chat-assistant-project-config-store";
 import type { AgentTeamConfigStore } from "./agent-team-config-store";
 import type { LibraryAgentConfigStore } from "./library-agent-config-store";
@@ -15,20 +13,6 @@ type DesktopServices = ReturnType<typeof createDesktopServices>;
 export function createDesktopServiceAccessors(
   getServices: () => Partial<DesktopServices>
 ) {
-  function requireModelConfigStore(): ModelConfigStore {
-    const modelConfigStore = getServices().modelConfigStore;
-    if (!modelConfigStore) {
-      throw new Error("模型配置存储尚未初始化。");
-    }
-    return modelConfigStore;
-  }
-  function requireModelUsageStore(): ModelUsageStore {
-    const modelUsageStore = getServices().modelUsageStore;
-    if (!modelUsageStore) {
-      throw new Error("模型用量存储尚未初始化。");
-    }
-    return modelUsageStore;
-  }
   function requireChatAssistantProjectConfigStore(): ChatAssistantProjectConfigStore {
     const chatAssistantProjectConfigStore =
       getServices().chatAssistantProjectConfigStore;
@@ -95,8 +79,6 @@ export function createDesktopServiceAccessors(
     return service;
   }
   return {
-    requireModelConfigStore,
-    requireModelUsageStore,
     requireChatAssistantProjectConfigStore,
     requireAgentTeamConfigStore,
     requireLibraryAgentConfigStore,

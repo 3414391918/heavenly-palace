@@ -61,8 +61,6 @@ function createHarness(overrides: HarnessOverrides = {}) {
   };
   let runtimeAvailable = overrides.runtimeAvailable ?? true;
   const loaders = {
-    loadModelSettings: vi.fn(async () => undefined),
-    loadOfficialModels: vi.fn(async () => undefined),
     ensureLongAgentSettingsLoaded: vi.fn(async () => undefined),
     loadAgentTeamSettings: vi.fn(async () => undefined),
     loadLibraryAgentSettings: vi.fn(async () => undefined),
@@ -128,10 +126,10 @@ describe("useWorkspaceFeatureHostCoordinator", () => {
     expect(harness.coordinator.activeFeature.value).toBe("long-workspace");
     harness.currentView.value = "settings";
     expect(harness.coordinator.activeFeature.value).toBe("settings");
-    harness.workspaceMainView.value = "models";
+    harness.workspaceMainView.value = "tools";
     expect(harness.coordinator.activeFeature.value).toBe("settings");
     harness.currentView.value = "workspace";
-    expect(harness.coordinator.activeFeature.value).toBe("models");
+    expect(harness.coordinator.activeFeature.value).toBe("tools");
   });
 
   it("projects manual feature descriptors and redirects old feature identities", async () => {
@@ -139,7 +137,6 @@ describe("useWorkspaceFeatureHostCoordinator", () => {
     expect(harness.coordinator.workspaceFeatureModule.value).toBeNull();
     for (const feature of [
       "directory",
-      "models",
       "tools",
       "voice-manager",
       "prompt-templates"
@@ -163,11 +160,10 @@ describe("useWorkspaceFeatureHostCoordinator", () => {
     );
   });
 
-  it("opens tools through the save guard without loading model or team controllers", async () => {
+  it("opens tools through the save guard", async () => {
     const harness = createHarness();
     await harness.coordinator.openWorkspaceDialog("tools");
     expect(harness.saveBeforeLeaving).toHaveBeenCalledOnce();
-    expect(harness.loaders.loadModelSettings).not.toHaveBeenCalled();
     expect(harness.coordinator.workspaceFeatureModule.value).toEqual({
       kind: "tools"
     });
@@ -193,12 +189,12 @@ describe("useWorkspaceFeatureHostCoordinator", () => {
     });
 
     await harness.coordinator.openWorkspaceDialog("directory");
-    await harness.coordinator.openWorkspaceDialog("models");
+    await harness.coordinator.openWorkspaceDialog("voice-manager");
     await harness.coordinator.openWorkspaceDialog("revision-analysis");
     await harness.coordinator.openSettings();
     await harness.coordinator.openAgentTeams();
-    await harness.coordinator.openWorkspaceDialog("models");
-    await harness.coordinator.openWorkspaceDialog("models");
+    await harness.coordinator.openWorkspaceDialog("prompt-templates");
+    await harness.coordinator.openWorkspaceDialog("tools");
 
     expect(harness.currentView.value).toBe("workspace");
     expect(harness.workspaceMainView.value).toBe("conversation");
@@ -220,10 +216,10 @@ describe("useWorkspaceFeatureHostCoordinator", () => {
         ++calls === 1 ? saving.promise : Promise.resolve(true)
     });
     const opening = harness.coordinator.openWorkspaceDialog("tools");
-    await harness.coordinator.openWorkspaceDialog("models");
+    await harness.coordinator.openWorkspaceDialog("directory");
     saving.resolve(true);
     await opening;
-    expect(harness.workspaceMainView.value).toBe("models");
+    expect(harness.workspaceMainView.value).toBe("directory");
   });
 
   it("does not let a delayed save replace a resource navigation", async () => {
@@ -245,7 +241,7 @@ describe("useWorkspaceFeatureHostCoordinator", () => {
     expect(harness.ensureAuthoringLoaded).not.toHaveBeenCalled();
   });
 
-  it("keeps manual pages independent of model and agent settings", async () => {
+  it("keeps manual pages independent of retired agent settings", async () => {
     const harness = createHarness();
     for (const feature of [
       "conversation",
@@ -254,37 +250,31 @@ describe("useWorkspaceFeatureHostCoordinator", () => {
       "directory"
     ] as const)
       await harness.coordinator.ensureActiveFeatureDependencies(feature);
-    expect(harness.loaders.loadModelSettings).not.toHaveBeenCalled();
     expect(harness.loaders.loadLibraryAgentSettings).not.toHaveBeenCalled();
     expect(
       harness.loaders.ensureLongAgentSettingsLoaded
     ).not.toHaveBeenCalled();
     expect(harness.loaders.loadAgentTeamSettings).not.toHaveBeenCalled();
-    await harness.coordinator.ensureActiveFeatureDependencies("models");
-    expect(harness.loaders.loadModelSettings).toHaveBeenCalledOnce();
   });
 
-  it("loads settings models without opening removed official model pages", async () => {
+  it("opens settings without loading retired model or agent settings", async () => {
     const harness = createHarness();
 
     await harness.coordinator.openSettings("general");
     expect(harness.currentView.value).toBe("settings");
-    expect(harness.loaders.loadModelSettings).toHaveBeenCalledOnce();
-    expect(harness.loaders.loadOfficialModels).not.toHaveBeenCalled();
     expect(
       harness.loaders.ensureLongAgentSettingsLoaded
     ).not.toHaveBeenCalled();
     expect(harness.loaders.loadLibraryAgentSettings).not.toHaveBeenCalled();
 
     harness.coordinator.closeSettings();
-    await harness.coordinator.openSettings("custom-models");
-    expect(harness.loaders.loadOfficialModels).not.toHaveBeenCalled();
-    expect(harness.loaders.loadModelSettings).toHaveBeenCalledTimes(2);
+    await harness.coordinator.openSettings("appearance");
+    expect(harness.settingsInitialCategory.value).toBe("appearance");
   });
 
   it("keeps the current page usable when a settings chunk cannot load", async () => {
     const harness = createHarness();
-    harness.workspaceMainView.value = "models";
+    harness.workspaceMainView.value = "tools";
     vi.mocked(loadSettingsFeature).mockRejectedValueOnce(
       new TypeError("Failed to fetch dynamically imported module")
     );
@@ -292,7 +282,7 @@ describe("useWorkspaceFeatureHostCoordinator", () => {
     await harness.coordinator.openSettings();
 
     expect(harness.currentView.value).toBe("workspace");
-    expect(harness.workspaceMainView.value).toBe("models");
+    expect(harness.workspaceMainView.value).toBe("tools");
     expect(harness.errors).toEqual([
       "设置页面加载失败，请稍后重试或重新启动应用。"
     ]);
@@ -309,17 +299,16 @@ describe("useWorkspaceFeatureHostCoordinator", () => {
     const loading = vi.fn(() => pending.promise);
     vi.mocked(loadSettingsFeature).mockImplementationOnce(loading);
     const harness = createHarness();
-    const opening = harness.coordinator.openSettings("custom-models");
+    const opening = harness.coordinator.openSettings("appearance");
     await vi.waitFor(() => expect(loading).toHaveBeenCalledOnce());
     expect(harness.currentView.value).toBe("workspace");
 
-    await harness.coordinator.openWorkspaceDialog("models");
+    await harness.coordinator.openWorkspaceDialog("directory");
     pending.resolve(buildSettingsFeatureModule);
     await opening;
 
     expect(harness.currentView.value).toBe("workspace");
-    expect(harness.workspaceMainView.value).toBe("models");
-    expect(harness.loaders.loadOfficialModels).not.toHaveBeenCalled();
+    expect(harness.workspaceMainView.value).toBe("directory");
   });
 
   it("contains rejecting background loaders without changing the selected page", async () => {
@@ -331,11 +320,9 @@ describe("useWorkspaceFeatureHostCoordinator", () => {
       }
     });
 
-    await expect(
-      harness.coordinator.openWorkspaceDialog("models")
-    ).resolves.toBeUndefined();
+    await expect(harness.coordinator.openAgentTeams()).resolves.toBeUndefined();
     await Promise.resolve();
-    expect(harness.workspaceMainView.value).toBe("models");
+    expect(harness.workspaceMainView.value).toBe("tools");
     expect(harness.errors).toEqual([]);
   });
 

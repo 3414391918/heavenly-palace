@@ -113,55 +113,15 @@ describe("SettingsPage", () => {
     expect(source).not.toContain("<LongAgentSettingsPanel");
   });
 
-  it("keeps usage and custom models without the removed settings categories", () => {
-    const usageIndex = source.indexOf('{ id: "usage", label: "用量"');
-    const customModelsIndex = source.indexOf(
-      '{ id: "custom-models", label: "自定义模型配置"'
-    );
-
-    expect(usageIndex).toBeGreaterThan(-1);
-    expect(customModelsIndex).toBeGreaterThan(usageIndex);
-    for (const id of [
-      "free-models",
-      "official-models",
-      "site-official-models",
-      "profile",
-      "voice",
-      "configuration",
-      "personalization",
-      "keyboard"
-    ]) {
-      expect(source).not.toContain(`id: "${id}"`);
-    }
-    expect(source).toContain('model-scope="custom"');
-    expect(source).toContain('emit("loadModels")');
-    expect(source).toContain("emit('saveModels', $event)");
-    expect(source).toContain("emit('testModel', $event)");
-    expect(source).not.toContain("<FreeModelsPanel");
-    expect(source).toContain(':testing-model-id="testingModelId"');
-    expect(source).not.toContain("<OfficialModelsPanel");
-    expect(source).not.toContain("<SiteOfficialModelsPanel");
-  });
-
-  it("connects custom model management to the existing app model state and actions", () => {
-    expect(featureHostSource).toContain(
-      "modelLoading: settingsStore.modelLoading"
-    );
-    expect(featureHostSource).toContain(
-      "modelSaving: settingsStore.modelSaving"
-    );
-    expect(featureModulesSource).toContain(
-      ':model-loading="module.modelLoading"'
-    );
-    expect(featureModulesSource).toContain(
-      ':model-saving="module.modelSaving"'
-    );
-    expect(featureModulesSource).toContain(
-      "@load-models=\"emit('loadModels')\""
-    );
-    expect(appSource).toContain('@load-models="loadModelSettings"');
-    expect(appSource).toContain('@save-models="saveModelSettings"');
-    expect(appSource).toContain('@test-model="testModel"');
+  it("removes the complete model and usage settings group", () => {
+    expect(source).not.toContain('label: "模型与用量"');
+    expect(source).not.toContain('id: "usage"');
+    expect(source).not.toContain('id: "custom-models"');
+    expect(source).not.toContain("<ModelUsagePanel");
+    expect(source).not.toContain("<ModelSettingsFeature");
+    expect(featureHostSource).not.toContain("modelLoading:");
+    expect(featureModulesSource).not.toContain("@save-models");
+    expect(appSource).not.toContain("@load-models");
   });
 
   it("lets users pick UI and editor font families from appearance settings", () => {

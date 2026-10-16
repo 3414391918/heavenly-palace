@@ -51,45 +51,80 @@ export class ToolLibraryStore {
     if (rootInfo.isSymbolicLink() || !rootInfo.isDirectory())
       throw new Error("工具目录不能是符号链接。");
     const marker = join(root, ".initialized-v1.json");
+    let initialized = true;
     try {
       await lstat(marker);
-      return root;
+    } catch (error) {
+      if (!missing(error)) throw error;
+      initialized = false;
+    }
+    if (!initialized) {
+      const defaults = await readdir(this.defaultsDirectory, {
+        withFileTypes: true
+      });
+      const guidance = (await this.guidance?.()) ?? [];
+      for (const item of defaults) {
+        if (!item.isDirectory() || !ToolIdSchema.safeParse(item.name).success)
+          continue;
+        const target = join(root, item.name);
+        try {
+          await lstat(target);
+          continue;
+        } catch (error) {
+          if (!missing(error)) throw error;
+        }
+        const temporary = join(root, `.install-${randomUUID()}`);
+        try {
+          await cp(join(this.defaultsDirectory, item.name), temporary, {
+            recursive: true
+          });
+          for (const file of guidance) {
+            if (file.toolId !== item.name) continue;
+            await writeToolText(
+              join(temporary, ToolFilePathSchema.parse(file.path)),
+              file.content
+            );
+          }
+          await rename(temporary, target);
+        } finally {
+          await rm(temporary, { recursive: true, force: true });
+        }
+      }
+      await writeToolText(marker, JSON.stringify({ version: 1 }) + "\n");
+    }
+    await this.installAddedVoiceDesign(root);
+    return root;
+  }
+
+  private async installAddedVoiceDesign(root: string): Promise<void> {
+    const marker = join(root, ".voice-design-installed-v1.json");
+    try {
+      await lstat(marker);
+      return;
     } catch (error) {
       if (!missing(error)) throw error;
     }
-    const defaults = await readdir(this.defaultsDirectory, {
-      withFileTypes: true
-    });
-    const guidance = (await this.guidance?.()) ?? [];
-    for (const item of defaults) {
-      if (!item.isDirectory() || !ToolIdSchema.safeParse(item.name).success)
-        continue;
-      const target = join(root, item.name);
-      try {
-        await lstat(target);
-        continue;
-      } catch (error) {
-        if (!missing(error)) throw error;
-      }
+    const source = join(this.defaultsDirectory, "voice-design");
+    try {
+      if (!(await lstat(source)).isDirectory()) return;
+    } catch (error) {
+      if (missing(error)) return;
+      throw error;
+    }
+    const target = join(root, "voice-design");
+    try {
+      await lstat(target);
+    } catch (error) {
+      if (!missing(error)) throw error;
       const temporary = join(root, `.install-${randomUUID()}`);
       try {
-        await cp(join(this.defaultsDirectory, item.name), temporary, {
-          recursive: true
-        });
-        for (const file of guidance) {
-          if (file.toolId !== item.name) continue;
-          await writeToolText(
-            join(temporary, ToolFilePathSchema.parse(file.path)),
-            file.content
-          );
-        }
+        await cp(source, temporary, { recursive: true });
         await rename(temporary, target);
       } finally {
         await rm(temporary, { recursive: true, force: true });
       }
     }
     await writeToolText(marker, JSON.stringify({ version: 1 }) + "\n");
-    return root;
   }
 
   private async snapshot(root: string): Promise<ToolLibrarySnapshot> {

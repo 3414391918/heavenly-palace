@@ -39,21 +39,6 @@ function bindDesktopShell(element: Element | ComponentPublicInstance | null) {
     @save-long-agents="shell.saveLongAgentSettings"
     @save-library-agents="shell.saveLibraryAgentSettings"
     @reset-library-agent="shell.resetLibraryAgentSettings"
-    @load-model-usage="shell.loadModelUsage"
-    @load-models="shell.loadModelSettings"
-    @save-models="shell.saveModelSettings"
-    @test-model="shell.testModel"
-    @load-official-models="shell.loadOfficialModels"
-    @load-site-official-models="shell.loadSiteOfficialModels"
-    @save-official-token="shell.saveOfficialToken"
-    @clear-official-token="shell.clearOfficialToken"
-    @save-site-official-token="shell.saveSiteOfficialToken"
-    @clear-site-official-token="shell.clearSiteOfficialToken"
-    @refresh-site-official-models="shell.refreshSiteOfficialModels"
-    @set-site-official-model-enabled="shell.setSiteOfficialModelEnabled"
-    @set-official-model-enabled="shell.setOfficialModelEnabled"
-    @refresh-free-models="shell.refreshFreeModels"
-    @set-free-model-enabled="shell.setFreeModelEnabled"
   />
   <div
     v-else
@@ -105,9 +90,6 @@ function bindDesktopShell(element: Element | ComponentPublicInstance | null) {
       @set-agent-team-enabled="shell.setAgentTeamEnabled"
       @save-agent-team="shell.saveAgentTeamSettings"
       @choose-workspace-directory="shell.featureHost.chooseWorkspaceDirectory"
-      @save-models="shell.saveModelSettings"
-      @test-model="shell.testModel"
-      @open-official-models="shell.featureHost.openOfficialModelsSettings"
       @refresh-catalog="shell.loadCatalogSnapshot"
     />
 

@@ -12,11 +12,12 @@ describe("unified creation entry points", () => {
     expect(dialog).not.toContain("SHORT_BOOK_GENRES");
     expect(dialog).not.toContain("SCRIPT_BOOK_GENRES");
   });
-  it("removes creation settings and preserves custom model configuration", () => {
+  it("removes creation and model settings", () => {
     expect(settings).not.toContain("<LongAgentSettingsPanel");
     expect(settings).not.toContain("<LibraryAgentSettingsPanel");
     expect(settings).not.toContain('title: "创作"');
-    expect(settings).toContain('label: "自定义模型配置"');
+    expect(settings).not.toContain('label: "自定义模型配置"');
+    expect(settings).not.toContain('label: "用量"');
   });
 
   it("provides independent tools and voices without retired navigation", () => {

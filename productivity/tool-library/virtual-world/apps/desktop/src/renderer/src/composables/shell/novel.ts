@@ -139,11 +139,7 @@ export function useShellNovel(ports: ShellRuntimePorts): NovelRuntime {
     },
     api: resolveLongWorkspaceApi,
     isWorkspaceActive: () => ports.features.isLongWorkspaceActive.value,
-    prepareOpenDependencies: () =>
-      Promise.all([
-        ports.features.loadModelSettings(),
-        ports.features.ensureLongAgentSettingsLoaded()
-      ]),
+    prepareOpenDependencies: async () => undefined,
     activateProposalBook: (bookId) =>
       longWorkspaceProposals.activateBook(bookId),
     synchronizeSelectedResourceForLayout: deferShellAction(

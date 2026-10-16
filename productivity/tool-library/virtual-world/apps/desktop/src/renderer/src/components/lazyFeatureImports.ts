@@ -5,8 +5,6 @@ export const loadAuthorSupportDialog = () =>
 export const loadLongWorkspaceModule = () =>
   import("./LongWorkspaceModule.vue");
 export const loadSettingsPage = () => import("./SettingsPage.vue");
-export const loadModelSettingsFeature = () =>
-  import("./ModelSettingsFeature.vue");
 export const loadWorkspaceDirectoryFeature = () =>
   import("./WorkspaceDirectoryFeature.vue");
 export const loadPromptTemplateManager = () =>

@@ -10,20 +10,17 @@ import type {
   LongAgentSettingsInput
 } from "@deepwrite/contracts";
 import { useSettingsStore } from "../stores/settingsStore";
-import {
-  useModelSettingsCoordinator,
-  type ModelSettingsNotifications
-} from "./useModelSettingsCoordinator";
-
-export type SettingsFeatureNotifications = ModelSettingsNotifications;
+export interface SettingsFeatureNotifications {
+  error(message: string): void;
+  info(message: string): void;
+  success(message: string): void;
+  warning(message: string): void;
+}
 
 export interface SettingsFeatureCoordinatorContext {
   api(): DeepWriteApi | undefined;
   settingsStore: ReturnType<typeof useSettingsStore>;
   notifications: SettingsFeatureNotifications;
-  onModelsLoaded: Parameters<
-    typeof useModelSettingsCoordinator
-  >[0]["onModelsLoaded"];
 }
 
 function errorMessage(error: unknown, fallback: string): string {
@@ -34,7 +31,30 @@ export function useSettingsFeatureCoordinator(
   context: SettingsFeatureCoordinatorContext
 ) {
   const { settingsStore, notifications: uiMessage } = context;
-  const modelSettingsCoordinator = useModelSettingsCoordinator(context);
+  async function loadAppAlerts(): Promise<void> {
+    const api = context.api()?.appAlerts;
+    if (!api) return;
+    try {
+      const snapshot = await api.get();
+      if (snapshot.shouldShowDesktop) {
+        settingsStore.startupAlertMessages = [...snapshot.desktopMessages];
+        settingsStore.startupAlertRevision = snapshot.desktopRevision;
+      }
+    } catch (error: unknown) {
+      console.warn("应用通知读取失败：", errorMessage(error, "未知错误"));
+    }
+  }
+
+  function closeStartupAlert(): void {
+    const revision = settingsStore.startupAlertRevision;
+    settingsStore.startupAlertMessages = [];
+    settingsStore.startupAlertRevision = "";
+    const api = context.api()?.appAlerts;
+    if (!revision || !api) return;
+    void api.acknowledgeDesktop(revision).catch((error: unknown) => {
+      console.warn("应用通知确认失败：", errorMessage(error, "未知错误"));
+    });
+  }
   async function loadLongAgentSettings(): Promise<boolean> {
     const api = context.api();
     if (!api) return false;
@@ -244,7 +264,8 @@ export function useSettingsFeatureCoordinator(
   }
 
   return {
-    ...modelSettingsCoordinator,
+    loadAppAlerts,
+    closeStartupAlert,
     loadLongAgentSettings,
     ensureLongAgentSettingsLoaded,
     saveLongAgentSettings,

@@ -272,47 +272,4 @@ describe("FishAudioService", () => {
     ).rejects.toThrow("120 秒");
     expect(requester).not.toHaveBeenCalled();
   });
-
-  it("turns a designed voice candidate into a private voice model", async () => {
-    const { instance, root } = await service();
-    const requests: Array<{ url: string; init: RequestInit | undefined }> = [];
-    const requester = vi.fn(async (url: string, init?: RequestInit) => {
-      requests.push({ url, init });
-      if (url.endsWith("/v1/voice-design"))
-        return Response.json({
-          candidates: [
-            {
-              audio_base64: Buffer.from("RIFFsample").toString("base64"),
-              text: "测试朗读"
-            }
-          ]
-        });
-      return Response.json({ _id: "designed-voice" }, { status: 201 });
-    });
-    const voice = (await instance.execute(
-      {
-        action: "voice.create",
-        bookId: "book",
-        characterId: "character",
-        characterName: "测试角色",
-        title: "设计声音",
-        mode: "design",
-        prompt: "温和、清晰的年轻女声，语速平稳。"
-      },
-      requester
-    )) as { id: string };
-    expect(voice.id).toBe("designed-voice");
-    expect(new Headers(requests[0]?.init?.headers).get("model")).toBe(
-      "voice-design-1"
-    );
-    expect(requests[1]?.init?.body).toBeInstanceOf(FormData);
-    const form = requests[1]?.init?.body as FormData;
-    expect(form.get("visibility")).toBe("private");
-    expect(form.get("texts")).toBe("测试朗读");
-    expect(form.get("voices")).toBeInstanceOf(Blob);
-    const disk = JSON.parse(
-      await readFile(join(root, "config", "fish-audio.json"), "utf8")
-    ) as Record<string, unknown>;
-    expect(disk).not.toHaveProperty("records");
-  });
 });

@@ -44,9 +44,38 @@ async function setup() {
   const store = new ToolLibraryStore(workspace, defaults, async () => [
     { toolId: "alpha", path: "notes.md", content: "已迁入规则" }
   ]);
-  return { root, work, directory, store };
+  return { root, work, directory, defaults, store };
 }
 describe("editable tool library", () => {
+  it("adds voice design once to an existing work directory and respects later deletion", async () => {
+    const { store, directory, defaults } = await setup();
+    await store.list();
+    await mkdir(join(defaults, "voice-design"));
+    await writeFile(
+      join(defaults, "voice-design/tool.json"),
+      JSON.stringify({
+        version: 1,
+        id: "voice-design",
+        name: "声音设计工具",
+        description: "设计声音",
+        entryFile: "SKILL.md",
+        relatedToolIds: []
+      })
+    );
+    await writeFile(join(defaults, "voice-design/SKILL.md"), "原始说明");
+    expect((await store.list()).tools.map(({ id }) => id)).toContain(
+      "voice-design"
+    );
+    await writeFile(join(directory, "voice-design/SKILL.md"), "用户改过的说明");
+    await store.list();
+    expect(
+      await readFile(join(directory, "voice-design/SKILL.md"), "utf8")
+    ).toBe("用户改过的说明");
+    await store.delete("voice-design");
+    expect((await store.list()).tools.map(({ id }) => id)).not.toContain(
+      "voice-design"
+    );
+  });
   it("installs defaults once in the work directory and edits the installed files", async () => {
     const { store, directory } = await setup();
     expect((await store.list()).tools).toHaveLength(2);

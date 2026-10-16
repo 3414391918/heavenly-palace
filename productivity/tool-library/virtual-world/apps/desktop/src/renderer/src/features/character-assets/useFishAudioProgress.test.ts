@@ -2,12 +2,10 @@ import { describe, expect, it } from "vitest";
 import { useFishAudioProgress } from "./useFishAudioProgress";
 
 describe("useFishAudioProgress", () => {
-  it("tracks model output and platform steps while ignoring unrelated operations", () => {
+  it("tracks platform steps while ignoring unrelated operations", () => {
     const progress = useFishAudioProgress();
-    progress.start("model", "生成提示词");
-    progress.append("model", "thinking", "核对人物资料");
-    progress.append("model", "content", "一段提示词");
-    progress.complete("model", "生成完成");
+    progress.start("prepare", "准备音频资料");
+    progress.complete("prepare", "已选择 1 段音频");
     progress.acceptPlatform("operation-1", {
       operationId: "operation-2",
       stage: "voice.create",
@@ -28,8 +26,7 @@ describe("useFishAudioProgress", () => {
     expect(progress.nodes.value).toEqual([
       expect.objectContaining({
         status: "completed",
-        thinking: "核对人物资料",
-        output: "一段提示词"
+        detail: "已选择 1 段音频"
       }),
       expect.objectContaining({ status: "completed", detail: "声音 ID：test" })
     ]);
@@ -37,23 +34,21 @@ describe("useFishAudioProgress", () => {
 
   it("keeps the failed step and its actionable error visible", () => {
     const progress = useFishAudioProgress();
-    progress.start("model", "生成提示词");
-    progress.fail(new Error("模型需要补充输入"));
+    progress.start("voice.create", "创建声音");
+    progress.fail(new Error("音频格式不受支持"));
     expect(progress.nodes.value[0]).toMatchObject({
       status: "error",
-      detail: "模型需要补充输入"
+      detail: "音频格式不受支持"
     });
   });
 
-  it("marks the active step cancelled without losing streamed details", () => {
+  it("marks the active step cancelled", () => {
     const progress = useFishAudioProgress();
-    progress.start("model", "生成提示词");
-    progress.append("model", "thinking", "核对人物资料");
+    progress.start("voice.create", "创建声音");
     progress.cancel();
     expect(progress.nodes.value[0]).toMatchObject({
       status: "cancelled",
-      detail: "任务已取消",
-      thinking: "核对人物资料"
+      detail: "任务已取消"
     });
   });
 });

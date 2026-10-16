@@ -4,7 +4,6 @@ export type WorkspaceMainView =
   | "tools"
   | "conversation"
   | "directory"
-  | "models"
   | "revision-analysis"
   | "voice-manager"
   | "prompt-templates"
@@ -13,7 +12,6 @@ export type WorkspaceMainView =
 export type PrimaryFeature =
   | "tools"
   | "directory"
-  | "models"
   | "revision-analysis"
   | "voice-manager"
   | "prompt-templates"
@@ -28,7 +26,6 @@ export function primaryFeatureForView(
     case "agent-team":
       return "agent-teams";
     case "directory":
-    case "models":
     case "revision-analysis":
     case "voice-manager":
     case "prompt-templates":

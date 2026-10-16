@@ -203,27 +203,6 @@ export class FishAudioService {
     }
   }
 
-  private async json(
-    state: State,
-    path: string,
-    method: string,
-    body: unknown,
-    requester: Requester,
-    signal?: AbortSignal
-  ): Promise<unknown> {
-    return this.request(
-      state,
-      path,
-      {
-        method,
-        headers: { "Content-Type": "application/json" },
-        ...(body === undefined ? {} : { body: JSON.stringify(body) })
-      },
-      requester,
-      signal
-    );
-  }
-
   async execute(
     payload: FishAudioCommandPayload,
     requester: Requester = fetch,
@@ -347,65 +326,24 @@ export class FishAudioService {
     form.set("title", payload.title);
     form.set("train_mode", "fast");
     form.set("visibility", "private");
-    if (payload.mode === "clone") {
-      const files = payload.files ?? [];
-      if (
-        !files.length ||
-        files.length > 20 ||
-        files.reduce((n, f) => n + f.durationSeconds, 0) > MAX_AUDIO_SECONDS
-      )
-        throw new Error("请选择 1～20 段音频，合计时长不超过 120 秒。");
-      let totalBytes = 0;
-      for (const file of files) {
-        const bytes = Buffer.from(file.base64, "base64");
-        totalBytes += bytes.byteLength;
-        if (!bytes.byteLength || totalBytes > MAX_AUDIO_BYTES)
-          throw new Error("音频文件总大小不能超过 20 MB。");
-        form.append(
-          "voices",
-          new Blob([bytes], { type: file.mimeType }),
-          file.name
-        );
-      }
-    } else {
-      if (!payload.prompt?.trim()) throw new Error("声音设计提示词不能为空。");
-      onProgress?.({
-        stage: "voice.design",
-        status: "running",
-        detail: "正在生成声音样本"
-      });
-      const designed = await this.json(
-        state,
-        "/v1/voice-design",
-        "POST",
-        {
-          instruction: payload.prompt,
-          language: "zh",
-          n: 1
-        },
-        requesterWithVoiceDesignHeader(requester),
-        signal
-      );
-      const candidate = (
-        designed as {
-          candidates?: Array<{ audio_base64?: string; text?: string }>;
-        }
-      ).candidates?.[0];
-      if (!candidate?.audio_base64)
-        throw new Error("FishAudio 未返回可用的设计声音。");
-      onProgress?.({
-        stage: "voice.design",
-        status: "completed",
-        detail: "声音样本已生成"
-      });
+    const files = payload.files;
+    if (
+      !files.length ||
+      files.length > 20 ||
+      files.reduce((n, f) => n + f.durationSeconds, 0) > MAX_AUDIO_SECONDS
+    )
+      throw new Error("请选择 1～20 段音频，合计时长不超过 120 秒。");
+    let totalBytes = 0;
+    for (const file of files) {
+      const bytes = Buffer.from(file.base64, "base64");
+      totalBytes += bytes.byteLength;
+      if (!bytes.byteLength || totalBytes > MAX_AUDIO_BYTES)
+        throw new Error("音频文件总大小不能超过 20 MB。");
       form.append(
         "voices",
-        new Blob([Buffer.from(candidate.audio_base64, "base64")], {
-          type: "audio/wav"
-        }),
-        "voice-design.wav"
+        new Blob([bytes], { type: file.mimeType }),
+        file.name
       );
-      if (candidate.text) form.append("texts", candidate.text);
     }
     onProgress?.({
       stage: "voice.create",
@@ -433,7 +371,6 @@ export class FishAudioService {
       characterName: payload.characterName,
       title: payload.title,
       mode: payload.mode,
-      ...(payload.prompt ? { prompt: payload.prompt } : {}),
       createdAt: new Date().toISOString()
     };
     return record;
@@ -457,15 +394,4 @@ export class FishAudioService {
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
-}
-
-function requesterWithVoiceDesignHeader(requester: Requester): Requester {
-  return (input, init) =>
-    requester(input, {
-      ...init,
-      headers: {
-        ...Object.fromEntries(new Headers(init?.headers)),
-        model: "voice-design-1"
-      }
-    });
 }

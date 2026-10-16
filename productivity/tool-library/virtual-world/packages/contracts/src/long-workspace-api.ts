@@ -1295,7 +1295,11 @@ export const LongWriteDocumentInputSchema = z
   .object({
     bookId: LongBookIdSchema,
     fileId: LongFileIdSchema,
-    content: z.string().max(16 * 1024 * 1024)
+    content: z.string().max(16 * 1024 * 1024),
+    expectedContent: z
+      .string()
+      .max(16 * 1024 * 1024)
+      .optional()
   })
   .strict();
 export type LongWriteDocumentInput = z.infer<

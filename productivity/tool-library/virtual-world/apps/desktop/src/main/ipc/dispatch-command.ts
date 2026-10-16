@@ -14,9 +14,7 @@ import { handleCharacterAssetCommands } from "./character-asset-commands";
 import { handleChapterImageCommands } from "./chapter-image-commands";
 import { handleFishAudioCommands } from "./fish-audio-commands";
 import { handleManuscriptCommands } from "./manuscript-commands";
-import { handleModelCommands } from "./model-commands";
 import { handleRendererStateCommands } from "./renderer-state-commands";
-import { handleSessionCommands } from "./session-commands";
 import { handleSettingsCommands } from "./settings-commands";
 import { handleToolLibraryCommands } from "./tool-library-commands";
 import { discoverToolCreatedProjects } from "../tool-created-projects";
@@ -32,6 +30,20 @@ export async function dispatchCommand(
       error: {
         code: "ipc.forbidden_internal_command",
         message: "Renderer cannot invoke internal commands."
+      }
+    };
+  }
+  if (
+    command.type.startsWith("models.") ||
+    command.type.startsWith("modelUsage.") ||
+    command.type.startsWith("session.")
+  ) {
+    return {
+      status: "rejected",
+      requestId: command.id,
+      error: {
+        code: "ipc.model_feature_removed",
+        message: "应用内模型调用功能已移除。"
       }
     };
   }
@@ -59,9 +71,7 @@ export async function dispatchCommand(
     (await handleLongCommands(ctx, command)) ??
     (await handleCatalogCommands(ctx, command)) ??
     (await handleRendererStateCommands(ctx, command)) ??
-    (await handleConversationExportCommands(ctx, command)) ??
-    (await handleModelCommands(ctx, command)) ??
-    (await handleSessionCommands(ctx, command));
+    (await handleConversationExportCommands(ctx, command));
   if (result) {
     return result;
   }
