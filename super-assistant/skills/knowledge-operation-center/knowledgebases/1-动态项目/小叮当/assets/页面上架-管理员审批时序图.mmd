@@ -1,0 +1,29 @@
+sequenceDiagram
+    actor 管理员
+    participant 审批页 as Cloud 审批页
+    participant Cloud as Cloud 后端
+    participant 数据库 as Cloud 数据库
+    participant 千机阁 as 千机阁服务
+    participant 京ME
+
+    京ME-->>管理员: 发送待审批消息和链接
+    管理员->>审批页: 打开申请详情
+    审批页->>Cloud: 查询申请
+    Cloud->>数据库: 读取申请人、页面、版本和可见范围
+    Cloud->>千机阁: 千机阁页面：核对 codeId 仍存在
+    Cloud-->>审批页: 展示申请详情
+
+    管理员->>审批页: 选择通过或驳回
+    审批页->>Cloud: 提交审批结果
+    Cloud->>千机阁: 千机阁页面：再次核对 codeId
+
+    alt 审批通过
+        Cloud->>数据库: 记录审批人和时间，将本次申请设为生效
+        Cloud->>千机阁: 若替换了旧版本，撤销旧版本委托
+    else 审批驳回
+        Cloud->>千机阁: 撤销本次委托（未被现有上架使用时）
+        Cloud->>数据库: 记录审批人、时间和原因；原上架继续生效
+    end
+
+    Cloud->>京ME: 尝试通知申请人审批结果
+    Cloud-->>审批页: 返回最新状态
