@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1690" height="1320" viewBox="0 0 1690 1320" role="img" aria-label="运行中立即发送 steer 注入时序图">
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#2563eb"/></marker><marker id="return" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/></marker></defs>
+<rect width="1690" height="1320" fill="#ffffff"/>
+<style>text{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",sans-serif;fill:#0f172a}.title{font-size:28px;font-weight:700}.sub{font-size:17px;fill:#475569}.actor{font-size:19px;font-weight:600}.label{font-size:18px}.small{font-size:16px;fill:#475569}.badge{font-size:15px;font-weight:700}.life{stroke:#94a3b8;stroke-width:2;stroke-dasharray:7 7}.solid{stroke:#2563eb;stroke-width:2.5;marker-end:url(#arrow)}.ret{stroke:#64748b;stroke-width:2;stroke-dasharray:7 5;marker-end:url(#return)}</style>
+<text x="60" y="52" text-anchor="start" class="title">运行中「立即发送」：补充指令进入后续推理</text>
+<text x="60" y="82" text-anchor="start" class="sub">当前模型请求不变；Agent 在下一次模型请求前读取已有 steeringQueue</text>
+<line x1="120" y1="175" x2="120" y2="1215" class="life"/>
+<rect x="15" y="112" width="210" height="62" rx="10" fill="#eff6ff" stroke="#93c5fd"/>
+<text x="120" y="151" text-anchor="middle" class="actor">用户</text>
+<line x1="390" y1="175" x2="390" y2="1215" class="life"/>
+<rect x="285" y="112" width="210" height="62" rx="10" fill="#eff6ff" stroke="#93c5fd"/>
+<text x="390" y="151" text-anchor="middle" class="actor">桌面端</text>
+<line x1="655" y1="175" x2="655" y2="1215" class="life"/>
+<rect x="550" y="112" width="210" height="62" rx="10" fill="#eff6ff" stroke="#93c5fd"/>
+<text x="655" y="151" text-anchor="middle" class="actor">Host / PiLoopHost</text>
+<line x1="950" y1="175" x2="950" y2="1215" class="life"/>
+<rect x="845" y="112" width="210" height="62" rx="10" fill="#eff6ff" stroke="#93c5fd"/>
+<text x="950" y="151" text-anchor="middle" class="actor">Pi Agent 循环</text>
+<line x1="1210" y1="175" x2="1210" y2="1215" class="life"/>
+<rect x="1105" y="112" width="210" height="62" rx="10" fill="#eff6ff" stroke="#93c5fd"/>
+<text x="1210" y="151" text-anchor="middle" class="actor">工具</text>
+<line x1="1530" y1="175" x2="1530" y2="1215" class="life"/>
+<rect x="1425" y="112" width="210" height="62" rx="10" fill="#eff6ff" stroke="#93c5fd"/>
+<text x="1530" y="151" text-anchor="middle" class="actor">模型 API</text>
+<line x1="959" y1="220" x2="1520" y2="220" class="solid"/>
+<text x="1240.0" y="205" text-anchor="middle" class="label">请求①：原有上下文</text>
+<line x1="129" y1="295" x2="380" y2="295" class="solid"/>
+<text x="255.0" y="280" text-anchor="middle" class="label">点击「立即发送」</text>
+<line x1="399" y1="365" x2="645" y2="365" class="solid"/>
+<text x="522.5" y="350" text-anchor="middle" class="label">注入文本（mode=steer）</text>
+<line x1="664" y1="435" x2="940" y2="435" class="solid"/>
+<text x="802.5" y="420" text-anchor="middle" class="label">agent.steer(user 消息)</text>
+<rect x="962" y="473" width="415" height="46" rx="8" fill="#ecfdf5" stroke="#86efac"/>
+<text x="1169" y="503" text-anchor="middle" class="label">放入 steeringQueue</text>
+<line x1="950" y1="497" x2="962" y2="497" class="solid"/>
+<line x1="646" y1="585" x2="400" y2="585" class="ret"/>
+<text x="522.5" y="570" text-anchor="middle" class="label">已接收；展示补充消息</text>
+<rect x="1100" y="612" width="545" height="54" rx="8" fill="#fff7ed" stroke="#fdba74"/>
+<text x="1372" y="647" text-anchor="middle" class="label">请求①已发出，输入不会被改写</text>
+<line x1="1521" y1="710" x2="960" y2="710" class="ret"/>
+<text x="1240.0" y="695" text-anchor="middle" class="label">请求①的回复</text>
+<rect x="755" y="745" width="570" height="166" rx="8" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="778" y="773" text-anchor="start" class="small">可选：当前回复包含工具调用</text>
+<line x1="959" y1="825" x2="1200" y2="825" class="solid"/>
+<text x="1080.0" y="810" text-anchor="middle" class="label">执行当前工具调用</text>
+<line x1="1201" y1="882" x2="960" y2="882" class="ret"/>
+<text x="1080.0" y="867" text-anchor="middle" class="label">工具结果</text>
+<rect x="962" y="943" width="415" height="46" rx="8" fill="#ecfdf5" stroke="#86efac"/>
+<text x="1169" y="973" text-anchor="middle" class="label">读取 steeringQueue 并取出指令</text>
+<line x1="950" y1="967" x2="962" y2="967" class="solid"/>
+<rect x="962" y="1013" width="415" height="46" rx="8" fill="#ecfdf5" stroke="#86efac"/>
+<text x="1169" y="1043" text-anchor="middle" class="label">追加为会话中的 user 消息</text>
+<line x1="950" y1="1037" x2="962" y2="1037" class="solid"/>
+<line x1="959" y1="1130" x2="1520" y2="1130" class="solid"/>
+<text x="1240.0" y="1115" text-anchor="middle" class="label">请求②：包含补充指令</text>
+<line x1="1521" y1="1200" x2="960" y2="1200" class="ret"/>
+<text x="1240.0" y="1185" text-anchor="middle" class="label">基于新上下文继续回答</text>
+<rect x="54" y="1250" width="1582" height="42" rx="6" fill="#f1f5f9" stroke="#e2e8f0"/>
+<text x="75" y="1277" text-anchor="start" class="small">说明：已接收 ≠ 模型已读取；图中工具阶段按存在工具调用的情况展示。</text>
+</svg>
