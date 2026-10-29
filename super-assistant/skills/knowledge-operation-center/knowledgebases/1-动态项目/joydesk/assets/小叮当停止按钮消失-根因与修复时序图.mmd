@@ -1,0 +1,43 @@
+%%{init: {"theme":"base","themeVariables":{"background":"#ffffff","primaryColor":"#e8f1ff","primaryTextColor":"#172b4d","primaryBorderColor":"#5b8def","lineColor":"#55657b","noteBkgColor":"#fffbea","noteTextColor":"#172b4d","noteBorderColor":"#d7bd64","actorBkg":"#e8f1ff","actorBorder":"#5b8def","actorTextColor":"#172b4d","signalColor":"#405169","signalTextColor":"#172b4d","labelBoxBkgColor":"#ffffff","labelTextColor":"#172b4d","loopTextColor":"#172b4d","fontFamily":"PingFang SC, Microsoft YaHei, sans-serif","fontSize":"18px"},"sequence":{"mirrorActors":false,"actorMargin":46,"messageMargin":28,"noteMargin":12,"diagramMarginX":25,"diagramMarginY":20,"width":170,"useMaxWidth":false}}}%%
+sequenceDiagram
+    autonumber
+    actor U as 用户
+    participant I as SearchInput<br/>输入框组件
+    participant C as conversationStore<br/>会话上下文与状态
+    participant S as 停止处理代码<br/>useMessageSending / aiStore
+    participant E as 当前任务执行器
+
+    Note over U,E: 截图场景：任务正在运行 isLoading=true；本次输入为空；分析工作台仍挂着上下文资源<br/>这里的“无法关闭”指右下角停止入口消失，不能仅凭截图认定执行器拒绝取消
+
+    rect rgb(255,245,243)
+        Note over U,E: 修复前：把“会话有背景资源”误当成“输入框有待发送内容”
+        I->>C: getConversationOperationContext(conversationId)
+        C-->>I: 返回分析工作台挂载的资源，非空
+        I->>I: hasReferencedResources=true<br/>旧 canSend=有文字 或 有图片 或 有资源 或 有引用
+        I->>I: 输入虽为空，canSend 仍为 true<br/>停止按钮条件：运行中 且 !canSend → false
+        I-->>U: 显示发送箭头；不渲染停止按钮
+        Note over U,S: 用户找不到停止入口 → 无法通过该按钮触发 handleStop → emit('stop')<br/>取消调用链尚未进入，任务继续运行
+    end
+
+    rect rgb(240,250,245)
+        Note over U,E: 修复后：运行中只检查本次草稿，背景资源不参与按钮切换
+        I->>I: hasComposerDraft=文字 / 新图片 / 编辑器资源标签 / 引用<br/>本次均为空 → false
+        I->>I: 运行中 canSend=hasComposerDraft=false<br/>isSubmitting=false → 满足停止按钮条件
+        I-->>U: 显示停止按钮 ■
+        U->>I: 点击停止
+        I->>S: handleStop → emit('stop')<br/>AIPanel → stopGeneration()
+        S->>C: 读取 currentRequestId 与最后助手消息的完成状态
+        C-->>S: 返回请求身份、消息状态和运行标记
+        alt 同一请求已经 completed，只剩旧 busy 标记
+            S->>C: clearCompletedConversationBusyState<br/>清理旧状态，保留 completed，不调用 cancelStream
+            C-->>I: 更新为空闲态，保留已交付结论
+            Note over S,E: 这条保护对应之前的“结束后误报中断”<br/>最后消息的请求 ID 必须匹配当前请求，不能误挡新任务停止
+        else 当前请求仍在执行
+            S->>S: aiStore.cancelStream(conversationId)<br/>设置 isCancellingStream=true，按钮禁用防重复点击
+            S->>E: window.joydesk.ai.cancelStream<br/>携带 sessionId、conversationId、requestId
+            E-->>S: 返回取消确认：同一 requestId、cancelled、completedAt
+            S->>C: 校验确认后 finalizeCancelledStream<br/>只收尾被取消的请求，保存取消状态并清理忙碌标记
+            C-->>I: 更新按钮与会话运行状态
+        end
+    end
+    Note over U,E: 判断边界：运行中＋空草稿＋背景资源 → 停止；运行中＋实际草稿 → 发送后续消息<br/>背景资源仍保留在会话中；本次修复改变的是按钮判断，不要求用户先删掉工作台上下文

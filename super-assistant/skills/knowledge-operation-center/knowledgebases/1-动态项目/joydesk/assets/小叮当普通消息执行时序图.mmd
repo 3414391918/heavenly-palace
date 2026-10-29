@@ -1,0 +1,19 @@
+sequenceDiagram
+    actor 用户
+    participant 界面 as 桌面界面
+    participant 运行时 as 对话运行时
+    participant Agent
+    participant 模型
+    participant 工具 as 文件工具
+
+    用户->>界面: 发送“帮我总结这个文件”
+    界面->>运行时: 提交消息和当前会话信息
+    运行时->>Agent: 开始执行
+    Agent->>模型: 提供问题，询问下一步
+    模型-->>Agent: 需要读取文件
+    Agent->>工具: 读取文件
+    工具-->>Agent: 返回文件内容
+    Agent->>模型: 带着文件内容继续
+    模型-->>Agent: 生成总结
+    Agent-->>界面: 逐步返回结果，结束运行
+    界面-->>用户: 显示回答

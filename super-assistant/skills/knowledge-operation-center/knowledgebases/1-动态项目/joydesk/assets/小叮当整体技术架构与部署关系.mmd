@@ -1,0 +1,98 @@
+%%{init: {"theme":"base","themeVariables":{"background":"#ffffff","primaryColor":"#e8f1ff","primaryTextColor":"#172033","primaryBorderColor":"#6395e8","lineColor":"#64748b","clusterBkg":"#f8fafc","clusterBorder":"#cbd5e1","fontSize":"15px"}}}%%
+flowchart TB
+  subgraph CLIENT["① 用户入口：代码运行在哪里"]
+    direction LR
+    D["桌面端 apps/desk<br/>内场、外场共用工程<br/>Electron + Vue + 本地 Node 服务"]
+    W["网页端 React<br/>内场：apps/desk-web<br/>外场：apps/joydesk-web<br/>静态站点与 Cloud 分别发布"]
+    M["移动端 apps/mobile<br/>Expo / React Native<br/>可连接电脑执行或云端执行"]
+  end
+  subgraph LOCAL["② 本机执行：运行在用户电脑"]
+    L["桌面运行时<br/>共享 Agent 内核 + 本机工具<br/>读文件、执行命令、调用 MCP"]
+    LD[("本机数据<br/>SQLite：desk.db / kernel.db<br/>技能、记忆、工作区文件")]
+    L --> LD
+  end
+  D -->|"本机任务"| L
+  C["③ apps/cloud：Java / Spring 服务<br/>账号、项目、会话同步、配置、定时调度<br/>跨端转发、云端任务派发、后台管理<br/>按产品形态和环境选择下面的实例"]
+  D <-->|"登录、同步、配置等"| C
+  W <-->|"HTTP / 流式对话"| C
+  M <-->|"HTTP / WebSocket"| C
+  C -->|"手机连接电脑、派发本机任务"| L
+  subgraph INTERNAL["④ 内场／主站"]
+    direction TB
+    CP["生产 Cloud<br/>xdd-cloud.jd.com<br/>行云应用：joydesk-xdd<br/>台账：华北 11.224.174.9 / 11.225.165.14 / 11.224.129.58<br/>华东 11.210.38.122 / 11.210.40.123"]
+    C1["预发 1 Cloud：默认预发地址<br/>xdd-cloud-pre.jd.com<br/>虚机：11.172.156.249"]
+    C2["预发 2 Cloud：另一套部署<br/>xdd-cloud-pre2.jd.com<br/>行云：joydesk-xdd / prepub-pre8c<br/>台账：11.190.11.39<br/>具体下游以该实例运行配置为准"]
+    KP["生产 kernel-runner<br/>入口：xdd-kr-prod.jd.com → 云负载均衡<br/>配置：6.201.84.{3,4,10,11,12,13,14,15}:3890"]
+    KT["预发 kernel-runner<br/>入口：xdd-kr-pre.jd.com<br/>当前配置：6.201.84.114:3890<br/>116 已从当前集群配置摘除"]
+    DP[("生产数据<br/>RDS：xdd-prod.rds.jdcloud.com<br/>Cloud 库 xdd_cloud / Runner 库 xdd_cloud_runner<br/>Cloud Redis 与 Runner Redis 分开")]
+    DT[("预发数据<br/>RDS：joydesk-pre.rds.jdcloud.com<br/>Cloud 库 xdd_cloud / Runner 库 xdd_cloud_runner<br/>预发 Cloud Redis / Runner Redis")]
+    CP --> KP
+    C1 --> KT
+    CP --> DP
+    KP --> DP
+    C1 --> DT
+    KT --> DT
+  end
+  subgraph EXTERNAL["⑤ 外场／商业化 SaaS"]
+    direction TB
+    SP["生产 Cloud<br/>joydesk.jdcloud.com<br/>行云：joyclaw / prod8c<br/>台账：11.225.152.50 / 11.225.165.19"]
+    ST["预发 Cloud<br/>joydesk-pre.jdcloud.com<br/>具体部署组、IP、Runner 绑定待核实"]
+    KS["SaaS 生产 kernel-runner<br/>配置入口：6.201.84.120:3890<br/>节点：6.201.84.120 / 121"]
+    DS[("SaaS Runner 数据<br/>RDS：joyclaw-saas.rds.jdcloud.com<br/>库 kernel_runner<br/>独立 Runner Redis<br/>Cloud 数据库映射待核实")]
+    SP --> KS
+    KS --> DS
+  end
+  C -->|"内场 prod"| CP
+  C -->|"内场 pre 默认"| C1
+  C -.->|"显式切到第二套预发"| C2
+  C -->|"外场 prod"| SP
+  C -->|"外场 pre"| ST
+  R["⑥ 云端执行内部<br/>kernel-runner 是执行宿主<br/>创建／管理隔离沙箱 → 加载共享 Agent 内核<br/>调用模型 → 执行工具 → 回传事件与结果"]
+  KP --> R
+  KT --> R
+  KS --> R
+  subgraph DEP["⑦ 模型、业务能力与文件服务：按需调用"]
+    direction LR
+    G["模型网关 → 模型推理服务<br/>Desk 默认：socrates-llm-gw.jd.com<br/>外场默认：joyclaw-llm-gw.jdcloud.com<br/>KR 声明默认：modelservice.jdcloud.com<br/>实际请求以所选模型配置为准<br/>网关／推理服务器 IP 待核实"]
+    B["技能市场／知识库／MCP 等<br/>独立服务，不等于 Cloud 本身<br/>内场技能：mkt-skill-manager*.jd.com<br/>外场技能：joyclaw-skills.jdcloud.com<br/>部分服务预发、生产共用"]
+    Q["千机阁：独立页面平台<br/>内场页面：var.jd.com<br/>外场页面：joyvar.jd.com<br/>开发页面：var-pre.jd.com<br/>Cloud 上游：var-service-office.jd.com<br/>预发上游：var-service-pre.jd.com<br/>具体部署 IP 待核实"]
+    F["云盘／对象存储<br/>JuiceFS、cloud-disk、OSS<br/>云盘台账：生产 11.172.156.243<br/>预发 11.172.156.249<br/>243 已不是生产 Cloud Java"]
+  end
+  L -->|"模型调用"| G
+  R -->|"模型调用"| G
+  L -->|"工具／业务请求"| B
+  R -->|"工具／业务请求"| B
+  L -->|"生成、编辑、预览页面"| Q
+  C -->|"千机阁业务接口"| Q
+  R -->|"工具按需调用"| Q
+  L <-->|"文件同步"| F
+  R <-->|"工作区／文件"| F
+  C -->|"文件服务接口"| F
+  subgraph OPS["⑧ 运维通道：不在用户对话请求链上"]
+    direction LR
+    X["行云 / JDOS<br/>代码构建 → 制品／镜像 → 部署组 → 实例<br/>用于发布、扩缩容、查看实例"]
+    N["Noah 堡垒机<br/>bastion.jd.com<br/>登录审计与访问入口"]
+    J["跳板机<br/>11.172.156.246<br/>go249 / go243 / go84_*"]
+    A["堡垒机应用组<br/>主站 Cloud：joyclaw_joydesk-xdd<br/>SaaS Cloud：joyclaw_joyclaw"]
+    N -.-> A
+    N -.-> J
+  end
+  X -.->|"发布容器"| CP
+  X -.->|"发布容器"| C2
+  X -.->|"发布容器"| SP
+  A -.->|"登录对应容器"| CP
+  A -.->|"登录对应容器"| SP
+  A -.->|"按预发 IP 区分"| C2
+  J -.->|"SSH"| C1
+  J -.->|"SSH"| KP
+  J -.->|"SSH"| KT
+  J -.->|"SSH"| KS
+  J -.->|"SSH"| F
+  classDef local fill:#edf8ee,stroke:#67a873,color:#172033;
+  classDef cloud fill:#e8f1ff,stroke:#6395e8,color:#172033;
+  classDef pending fill:#fff5df,stroke:#c99235,color:#172033;
+  classDef ops fill:#f1eaff,stroke:#a184cd,color:#172033;
+  class D,L,LD local;
+  class C,CP,C1,KP,KT,SP,KS,R cloud;
+  class C2,ST,DS pending;
+  class X,N,J,A ops;

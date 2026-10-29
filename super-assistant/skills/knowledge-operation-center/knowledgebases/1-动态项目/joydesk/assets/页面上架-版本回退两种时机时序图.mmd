@@ -1,0 +1,26 @@
+sequenceDiagram
+    actor 作者
+    actor 管理员
+    actor 可见用户
+    participant 千机阁
+    participant Cloud
+    participant 数据库 as Cloud数据库
+
+    作者->>千机阁: 回退页面，选定版本的 codeId 被删除
+    Note over 千机阁,Cloud: 千机阁不会立即通知 Cloud；Cloud 在下次访问时发现
+
+    alt 管理员尚未审批
+        管理员->>Cloud: 打开申请详情或提交审批
+        Cloud->>千机阁: 申请的 codeId 还在吗？
+        千机阁-->>Cloud: 不在
+        Cloud->>千机阁: 撤销本次委托
+        Cloud->>数据库: 标记申请失效
+        Cloud-->>管理员: 该申请不能再审批
+    else 已审批通过
+        可见用户->>Cloud: 刷新工作台或打开应用
+        Cloud->>千机阁: 已上架的 codeId 还在吗？
+        千机阁-->>Cloud: 不在
+        Cloud->>千机阁: 撤销旧委托
+        Cloud->>数据库: 标记上架失效，清空生效记录
+        Cloud-->>可见用户: 不再展示或拒绝打开
+    end

@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1175" viewBox="0 0 1400 1175" role="img" aria-labelledby="title description">
+  <title id="title">问题2-解决方案：中断后续聊时的工具调用历史处理</title>
+  <desc id="description">用户停止或等待超时后，已中止或出错的工具调用会被模型历史跳过；按 ID 同时排除对应的未执行结果，避免 400。</desc>
+  <rect width="1400" height="1175" fill="#fff"/>
+  <g font-family="PingFang SC, Microsoft YaHei, sans-serif" fill="#172033">
+    <text x="700" y="43" text-anchor="middle" font-size="30" font-weight="600">中断后续聊：工具调用历史导致 400 的原因与处理</text>
+
+    <g font-size="23" text-anchor="middle">
+      <rect x="65" y="75" width="160" height="52" rx="7" fill="#eef2ff" stroke="#64748b"/>
+      <text x="145" y="109">用户</text>
+      <rect x="385" y="75" width="160" height="52" rx="7" fill="#eef2ff" stroke="#64748b"/>
+      <text x="465" y="109">小叮当</text>
+      <rect x="735" y="75" width="160" height="52" rx="7" fill="#eef2ff" stroke="#64748b"/>
+      <text x="815" y="109">消息整理</text>
+      <rect x="1115" y="75" width="160" height="52" rx="7" fill="#eef2ff" stroke="#64748b"/>
+      <text x="1195" y="109">模型网关</text>
+    </g>
+
+    <g stroke="#94a3b8" stroke-width="1.6" stroke-dasharray="7 7">
+      <line x1="145" y1="127" x2="145" y2="1120"/>
+      <line x1="465" y1="127" x2="465" y2="1120"/>
+      <line x1="815" y1="127" x2="815" y2="1120"/>
+      <line x1="1195" y1="127" x2="1195" y2="1120"/>
+    </g>
+
+    <g font-size="23" stroke="#334155" stroke-width="2" fill="none">
+      <path d="M465 176 H535 V207 H465"/>
+      <line x1="145" y1="260" x2="465" y2="260"/>
+      <path d="M465 316 H535 V349 H465"/>
+      <line x1="145" y1="405" x2="465" y2="405"/>
+    </g>
+    <g font-size="23">
+      <text x="550" y="166">记录工具调用（示例 ID：B4Ki）</text>
+      <text x="305" y="247" text-anchor="middle">手动停止／超时自动取消</text>
+      <text x="550" y="300">调用记为“已中止”或“出错”</text>
+      <text x="550" y="330">补记同 ID 的“未执行”结果</text>
+      <text x="305" y="392" text-anchor="middle">发送新消息</text>
+    </g>
+
+    <rect x="48" y="445" width="1304" height="335" fill="#fff7f7" stroke="#cbd5e1" stroke-width="2"/>
+    <text x="82" y="478" font-size="23" font-weight="600">当前行为</text>
+    <g stroke="#334155" stroke-width="2" fill="none">
+      <line x1="465" y1="530" x2="815" y2="530"/>
+      <path d="M815 579 H875 V615 H815"/>
+      <line x1="815" y1="680" x2="1195" y2="680"/>
+      <line x1="1195" y1="749" x2="465" y2="749" stroke-dasharray="8 6"/>
+    </g>
+    <g font-size="23">
+      <text x="640" y="516" text-anchor="middle">提交历史记录</text>
+      <text x="900" y="570">跳过已中止／出错的调用</text>
+      <text x="900" y="599">却留下“未执行”结果</text>
+      <text x="1005" y="666" text-anchor="middle">发送没有对应调用的工具结果</text>
+      <text x="830" y="735" text-anchor="middle">400 格式错误</text>
+    </g>
+
+    <rect x="48" y="780" width="1304" height="340" fill="#f5fbf7" stroke="#cbd5e1" stroke-width="2"/>
+    <text x="82" y="815" font-size="23" font-weight="600">解决方案</text>
+    <g stroke="#334155" stroke-width="2" fill="none">
+      <line x1="465" y1="858" x2="815" y2="858"/>
+      <path d="M815 915 H875 V950 H815"/>
+      <line x1="815" y1="1007" x2="1195" y2="1007"/>
+      <line x1="1195" y1="1081" x2="465" y2="1081" stroke-dasharray="8 6"/>
+    </g>
+    <g font-size="23">
+      <text x="640" y="845" text-anchor="middle">提交历史记录</text>
+      <text x="900" y="905">按 ID 配对检查</text>
+      <text x="900" y="934">排除被跳过的调用及同 ID“未执行”结果</text>
+      <text x="1005" y="993" text-anchor="middle">发送有效历史和用户新消息</text>
+      <text x="830" y="1067" text-anchor="middle">正常回复</text>
+    </g>
+    <g fill="#334155">
+      <path d="M477 200 L465 207 L477 214 Z"/>
+      <path d="M453 253 L465 260 L453 267 Z"/>
+      <path d="M477 342 L465 349 L477 356 Z"/>
+      <path d="M453 398 L465 405 L453 412 Z"/>
+      <path d="M803 523 L815 530 L803 537 Z"/>
+      <path d="M827 608 L815 615 L827 622 Z"/>
+      <path d="M1183 673 L1195 680 L1183 687 Z"/>
+      <path d="M477 742 L465 749 L477 756 Z"/>
+      <path d="M803 851 L815 858 L803 865 Z"/>
+      <path d="M827 943 L815 950 L827 957 Z"/>
+      <path d="M1183 1000 L1195 1007 L1183 1014 Z"/>
+      <path d="M477 1074 L465 1081 L477 1088 Z"/>
+    </g>
+  </g>
+</svg>

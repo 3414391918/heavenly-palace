@@ -1,0 +1,33 @@
+sequenceDiagram
+    participant U as 用户
+    participant D as 小叮当桌面端
+    participant M as 技能市场
+    participant F as 本地 Skill 文件
+    participant S as SkillScope
+    participant A as Pi Agent
+    participant T as 工具执行层
+
+    U->>D: 安装或更新 Skill
+    D->>M: 下载技能包
+    M-->>D: 返回 ZIP
+    D->>F: 导入 SKILL.md、脚本等文件
+
+    U->>D: 发消息，选择或 @ Skill
+    D->>S: 解析本轮选择及专家、项目等范围
+    S->>F: 查找本地 Skill
+    F-->>S: 路径、元数据、正文
+    S-->>D: 本轮可用性及 L0/L1 决策
+
+    alt L0：可发现
+        D->>A: 提供名称、描述和读取路径
+        Note over A: 需要时再读取 SKILL.md
+    else L1：本轮已激活
+        D->>A: 注入 SKILL.md 正文
+        D->>T: 合并该 Skill 声明的额外工具
+        T-->>A: 提供本轮可用的工具定义
+    end
+
+    A->>T: 模型发起工具调用
+    T->>T: 按本轮授权再次校验
+    T-->>A: 返回执行结果
+    A-->>U: 回答
