@@ -1,0 +1,29 @@
+sequenceDiagram
+    participant U as 用户
+    participant UI as 桌面端
+    participant R as 已安装插件记录
+    participant H as 对话宿主
+    participant S as SkillScope
+    participant MCP as 插件 MCP 服务
+    participant A as Pi Agent
+
+    U->>UI: 在对话中使用插件
+    UI->>H: 消息 + activePluginId + 插件 Skill ID
+    H->>R: 核对已安装插件及其能力
+
+    opt 插件声明了 MCP
+        H->>MCP: 按本轮激活并确认服务就绪
+        MCP-->>H: 工具清单或启动错误
+    end
+
+    H->>S: 核对 Skill 是否确实属于该插件
+    S-->>H: 本轮可用的 Skill 说明
+    H->>H: 筛选插件工具并形成本轮授权
+    H->>A: Skill 上下文 + 可用工具定义
+
+    opt 模型决定调用工具
+        A->>H: 工具名和参数
+        H->>H: 再校验本轮授权
+        H->>MCP: 执行插件 MCP 工具
+        MCP-->>A: 执行结果
+    end

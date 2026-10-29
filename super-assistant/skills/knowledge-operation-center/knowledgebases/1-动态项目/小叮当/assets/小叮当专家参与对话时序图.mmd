@@ -1,0 +1,19 @@
+sequenceDiagram
+    participant U as 用户
+    participant UI as 桌面端
+    participant B as 专家配置与技能绑定
+    participant R as 会话路由
+    participant W as 专家工作区
+    participant H as 对话 Agent
+    participant P as Pi Agent 与模型
+
+    U->>UI: 进入专家 A 的会话并发送消息
+    UI->>B: 查询 A 绑定的 Skill
+    B-->>UI: 技能 ID 和使用范围
+    UI->>R: 消息 + targetAgentId=A + 技能范围
+    R->>H: 选用 A 的 Agent 配置
+    H->>W: 读取 A 的身份规则和适用记忆
+    W-->>H: agents/agents.md 等上下文
+    H->>H: 校验本轮 Skill 范围与工具权限
+    H->>P: 专家规则 + 历史 + 用户消息 + 可用工具
+    P-->>U: 经相同的模型、工具循环生成回答

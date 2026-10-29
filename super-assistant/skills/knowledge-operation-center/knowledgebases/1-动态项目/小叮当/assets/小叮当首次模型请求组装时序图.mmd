@@ -1,0 +1,22 @@
+sequenceDiagram
+    participant 用户 as 用户/桌面端
+    participant 入口 as 请求整理
+    participant 会话 as SessionApp
+    participant 宿主 as 小叮当对话 Agent
+    participant 核心 as Pi Agent 核心
+    participant 模型 as 模型服务
+
+    用户->>入口: 消息 + 所选专家、Skill、MCP、插件、关联资源
+    入口->>入口: 将关联资源说明整理进本轮用户消息
+    入口->>会话: 提交 UserInput
+    会话->>会话: 取得当前会话的规范历史
+    会话->>宿主: UserInput + conversationHistory
+    宿主->>宿主: prepareTurn：组装系统提示词
+    Note over 宿主: 基础规则、专家身份、适用记忆、Skill 信息等
+    宿主->>宿主: 确定本轮有权使用的工具
+    Note over 宿主: 基础工具、获授权的 Skill/MCP/插件工具
+    宿主->>核心: systemPrompt + 工具清单
+    核心->>核心: 沿用活动历史，或从持久化历史恢复
+    核心->>核心: 加入本轮用户消息，按窗口预算处理上下文
+    核心->>模型: 系统提示词 + 消息列表 + 工具定义
+    模型-->>核心: 正文或工具调用请求
